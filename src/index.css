@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -97,5 +98,35 @@
 
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+/* Game Show Custom Classes */
+@layer components {
+  .game-card {
+    @apply relative rounded-lg overflow-hidden bg-gradient-to-br from-gameshow-card to-gameshow-primary/60 border-2 border-gameshow-primary/30 shadow-lg transition-transform;
+    perspective: 1000px;
+    transform-style: preserve-3d;
+  }
+  
+  .card-glow {
+    @apply animate-pulse-glow;
+  }
+  
+  .player-camera-box {
+    @apply rounded-lg border-4 border-gameshow-accent shadow-lg overflow-hidden transition-all duration-300;
+  }
+  
+  .player-camera-box.active {
+    @apply border-gameshow-primary animate-pulse-glow;
+  }
+  
+  .game-btn {
+    @apply px-4 py-2 rounded-md bg-gameshow-primary text-gameshow-text font-bold 
+           hover:bg-gameshow-secondary transition-colors shadow-md;
+  }
+  
+  .game-card-icon {
+    @apply w-10 h-10 p-1 rounded-full bg-gameshow-primary/20 text-gameshow-text;
   }
 }

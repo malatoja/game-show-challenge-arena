@@ -1,3 +1,4 @@
+
 import type { Config } from "tailwindcss";
 
 export default {
@@ -61,6 +62,15 @@ export default {
 					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
+				},
+				gameshow: {
+					primary: '#9b30ff',
+					secondary: '#6e00ff',
+					accent: '#ff3c78',
+					background: '#1a0533',
+					card: '#2d1052',
+					text: '#ffffff',
+					muted: '#9d88c0'
 				}
 			},
 			borderRadius: {
@@ -84,11 +94,52 @@ export default {
 					to: {
 						height: '0'
 					}
+				},
+				'pulse-glow': {
+					'0%, 100%': { 
+						boxShadow: '0 0 12px #9b30ff',
+						opacity: '1'
+					},
+					'50%': { 
+						boxShadow: '0 0 20px #9b30ff',
+						opacity: '0.8'
+					}
+				},
+				'card-flip': {
+					'0%': { 
+						transform: 'rotateY(0deg)',
+					},
+					'100%': { 
+						transform: 'rotateY(180deg)',
+					}
+				},
+				'card-flash': {
+					'0%': { 
+						opacity: '0.3',
+					},
+					'50%': { 
+						opacity: '1',
+					},
+					'100%': { 
+						opacity: '0.3',
+					}
+				},
+				'wheel-spin': {
+					'0%': {
+						transform: 'rotate(0deg)'
+					},
+					'100%': {
+						transform: 'rotate(360deg)'
+					}
 				}
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
-				'accordion-up': 'accordion-up 0.2s ease-out'
+				'accordion-up': 'accordion-up 0.2s ease-out',
+				'pulse-glow': 'pulse-glow 2s ease-in-out infinite',
+				'card-flip': 'card-flip 0.5s ease-out forwards',
+				'card-flash': 'card-flash 0.8s ease-in-out',
+				'wheel-spin': 'wheel-spin 5s cubic-bezier(0.3, 0.8, 0.2, 1) forwards'
 			}
 		}
 	},
