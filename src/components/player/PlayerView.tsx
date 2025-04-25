@@ -1,45 +1,82 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useGame } from '@/context/GameContext';
 import { CardType } from '@/types/gameTypes';
 import { Button } from '@/components/ui/button';
+import { Progress } from '@/components/ui/progress';
 import QuestionDisplay from '../questions/QuestionDisplay';
 import CardDeck from '../cards/CardDeck';
 import FortuneWheel from '../wheel/FortuneWheel';
 import { ROUND_NAMES } from '@/constants/gameConstants';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Confetti } from 'lucide-react';
 
 export function PlayerView({ playerId }: { playerId: string }) {
   const { state } = useGame();
-  const { currentRound, players, currentQuestion, wheelSpinning } = state;
+  const { currentRound, players, currentQuestion, wheelSpinning, roundEnded } = state;
+  const [selectedCard, setSelectedCard] = useState<CardType | null>(null);
+  const [showCardAnimation, setShowCardAnimation] = useState(false);
   
   // Find this player
   const player = players.find(p => p.id === playerId);
   
+  // Show card animation if player has just received a new card
+  useEffect(() => {
+    if (player?.cards && player.cards.some(card => !card.isUsed)) {
+      const unusedCardType = player.cards.find(card => !card.isUsed)?.type || null;
+      if (unusedCardType && unusedCardType !== selectedCard) {
+        setSelectedCard(unusedCardType);
+        setShowCardAnimation(true);
+        
+        // Hide animation after 3 seconds
+        const timer = setTimeout(() => {
+          setShowCardAnimation(false);
+        }, 3000);
+        
+        return () => clearTimeout(timer);
+      }
+    }
+  }, [player?.cards, selectedCard]);
+  
   if (!player) {
     return (
-      <div className="container mx-auto p-4 flex items-center justify-center h-screen">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-red-500">Gracz nie znaleziony</h1>
-          <p className="text-gameshow-muted mt-2">Ten gracz nie istnieje w aktualnej grze.</p>
-          <a href="/" className="mt-4 inline-block game-btn">Wróć do strony głównej</a>
-        </div>
+      <div className="container mx-auto p-4 flex items-center justify-center h-screen bg-gameshow-background">
+        <Card className="max-w-md w-full bg-gameshow-card">
+          <CardHeader className="text-center">
+            <CardTitle className="text-2xl font-bold text-red-500">Gracz nie znaleziony</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-gameshow-muted text-center mb-4">Ten gracz nie istnieje w aktualnej grze.</p>
+            <div className="flex justify-center">
+              <a href="/" className="game-btn inline-block">Wróć do strony głównej</a>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     );
   }
   
-  return (
-    <div className="container mx-auto p-4 bg-gameshow-background min-h-screen">
-      <div className="flex flex-col space-y-6">
-        {/* Header */}
-        <div className="bg-gameshow-card p-4 rounded-lg">
-          <div className="flex items-center justify-between">
-            <h1 className="text-xl md:text-3xl font-bold text-gameshow-text">
-              {player.name} - {player.points} punktów
-            </h1>
+  // If the round has ended, show a different view
+  if (roundEnded) {
+    return (
+      <div className="container mx-auto p-4 bg-gameshow-background min-h-screen flex items-center justify-center">
+        <Card className="max-w-lg w-full bg-gameshow-card">
+          <CardHeader className="text-center bg-gradient-to-r from-gameshow-primary/30 to-gameshow-secondary/30">
+            <CardTitle className="text-2xl font-bold flex items-center justify-center gap-2">
+              <Confetti className="h-6 w-6 text-yellow-400" />
+              Koniec rundy: {ROUND_NAMES[currentRound]}
+              <Confetti className="h-6 w-6 text-yellow-400" />
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-6 text-center">
+            <h3 className="text-xl font-semibold mb-4">Twój wynik:</h3>
+            <div className="flex justify-center items-center gap-3 text-3xl font-bold mb-6">
+              {player.points} punktów
+            </div>
             
-            <div className="flex items-center space-x-2">
-              <span className="text-gameshow-muted">Życia:</span>
-              <div className="flex space-x-1">
+            <div className="flex items-center justify-center gap-2 mb-6">
+              <span className="text-sm">Życia:</span>
+              <div className="flex gap-1">
                 {Array.from({ length: 3 }).map((_, i) => (
                   <div key={i} 
                     className={`w-4 h-4 rounded-full ${
@@ -49,16 +86,64 @@ export function PlayerView({ playerId }: { playerId: string }) {
                 ))}
               </div>
             </div>
+            
+            <p className="text-gameshow-muted">
+              Poczekaj na rozpoczęcie kolejnej rundy...
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+  
+  return (
+    <div className="container mx-auto p-4 bg-gameshow-background min-h-screen">
+      <div className="flex flex-col space-y-6">
+        {/* Header */}
+        <div className="bg-gameshow-card p-4 rounded-lg shadow-lg">
+          <div className="flex items-center justify-between">
+            <h1 className="text-xl md:text-3xl font-bold text-gameshow-text">
+              {player.name}
+            </h1>
+            
+            <div className="flex items-center space-x-4">
+              <div className="text-xl font-bold">
+                {player.points} <span className="text-sm text-gameshow-muted">punktów</span>
+              </div>
+              
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-gameshow-muted">Życia:</span>
+                <div className="flex space-x-1">
+                  {Array.from({ length: 3 }).map((_, i) => (
+                    <div key={i} 
+                      className={`w-4 h-4 rounded-full ${
+                        i < player.lives ? "bg-red-500" : "bg-gray-400"
+                      }`}
+                    />
+                  ))}
+                </div>
+              </div>
+            </div>
           </div>
           
-          <div className="mt-2">
+          <div className="mt-3">
+            <Progress 
+              value={player.lives * 33.33} 
+              className="h-2" 
+              style={{
+                background: 'rgba(255,0,0,0.2)',
+              }}
+            />
+          </div>
+          
+          <div className="mt-4 flex flex-wrap gap-2 items-center">
             <div className="inline-block px-3 py-1 bg-gameshow-primary/30 rounded-full">
               <span className="text-sm text-gameshow-muted">
                 {ROUND_NAMES[currentRound]}
               </span>
             </div>
             {player.isActive && (
-              <div className="inline-block ml-2 px-3 py-1 bg-gameshow-accent rounded-full">
+              <div className="inline-block px-3 py-1 bg-gameshow-accent rounded-full animate-pulse">
                 <span className="text-sm font-semibold text-white">Twoja kolej!</span>
               </div>
             )}
@@ -66,16 +151,18 @@ export function PlayerView({ playerId }: { playerId: string }) {
         </div>
         
         {/* Player's cards */}
-        <div className="bg-gameshow-card p-4 rounded-lg">
+        <div className="bg-gameshow-card p-4 rounded-lg shadow-lg">
           <h2 className="text-xl font-semibold text-gameshow-text mb-3">Twoje karty</h2>
+          
           <CardDeck cards={player.cards} />
+          
           <div className="mt-4 text-center text-sm text-gameshow-muted">
             <p>Aby użyć karty, powiedz prowadzącemu, którą kartę chcesz aktywować.</p>
           </div>
         </div>
         
         {/* Current question or wheel */}
-        <div className="bg-gameshow-card p-4 rounded-lg">
+        <div className="bg-gameshow-card p-4 rounded-lg shadow-lg">
           <h2 className="text-xl font-semibold text-gameshow-text mb-3">
             {currentRound === 'wheel' && wheelSpinning 
               ? 'Koło Fortuny' 
@@ -94,6 +181,31 @@ export function PlayerView({ playerId }: { playerId: string }) {
           )}
         </div>
       </div>
+      
+      {/* Card animation overlay */}
+      {showCardAnimation && selectedCard && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 animate-fade-in">
+          <div className="text-center">
+            <div className="text-2xl text-white mb-4">Otrzymujesz nową kartę!</div>
+            <div className="animate-bounce scale-150 mb-8">
+              {/* This would use your SpecialCard component to show the card with animation */}
+              <div className="game-card w-32 h-48 mx-auto">
+                <div className="p-4 text-center">
+                  <div className="text-lg font-bold mt-2">
+                    {selectedCard}
+                  </div>
+                </div>
+              </div>
+            </div>
+            <Button 
+              onClick={() => setShowCardAnimation(false)}
+              className="mt-4"
+            >
+              Zamknij
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

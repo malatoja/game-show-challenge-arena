@@ -50,6 +50,15 @@
     --sidebar-border: 220 13% 91%;
 
     --sidebar-ring: 217.2 91.2% 59.8%;
+    
+    /* Game show custom colors */
+    --gameshow-background: 222 47% 11%;
+    --gameshow-text: 0 0% 98%;
+    --gameshow-muted: 215 20% 65%;
+    --gameshow-primary: 262 83% 65%;
+    --gameshow-secondary: 330 81% 60%;
+    --gameshow-accent: 47 95% 60%;
+    --gameshow-card: 218 50% 18%;
   }
 
   .dark {
@@ -99,6 +108,62 @@
   body {
     @apply bg-background text-foreground;
   }
+  
+  @keyframes pulse-glow {
+    0%, 100% {
+      box-shadow: 0 0 5px rgba(var(--gameshow-primary), 0.5);
+    }
+    50% {
+      box-shadow: 0 0 20px rgba(var(--gameshow-primary), 0.8);
+    }
+  }
+  
+  @keyframes wheel-spin {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(var(--spin-rotation, 1080deg));
+    }
+  }
+  
+  @keyframes card-flip {
+    0% {
+      transform: perspective(400px) rotateY(0);
+    }
+    100% {
+      transform: perspective(400px) rotateY(180deg);
+    }
+  }
+  
+  @keyframes fade-in {
+    0% {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    100% {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  @keyframes confetti-fall {
+    0% {
+      transform: translateY(-100vh) rotate(0deg);
+    }
+    100% {
+      transform: translateY(100vh) rotate(720deg);
+    }
+  }
+  
+  @keyframes float-animation {
+    0%, 100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-10px);
+    }
+  }
 }
 
 /* Game Show Custom Classes */
@@ -110,7 +175,31 @@
   }
   
   .card-glow {
-    @apply animate-pulse-glow;
+    animation: pulse-glow 2s infinite;
+  }
+  
+  .animate-pulse-glow {
+    animation: pulse-glow 2s infinite;
+  }
+  
+  .animate-wheel-spin {
+    animation: wheel-spin 5s cubic-bezier(0.3, 0.8, 0.2, 1);
+  }
+  
+  .animate-card-flip {
+    animation: card-flip 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  }
+  
+  .animate-fade-in {
+    animation: fade-in 0.5s ease-out forwards;
+  }
+  
+  .animate-confetti {
+    animation: confetti-fall 4s ease-in-out forwards;
+  }
+  
+  .animate-float {
+    animation: float-animation 4s ease-in-out infinite;
   }
   
   .player-camera-box {
@@ -122,7 +211,7 @@
   }
   
   .game-btn {
-    @apply px-4 py-2 rounded-md bg-gameshow-primary text-gameshow-text font-bold 
+    @apply px-4 py-2 rounded-md bg-gameshow-primary text-white font-bold 
            hover:bg-gameshow-secondary transition-colors shadow-md;
   }
   
