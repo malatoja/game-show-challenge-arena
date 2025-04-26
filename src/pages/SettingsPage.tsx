@@ -1,10 +1,9 @@
-
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { 
   Users, FileText, Palette, Award, 
-  Music, Cards, Zap, Settings 
+  Music, CreditCard, Zap, Settings 
 } from 'lucide-react';
 import { PlayersTab } from '@/components/settings/PlayersTab';
 import { QuestionsTab } from '@/components/settings/QuestionsTab';
@@ -50,7 +49,7 @@ const SettingsPage = () => {
             <Music className="h-4 w-4" /> Dźwięki
           </TabsTrigger>
           <TabsTrigger value="cards" className="flex items-center gap-2">
-            <Cards className="h-4 w-4" /> Karty
+            <CreditCard className="h-4 w-4" /> Karty
           </TabsTrigger>
           <TabsTrigger value="automation" className="flex items-center gap-2">
             <Zap className="h-4 w-4" /> Automatyzacja

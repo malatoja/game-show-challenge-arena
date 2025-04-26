@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -254,13 +253,6 @@ export const QuestionsTab = () => {
       }
     };
 
-    if (file.name.endsWith('.json') || file.name.endsWith('.csv')) {
-      reader.readAsText(file);
-    } else {
-      toast.error('Nieobsługiwany format pliku. Używaj .json lub .csv');
-    }
-  };
-
   return (
     <div>
       <h2 className="text-2xl font-bold mb-4">Baza pytań</h2>
@@ -419,7 +411,7 @@ export const QuestionsTab = () => {
                                         : 'bg-gray-100'
                                     }`}
                                   >
-                                    {answer}
+                                    {answer.text}
                                     {idx === question.correctAnswerIndex && (
                                       <span className="ml-2 text-green-600 text-xs">
                                         (Prawidłowa)
