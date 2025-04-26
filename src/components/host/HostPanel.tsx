@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useGame } from '@/context/GameContext';
 import { CardType, Player, Question, RoundType } from '@/types/gameTypes';
@@ -196,6 +195,7 @@ export function HostPanel() {
           players={players}
           onSelectPlayer={(player) => handleSelectPlayer(player)}
           onAddTestCards={handleAddTestCards}
+          onUseCard={handleUseCard}
         />
         
         {/* Main Game Interface */}
