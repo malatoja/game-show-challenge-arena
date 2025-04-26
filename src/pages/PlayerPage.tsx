@@ -1,10 +1,10 @@
 
 import React, { useState } from 'react';
-import { GameProvider } from '@/context/GameContext';
 import PlayerView from '@/components/player/PlayerView';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Link } from 'react-router-dom';
+import { useGame } from '@/context/GameContext';
 
 const PlayerPage = () => {
   const [playerId, setPlayerId] = useState('');
@@ -17,7 +17,7 @@ const PlayerPage = () => {
   };
   
   return (
-    <GameProvider>
+    <>
       {!joinedId ? (
         <div className="min-h-screen flex items-center justify-center bg-gameshow-background p-4">
           <div className="max-w-md w-full bg-gameshow-card rounded-lg p-8 shadow-lg">
@@ -58,7 +58,7 @@ const PlayerPage = () => {
       ) : (
         <PlayerView playerId={joinedId} />
       )}
-    </GameProvider>
+    </>
   );
 };
 

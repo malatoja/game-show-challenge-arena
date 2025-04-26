@@ -1,6 +1,7 @@
+
 import React, { useState, useEffect } from 'react';
 import { useGame } from '@/context/GameContext';
-import { CardType } from '@/types/gameTypes';
+import { CardType, Player } from '@/types/gameTypes';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import QuestionDisplay from '../questions/QuestionDisplay';
@@ -8,7 +9,12 @@ import CardDeck from '../cards/CardDeck';
 import FortuneWheel from '../wheel/FortuneWheel';
 import { ROUND_NAMES } from '@/constants/gameConstants';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Star, Trophy } from 'lucide-react';
+import { Star, Trophy, AlertCircle, Zap } from 'lucide-react';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { toast } from 'sonner';
+import PlayerHeader from './PlayerHeader';
+import PlayerRoundContent from './PlayerRoundContent';
+import PlayerFooter from './PlayerFooter';
 
 export function PlayerView({ playerId }: { playerId: string }) {
   const { state } = useGame();
@@ -36,6 +42,15 @@ export function PlayerView({ playerId }: { playerId: string }) {
       }
     }
   }, [player?.cards, selectedCard]);
+
+  const handleUseCard = (cardType: CardType) => {
+    if (!player) return;
+    
+    toast(`Używasz karty: ${cardType}`, {
+      description: "Poinformuj prowadzącego o chęci użycia karty.",
+      duration: 5000,
+    });
+  };
   
   if (!player) {
     return (
@@ -96,90 +111,23 @@ export function PlayerView({ playerId }: { playerId: string }) {
   }
   
   return (
-    <div className="container mx-auto p-4 bg-gameshow-background min-h-screen">
-      <div className="flex flex-col space-y-6">
-        {/* Header */}
-        <div className="bg-gameshow-card p-4 rounded-lg shadow-lg">
-          <div className="flex items-center justify-between">
-            <h1 className="text-xl md:text-3xl font-bold text-gameshow-text">
-              {player.name}
-            </h1>
-            
-            <div className="flex items-center space-x-4">
-              <div className="text-xl font-bold">
-                {player.points} <span className="text-sm text-gameshow-muted">punktów</span>
-              </div>
-              
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-gameshow-muted">Życia:</span>
-                <div className="flex space-x-1">
-                  {Array.from({ length: 3 }).map((_, i) => (
-                    <div key={i} 
-                      className={`w-4 h-4 rounded-full ${
-                        i < player.lives ? "bg-red-500" : "bg-gray-400"
-                      }`}
-                    />
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-          
-          <div className="mt-3">
-            <Progress 
-              value={player.lives * 33.33} 
-              className="h-2" 
-              style={{
-                background: 'rgba(255,0,0,0.2)',
-              }}
-            />
-          </div>
-          
-          <div className="mt-4 flex flex-wrap gap-2 items-center">
-            <div className="inline-block px-3 py-1 bg-gameshow-primary/30 rounded-full">
-              <span className="text-sm text-gameshow-muted">
-                {ROUND_NAMES[currentRound]}
-              </span>
-            </div>
-            {player.isActive && (
-              <div className="inline-block px-3 py-1 bg-gameshow-accent rounded-full animate-pulse">
-                <span className="text-sm font-semibold text-white">Twoja kolej!</span>
-              </div>
-            )}
-          </div>
-        </div>
-        
-        {/* Player's cards */}
-        <div className="bg-gameshow-card p-4 rounded-lg shadow-lg">
-          <h2 className="text-xl font-semibold text-gameshow-text mb-3">Twoje karty</h2>
-          
-          <CardDeck cards={player.cards} />
-          
-          <div className="mt-4 text-center text-sm text-gameshow-muted">
-            <p>Aby użyć karty, powiedz prowadzącemu, którą kartę chcesz aktywować.</p>
-          </div>
-        </div>
-        
-        {/* Current question or wheel */}
-        <div className="bg-gameshow-card p-4 rounded-lg shadow-lg">
-          <h2 className="text-xl font-semibold text-gameshow-text mb-3">
-            {currentRound === 'wheel' && wheelSpinning 
-              ? 'Koło Fortuny' 
-              : 'Aktualne Pytanie'}
-          </h2>
-          
-          {currentRound === 'wheel' && wheelSpinning ? (
-            <div className="flex justify-center">
-              <FortuneWheel isSpinning={wheelSpinning} />
-            </div>
-          ) : (
-            <QuestionDisplay 
-              question={currentQuestion}
-              timeLimit={currentRound === 'speed' ? 5 : 30}
-            />
-          )}
-        </div>
-      </div>
+    <div className="flex flex-col min-h-screen bg-gameshow-background">
+      {/* Top section - Player header */}
+      <PlayerHeader player={player} />
+      
+      {/* Middle section - Content based on round */}
+      <PlayerRoundContent 
+        player={player}
+        currentRound={currentRound}
+        currentQuestion={currentQuestion}
+        wheelSpinning={wheelSpinning}
+      />
+      
+      {/* Bottom section - Actions */}
+      <PlayerFooter 
+        player={player}
+        onUseCard={handleUseCard}
+      />
       
       {/* Card animation overlay */}
       {showCardAnimation && selectedCard && (
