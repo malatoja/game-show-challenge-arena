@@ -10,26 +10,29 @@ import PlayerPage from "./pages/PlayerPage";
 import NotFound from "./pages/NotFound";
 import GameRulesPage from "./pages/GameRulesPage";
 import SettingsPage from "./pages/SettingsPage";
+import { GameProvider } from "./context/GameContext";
 
 const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/host" element={<HostPage />} />
-          <Route path="/player" element={<PlayerPage />} />
-          <Route path="/rules" element={<GameRulesPage />} />
-          <Route path="/settings" element={<SettingsPage />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
+    <GameProvider>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/host" element={<HostPage />} />
+            <Route path="/player" element={<PlayerPage />} />
+            <Route path="/rules" element={<GameRulesPage />} />
+            <Route path="/settings" element={<SettingsPage />} />
+            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+      </TooltipProvider>
+    </GameProvider>
   </QueryClientProvider>
 );
 
