@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useReducer, ReactNode } from 'react';
 import { GameState, Player, Question, RoundType, PlayerId, CardType } from '../types/gameTypes';
 import { INITIAL_LIVES, SAMPLE_QUESTIONS, createCard } from '../constants/gameConstants';
@@ -13,11 +12,15 @@ type GameAction =
   | { type: 'SET_CURRENT_QUESTION'; question: Question }
   | { type: 'ANSWER_QUESTION'; playerId: PlayerId; isCorrect: boolean }
   | { type: 'ADD_PLAYER'; player: Player }
+  | { type: 'UPDATE_PLAYER'; player: Player } // Added UPDATE_PLAYER action
   | { type: 'REMOVE_PLAYER'; playerId: PlayerId }
   | { type: 'SPIN_WHEEL'; spinning: boolean }
   | { type: 'SET_CATEGORY'; category: string }
   | { type: 'USE_CARD'; playerId: PlayerId; cardType: CardType }
   | { type: 'AWARD_CARD'; playerId: PlayerId; cardType: CardType }
+  | { type: 'ADD_QUESTION'; question: Question } // Added ADD_QUESTION action
+  | { type: 'UPDATE_QUESTION'; question: Question } // Added UPDATE_QUESTION action
+  | { type: 'REMOVE_QUESTION'; questionId: string } // Added REMOVE_QUESTION action
   | { type: 'RESTART_GAME' };
 
 // Initial state
@@ -140,6 +143,14 @@ function gameReducer(state: GameState, action: GameAction): GameState {
         ...state,
         players: [...state.players, action.player]
       };
+
+    case 'UPDATE_PLAYER':
+      return {
+        ...state,
+        players: state.players.map(player => 
+          player.id === action.player.id ? action.player : player
+        )
+      };
     
     case 'REMOVE_PLAYER':
       return {
@@ -214,6 +225,26 @@ function gameReducer(state: GameState, action: GameAction): GameState {
         })
       };
     }
+
+    case 'ADD_QUESTION':
+      return {
+        ...state,
+        questions: [...state.questions, action.question]
+      };
+    
+    case 'UPDATE_QUESTION':
+      return {
+        ...state,
+        questions: state.questions.map(question => 
+          question.id === action.question.id ? action.question : question
+        )
+      };
+    
+    case 'REMOVE_QUESTION':
+      return {
+        ...state,
+        questions: state.questions.filter(question => question.id !== action.questionId)
+      };
     
     case 'RESTART_GAME':
       return {

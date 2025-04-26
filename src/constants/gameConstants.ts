@@ -1,16 +1,18 @@
 
-import { Card, CardType, Question } from "../types/gameTypes";
+import { Card, CardType, Question, Answer } from "../types/gameTypes";
 
 export const ROUND_TIME_LIMITS = {
   knowledge: 30, // seconds
   speed: 5,      // seconds
-  wheel: 20      // seconds
+  wheel: 20,     // seconds
+  standard: 30   // seconds
 };
 
 export const ROUND_NAMES = {
   knowledge: "Zróżnicowana Wiedza z Polskiego Internetu",
   speed: "Runda 5 sekund",
-  wheel: "Koło fortuny"
+  wheel: "Koło fortuny",
+  standard: "Standardowa runda"
 };
 
 export const INITIAL_LIVES = 3;
@@ -46,11 +48,11 @@ export const CARD_DETAILS: Record<CardType, { name: string; description: string 
   },
   lustro: {
     name: "Lustro",
-    description: "Usuwa jedną błędną odpowiedź"
+    description: "Odbija efekt karty"
   },
   oswiecenie: {
     name: "Oświecenie",
-    description: "Host może udzielić wskazówki"
+    description: "Podpowiedź do pytania"
   }
 };
 
@@ -75,7 +77,12 @@ export const SAMPLE_QUESTIONS: Question[] = [
       { text: "Jutro Dobranoc", isCorrect: false },
       { text: "Już Dawno", isCorrect: false }
     ],
-    correctAnswerIndex: 1
+    correctAnswerIndex: 1,
+    round: "standard",
+    difficulty: "medium",
+    used: false,
+    favorite: false,
+    points: 10
   },
   {
     id: "2",
@@ -87,7 +94,12 @@ export const SAMPLE_QUESTIONS: Question[] = [
       { text: "Izak i Friz", isCorrect: false },
       { text: "Vogule Poland i Quebonafide", isCorrect: true }
     ],
-    correctAnswerIndex: 3
+    correctAnswerIndex: 3,
+    round: "standard",
+    difficulty: "medium",
+    used: false,
+    favorite: false,
+    points: 10
   },
   {
     id: "3",
@@ -99,7 +111,12 @@ export const SAMPLE_QUESTIONS: Question[] = [
       { text: "Postać z polskiego mema", isCorrect: false },
       { text: "Bohater gry 'Wiedźmin'", isCorrect: false }
     ],
-    correctAnswerIndex: 0
+    correctAnswerIndex: 0,
+    round: "standard",
+    difficulty: "medium",
+    used: false,
+    favorite: false,
+    points: 10
   }
 ];
 

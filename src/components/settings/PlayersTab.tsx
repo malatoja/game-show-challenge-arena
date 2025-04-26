@@ -47,7 +47,7 @@ export const PlayersTab = () => {
       id: `player-${Date.now()}`,
       name: newPlayer.name || 'Nowy Gracz',
       avatarUrl: newPlayer.avatarUrl,
-      color: newPlayer.color || playerColors[0],
+      color: newPlayer.color || '#ff5722',
       lives: 3,
       points: 0,
       cards: [],
@@ -65,7 +65,7 @@ export const PlayersTab = () => {
     setNewPlayer({
       name: player.name,
       avatarUrl: player.avatarUrl,
-      color: player.color || playerColors[0]
+      color: player.color || '#ff5722'
     });
   };
 
@@ -76,7 +76,7 @@ export const PlayersTab = () => {
       ...selectedPlayer,
       name: newPlayer.name,
       avatarUrl: newPlayer.avatarUrl,
-      color: newPlayer.color || playerColors[0]
+      color: newPlayer.color || '#ff5722'
     };
 
     dispatch({ type: 'UPDATE_PLAYER', player: updatedPlayer });

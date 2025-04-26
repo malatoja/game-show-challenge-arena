@@ -1,6 +1,6 @@
 
 export type PlayerId = string;
-export type RoundType = 'knowledge' | 'speed' | 'wheel';
+export type RoundType = 'knowledge' | 'speed' | 'wheel' | 'standard' | 'all';
 
 export type CardType = 
   | 'dejavu'     // Retry after wrong answer
@@ -23,11 +23,13 @@ export interface Player {
   isActive: boolean;
   streamUrl?: string; // URL to Twitch stream
   eliminated: boolean;
+  color?: string; // Adding color property
 }
 
 export interface Card {
+  id?: string; // Adding id as optional
   type: CardType;
-  name: string;
+  name?: string; // Adding name as optional
   description: string;
   isUsed: boolean;
 }
@@ -39,6 +41,11 @@ export interface Question {
   answers: Answer[];
   correctAnswerIndex: number;
   timeLimit?: number; // in seconds
+  round?: RoundType; // Adding round property
+  difficulty?: 'easy' | 'medium' | 'hard'; // Adding difficulty property
+  used?: boolean; // Adding used property
+  favorite?: boolean; // Adding favorite property
+  points?: number; // Adding points property
 }
 
 export interface Answer {

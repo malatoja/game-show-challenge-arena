@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useGame } from '@/context/GameContext';
-import { Question, RoundType } from '@/types/gameTypes';
+import { Question, RoundType, Answer } from '@/types/gameTypes';
 import { toast } from 'sonner';
 import { 
   Tabs, 
@@ -22,7 +22,7 @@ import {
 
 export const QuestionsTab = () => {
   const { state, dispatch } = useGame();
-  const [activeRound, setActiveRound] = useState<RoundType>('standard');
+  const [activeRound, setActiveRound] = useState<RoundType | 'all'>('all');
   const [activeCategory, setActiveCategory] = useState<string>('all');
   const [filter, setFilter] = useState({
     used: false,
@@ -35,7 +35,12 @@ export const QuestionsTab = () => {
     round: 'standard',
     difficulty: 'medium',
     text: '',
-    answers: ['', '', '', ''],
+    answers: [
+      { text: '', isCorrect: false },
+      { text: '', isCorrect: false },
+      { text: '', isCorrect: false },
+      { text: '', isCorrect: false }
+    ],
     correctAnswerIndex: 0,
   });
 
@@ -68,7 +73,7 @@ export const QuestionsTab = () => {
       return;
     }
 
-    if (!newQuestion.answers || newQuestion.answers.some(a => !a)) {
+    if (!newQuestion.answers || newQuestion.answers.some(a => !a.text)) {
       toast.error('Wszystkie odpowiedzi muszą być wypełnione');
       return;
     }
@@ -76,11 +81,11 @@ export const QuestionsTab = () => {
     const question: Question = {
       id: `question-${Date.now()}`,
       text: newQuestion.text || '',
-      answers: newQuestion.answers || ['', '', '', ''],
+      answers: newQuestion.answers || [],
       correctAnswerIndex: newQuestion.correctAnswerIndex || 0,
       category: newQuestion.category || 'Ogólne',
-      difficulty: newQuestion.difficulty || 'medium',
-      round: newQuestion.round || 'standard',
+      difficulty: newQuestion.difficulty,
+      round: newQuestion.round,
       points: 10,
       used: false,
       favorite: false,
@@ -95,14 +100,22 @@ export const QuestionsTab = () => {
       round: 'standard',
       difficulty: 'medium',
       text: '',
-      answers: ['', '', '', ''],
+      answers: [
+        { text: '', isCorrect: false },
+        { text: '', isCorrect: false },
+        { text: '', isCorrect: false },
+        { text: '', isCorrect: false }
+      ],
       correctAnswerIndex: 0,
     });
   };
 
   const handleAnswerChange = (index: number, value: string) => {
-    const newAnswers = [...(newQuestion.answers || ['', '', '', ''])];
-    newAnswers[index] = value;
+    if (!newQuestion.answers) return;
+    
+    const newAnswers = [...newQuestion.answers];
+    newAnswers[index] = { text: value, isCorrect: index === newQuestion.correctAnswerIndex };
+    
     setNewQuestion({
       ...newQuestion,
       answers: newAnswers

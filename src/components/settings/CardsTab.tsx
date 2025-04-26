@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 import SpecialCard from '@/components/cards/SpecialCard';
 import { CARD_IMAGES } from '@/constants/cardImages';
 import { CardType, Card as CardInterface } from '@/types/gameTypes';
+import { CARD_DETAILS } from '@/constants/gameConstants';
 
 export const CardsTab = () => {
   const [selectedCardType, setSelectedCardType] = useState<CardType>('dejavu');
@@ -18,15 +19,15 @@ export const CardsTab = () => {
   });
   
   const defaultCards: Record<CardType, CardInterface> = {
-    dejavu: { id: '1', type: 'dejavu', description: 'Powtórz ostatnie pytanie', isUsed: false },
-    kontra: { id: '2', type: 'kontra', description: 'Odpowiedz na pytanie przeciwnika', isUsed: false },
-    reanimacja: { id: '3', type: 'reanimacja', description: 'Przywróć gracza do gry', isUsed: false },
-    skip: { id: '4', type: 'skip', description: 'Pomiń pytanie', isUsed: false },
-    turbo: { id: '5', type: 'turbo', description: 'Podwójne punkty', isUsed: false },
-    refleks2: { id: '6', type: 'refleks2', description: 'Podwojony czas na odpowiedź', isUsed: false },
-    refleks3: { id: '7', type: 'refleks3', description: 'Potrojony czas na odpowiedź', isUsed: false },
-    lustro: { id: '8', type: 'lustro', description: 'Odbij efekt karty', isUsed: false },
-    oswiecenie: { id: '9', type: 'oswiecenie', description: 'Podpowiedź do pytania', isUsed: false }
+    dejavu: { type: 'dejavu', description: 'Powtórz ostatnie pytanie', isUsed: false },
+    kontra: { type: 'kontra', description: 'Odpowiedz na pytanie przeciwnika', isUsed: false },
+    reanimacja: { type: 'reanimacja', description: 'Przywróć gracza do gry', isUsed: false },
+    skip: { type: 'skip', description: 'Pomiń pytanie', isUsed: false },
+    turbo: { type: 'turbo', description: 'Podwójne punkty', isUsed: false },
+    refleks2: { type: 'refleks2', description: 'Podwojony czas na odpowiedź', isUsed: false },
+    refleks3: { type: 'refleks3', description: 'Potrojony czas na odpowiedź', isUsed: false },
+    lustro: { type: 'lustro', description: 'Odbij efekt karty', isUsed: false },
+    oswiecenie: { type: 'oswiecenie', description: 'Podpowiedź do pytania', isUsed: false }
   };
   
   // Get all card types
