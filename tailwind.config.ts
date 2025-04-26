@@ -1,4 +1,3 @@
-
 import type { Config } from "tailwindcss";
 
 export default {
@@ -71,7 +70,16 @@ export default {
 					card: '#2d1052',
 					text: '#ffffff',
 					muted: '#9d88c0'
-				}
+				},
+				neon: {
+          blue: '#2E9CCA',
+          purple: '#9D4EDD',
+          pink: '#FF3864',
+          orange: '#FF6B35',
+          green: '#39FF14',
+          red: '#FF2957',
+          yellow: '#FFD700',
+        },
 			},
 			borderRadius: {
 				lg: 'var(--radius)',
@@ -131,7 +139,25 @@ export default {
 					'100%': {
 						transform: 'rotate(360deg)'
 					}
-				}
+				},
+				'glow-pulse': {
+          '0%, 100%': {
+            boxShadow: '0 0 5px rgba(46, 156, 202, 0.5), 0 0 20px rgba(46, 156, 202, 0.3)',
+            opacity: '1'
+          },
+          '50%': {
+            boxShadow: '0 0 10px rgba(46, 156, 202, 0.8), 0 0 30px rgba(46, 156, 202, 0.6)',
+            opacity: '0.8'
+          }
+        },
+        'neon-pulse': {
+          '0%, 100%': {
+            textShadow: '0 0 4px #fff, 0 0 11px #fff, 0 0 19px #fff, 0 0 40px #2E9CCA, 0 0 80px #2E9CCA'
+          },
+          '50%': {
+            textShadow: '0 0 4px #fff, 0 0 9px #fff, 0 0 15px #fff, 0 0 30px #2E9CCA, 0 0 60px #2E9CCA'
+          }
+        }
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
@@ -139,7 +165,9 @@ export default {
 				'pulse-glow': 'pulse-glow 2s ease-in-out infinite',
 				'card-flip': 'card-flip 0.5s ease-out forwards',
 				'card-flash': 'card-flash 0.8s ease-in-out',
-				'wheel-spin': 'wheel-spin 5s cubic-bezier(0.3, 0.8, 0.2, 1) forwards'
+				'wheel-spin': 'wheel-spin 5s cubic-bezier(0.3, 0.8, 0.2, 1) forwards',
+				'glow-pulse': 'glow-pulse 2s ease-in-out infinite',
+        'neon-pulse': 'neon-pulse 1.5s ease-in-out infinite',
 			}
 		}
 	},
