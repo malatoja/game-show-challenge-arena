@@ -41,27 +41,27 @@ export function TopBar({
   const roundName = ROUND_NAMES[currentRound];
   
   return (
-    <div className="bg-gameshow-card/90 backdrop-blur-sm border-b border-neon-blue/30 shadow-[0_0_15px_rgba(46,156,202,0.3)]">
-      <div className="container mx-auto p-4">
-        <div className="flex flex-col md:flex-row items-center justify-between space-y-4 md:space-y-0">
+    <div className="bg-gameshow-card/90 backdrop-blur-sm border-b border-neon-blue/30 shadow-[0_0_15px_rgba(46,156,202,0.3)] sticky top-0 z-10">
+      <div className="container mx-auto p-2 md:p-4">
+        <div className="flex flex-col md:flex-row items-center justify-between space-y-4 md:space-y-0 md:gap-4">
           {/* Round Title */}
-          <div>
-            <h1 className="text-4xl font-bold animate-neon-pulse text-white">
+          <div className="w-full md:w-auto">
+            <h1 className="text-2xl md:text-4xl font-bold animate-neon-pulse text-white text-center md:text-left">
               AKTUALNA RUNDA: {roundName}
             </h1>
           </div>
           
           {/* Timer and Controls */}
-          <div className="flex items-center space-x-6">
+          <div className="flex items-center space-x-2 md:space-x-6">
             {/* Timer Display */}
             <div className="relative">
               <div className={`
-                w-24 h-24 rounded-full flex items-center justify-center
+                w-16 h-16 md:w-24 md:h-24 rounded-full flex items-center justify-center
                 bg-gameshow-card border-2 border-neon-orange
                 ${timer <= 5 ? 'animate-pulse' : ''}
                 shadow-[0_0_15px_rgba(255,107,53,0.3)]
               `}>
-                <span className="text-3xl font-bold text-neon-orange">
+                <span className="text-xl md:text-3xl font-bold text-neon-orange">
                   {formatTime(timer)}
                 </span>
               </div>
@@ -72,28 +72,28 @@ export function TopBar({
               {!isTimerRunning ? (
                 <Button 
                   onClick={onStartTimer}
-                  className="bg-neon-green/20 hover:bg-neon-green/30 border border-neon-green text-neon-green shadow-[0_0_10px_rgba(57,255,20,0.3)]"
+                  className="bg-neon-green/20 hover:bg-neon-green/30 border border-neon-green text-neon-green shadow-[0_0_10px_rgba(57,255,20,0.3)] px-2 md:px-4"
                 >
-                  <Play className="h-5 w-5" />
-                  <span className="ml-2">Start</span>
+                  <Play className="h-4 w-4 md:h-5 md:w-5" />
+                  <span className="hidden md:inline ml-2">Start</span>
                 </Button>
               ) : (
                 <Button 
                   onClick={onStopTimer}
-                  className="bg-neon-red/20 hover:bg-neon-red/30 border border-neon-red text-neon-red shadow-[0_0_10px_rgba(255,41,87,0.3)]"
+                  className="bg-neon-red/20 hover:bg-neon-red/30 border border-neon-red text-neon-red shadow-[0_0_10px_rgba(255,41,87,0.3)] px-2 md:px-4"
                 >
-                  <Pause className="h-5 w-5" />
-                  <span className="ml-2">Stop</span>
+                  <Pause className="h-4 w-4 md:h-5 md:w-5" />
+                  <span className="hidden md:inline ml-2">Stop</span>
                 </Button>
               )}
               
               <Button 
                 onClick={onResetTimer}
                 variant="outline"
-                className="border-neon-blue text-neon-blue hover:bg-neon-blue/10"
+                className="border-neon-blue text-neon-blue hover:bg-neon-blue/10 px-2 md:px-4"
               >
-                <RefreshCw className="h-5 w-5" />
-                <span className="ml-2">Reset</span>
+                <RefreshCw className="h-4 w-4 md:h-5 md:w-5" />
+                <span className="hidden md:inline ml-2">Reset</span>
               </Button>
             </div>
           </div>
@@ -103,7 +103,7 @@ export function TopBar({
             <DropdownMenuTrigger asChild>
               <Button 
                 disabled={!canStartRound}
-                className="bg-neon-purple/20 hover:bg-neon-purple/30 border border-neon-purple text-white animate-glow-pulse"
+                className="bg-neon-purple/20 hover:bg-neon-purple/30 border border-neon-purple text-white animate-glow-pulse md:min-w-[160px]"
               >
                 Zmień Rundę <ChevronDown className="ml-2 h-4 w-4" />
               </Button>

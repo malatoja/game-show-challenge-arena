@@ -10,6 +10,8 @@ import GameResults from './GameResults';
 import TopBar from './TopBar';
 import RightColumn from './RightColumn';
 import BottomBar from './BottomBar';
+import QuestionControls from './QuestionControls';
+import CardManagement from './CardManagement';
 
 export function GameHostPanel() {
   const { state, dispatch } = useGame();
@@ -46,6 +48,10 @@ export function GameHostPanel() {
     } else if (timer === 0) {
       setIsTimerRunning(false);
       addEvent("Czas minął!");
+      
+      // Play sound effect when timer reaches zero
+      const audio = new Audio('/sounds/times_up.mp3');
+      audio.play().catch(err => console.error("Error playing sound:", err));
     }
     
     return () => {
@@ -55,15 +61,18 @@ export function GameHostPanel() {
   
   const startTimer = () => {
     setIsTimerRunning(true);
+    addEvent("Timer uruchomiony");
   };
   
   const stopTimer = () => {
     setIsTimerRunning(false);
+    addEvent("Timer zatrzymany");
   };
   
   const resetTimer = () => {
     setTimer(getDefaultTimeForRound(currentRound));
     setIsTimerRunning(false);
+    addEvent("Timer zresetowany");
   };
   
   const getDefaultTimeForRound = (round: RoundType): number => {
@@ -95,8 +104,10 @@ export function GameHostPanel() {
       }
     });
     
-    dispatch({ type: 'START_ROUND', roundType });
+    // Reset timer for this round
     setTimer(getDefaultTimeForRound(roundType));
+    
+    dispatch({ type: 'START_ROUND', roundType });
     addEvent(`Rozpoczęto rundę: ${ROUND_NAMES[roundType]}`);
     toast.success(`Rozpoczęto rundę: ${ROUND_NAMES[roundType]}`);
   };
@@ -124,6 +135,11 @@ export function GameHostPanel() {
   const handleSkipQuestion = () => {
     addEvent("Pytanie pominięte");
     toast.info("Pytanie pominięte");
+    
+    // Mark current question as used if we have one
+    if (currentQuestion) {
+      dispatch({ type: 'MARK_QUESTION_USED', questionId: currentQuestion.id });
+    }
   };
   
   const handlePause = () => {
@@ -207,14 +223,27 @@ export function GameHostPanel() {
         onResetTimer={resetTimer}
       />
       
-      <div className="flex flex-1 p-2">
-        <div className="flex-1">
+      <div className="flex flex-1 p-2 gap-2">
+        <div className="flex flex-col gap-2 flex-1">
           <PlayerGrid
             players={players}
             onSelectPlayer={handleSelectPlayer}
             onAddTestCards={handleAddTestCards}
             onUseCard={handleUseCard}
           />
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+            <QuestionControls 
+              currentRound={currentRound}
+              isTimerRunning={isTimerRunning}
+              onStartTimer={startTimer}
+              onStopTimer={stopTimer}
+              onResetTimer={resetTimer}
+              onSkipQuestion={handleSkipQuestion}
+            />
+            
+            <CardManagement playerId={activePlayerId} />
+          </div>
         </div>
         
         <RightColumn 

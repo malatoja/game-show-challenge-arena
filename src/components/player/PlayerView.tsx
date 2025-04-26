@@ -7,7 +7,7 @@ import { Progress } from '@/components/ui/progress';
 import QuestionDisplay from '../questions/QuestionDisplay';
 import CardDeck from '../cards/CardDeck';
 import FortuneWheel from '../wheel/FortuneWheel';
-import { ROUND_NAMES } from '@/constants/gameConstants';
+import { ROUND_NAMES, CARD_DETAILS } from '@/constants/gameConstants';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Star, Trophy, AlertCircle, Zap } from 'lucide-react';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
@@ -21,6 +21,7 @@ export function PlayerView({ playerId }: { playerId: string }) {
   const { currentRound, players, currentQuestion, wheelSpinning, roundEnded } = state;
   const [selectedCard, setSelectedCard] = useState<CardType | null>(null);
   const [showCardAnimation, setShowCardAnimation] = useState(false);
+  const [showCardDesc, setShowCardDesc] = useState(false);
   
   // Find this player
   const player = players.find(p => p.id === playerId);
@@ -32,6 +33,10 @@ export function PlayerView({ playerId }: { playerId: string }) {
       if (unusedCardType && unusedCardType !== selectedCard) {
         setSelectedCard(unusedCardType);
         setShowCardAnimation(true);
+        
+        // Play card awarded sound
+        const audio = new Audio('/sounds/card_awarded.mp3');
+        audio.play().catch(err => console.error("Error playing sound:", err));
         
         // Hide animation after 3 seconds
         const timer = setTimeout(() => {
@@ -46,10 +51,22 @@ export function PlayerView({ playerId }: { playerId: string }) {
   const handleUseCard = (cardType: CardType) => {
     if (!player) return;
     
-    toast(`Używasz karty: ${cardType}`, {
+    // Play card use sound
+    const audio = new Audio('/sounds/card_use.mp3');
+    audio.play().catch(err => console.error("Error playing sound:", err));
+    
+    toast(`Używasz karty: ${CARD_DETAILS[cardType].name}`, {
       description: "Poinformuj prowadzącego o chęci użycia karty.",
       duration: 5000,
     });
+
+    // Show card description
+    setSelectedCard(cardType);
+    setShowCardDesc(true);
+    
+    setTimeout(() => {
+      setShowCardDesc(false);
+    }, 5000);
   };
   
   if (!player) {
@@ -135,22 +152,32 @@ export function PlayerView({ playerId }: { playerId: string }) {
           <div className="text-center">
             <div className="text-2xl text-white mb-4">Otrzymujesz nową kartę!</div>
             <div className="animate-bounce scale-150 mb-8">
-              {/* This would use your SpecialCard component to show the card with animation */}
-              <div className="game-card w-32 h-48 mx-auto">
-                <div className="p-4 text-center">
-                  <div className="text-lg font-bold mt-2">
-                    {selectedCard}
+              <div className="game-card w-32 h-48 mx-auto bg-gameshow-card border-2 border-neon-purple rounded-lg shadow-[0_0_20px_rgba(255,56,100,0.4)] p-3">
+                <div className="p-2 text-center">
+                  <div className="text-lg font-bold mt-2 text-neon-purple animate-neon-pulse">
+                    {selectedCard && CARD_DETAILS[selectedCard].name}
+                  </div>
+                  <div className="text-xs mt-2 text-white">
+                    {selectedCard && CARD_DETAILS[selectedCard].description}
                   </div>
                 </div>
               </div>
             </div>
             <Button 
               onClick={() => setShowCardAnimation(false)}
-              className="mt-4"
+              className="mt-4 bg-neon-purple/20 hover:bg-neon-purple/30 border border-neon-purple text-neon-purple"
             >
               Zamknij
             </Button>
           </div>
+        </div>
+      )}
+      
+      {/* Card description overlay */}
+      {showCardDesc && selectedCard && (
+        <div className="fixed bottom-20 left-1/2 transform -translate-x-1/2 bg-gameshow-card/90 backdrop-blur-md p-4 rounded-lg border border-neon-purple/50 shadow-[0_0_15px_rgba(255,56,100,0.3)] max-w-xs animate-fade-in z-40">
+          <h3 className="font-bold text-neon-purple mb-2">{CARD_DETAILS[selectedCard].name}</h3>
+          <p className="text-white text-sm">{CARD_DETAILS[selectedCard].description}</p>
         </div>
       )}
     </div>

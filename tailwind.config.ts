@@ -1,3 +1,4 @@
+
 import type { Config } from "tailwindcss";
 
 export default {
@@ -157,6 +158,42 @@ export default {
           '50%': {
             textShadow: '0 0 4px #fff, 0 0 9px #fff, 0 0 15px #fff, 0 0 30px #2E9CCA, 0 0 60px #2E9CCA'
           }
+        },
+        'fade-in': {
+          '0%': { 
+            opacity: '0',
+          },
+          '100%': {
+            opacity: '1',
+          }
+        },
+        'fade-out': {
+          '0%': { 
+            opacity: '1',
+          },
+          '100%': {
+            opacity: '0',
+          }
+        },
+        'bounce': {
+          '0%, 100%': {
+            transform: 'translateY(-10%)',
+            animationTimingFunction: 'cubic-bezier(0.8, 0, 1, 1)'
+          },
+          '50%': {
+            transform: 'translateY(0)',
+            animationTimingFunction: 'cubic-bezier(0, 0, 0.2, 1)'
+          }
+        },
+        'confetti': {
+          '0%': { 
+            transform: 'translateY(0) rotate(0deg)',
+            opacity: '1'
+          },
+          '100%': {
+            transform: 'translateY(100vh) rotate(720deg)',
+            opacity: '0'
+          }
         }
 			},
 			animation: {
@@ -168,6 +205,10 @@ export default {
 				'wheel-spin': 'wheel-spin 5s cubic-bezier(0.3, 0.8, 0.2, 1) forwards',
 				'glow-pulse': 'glow-pulse 2s ease-in-out infinite',
         'neon-pulse': 'neon-pulse 1.5s ease-in-out infinite',
+        'fade-in': 'fade-in 0.3s ease-out',
+        'fade-out': 'fade-out 0.3s ease-out',
+        'bounce': 'bounce 1s infinite',
+        'confetti': 'confetti 2s cubic-bezier(0, 0.5, 0.5, 1) forwards'
 			}
 		}
 	},

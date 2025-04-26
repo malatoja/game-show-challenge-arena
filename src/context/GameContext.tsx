@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useReducer, ReactNode } from 'react';
 import { GameState, Player, Question, RoundType, PlayerId, CardType } from '../types/gameTypes';
 import { INITIAL_LIVES, SAMPLE_QUESTIONS, createCard } from '../constants/gameConstants';
@@ -12,16 +13,18 @@ type GameAction =
   | { type: 'SET_CURRENT_QUESTION'; question: Question }
   | { type: 'ANSWER_QUESTION'; playerId: PlayerId; isCorrect: boolean }
   | { type: 'ADD_PLAYER'; player: Player }
-  | { type: 'UPDATE_PLAYER'; player: Player } // Added UPDATE_PLAYER action
+  | { type: 'UPDATE_PLAYER'; player: Player }
   | { type: 'REMOVE_PLAYER'; playerId: PlayerId }
   | { type: 'SPIN_WHEEL'; spinning: boolean }
   | { type: 'SET_CATEGORY'; category: string }
   | { type: 'USE_CARD'; playerId: PlayerId; cardType: CardType }
   | { type: 'AWARD_CARD'; playerId: PlayerId; cardType: CardType }
-  | { type: 'ADD_QUESTION'; question: Question } // Added ADD_QUESTION action
-  | { type: 'UPDATE_QUESTION'; question: Question } // Added UPDATE_QUESTION action
-  | { type: 'REMOVE_QUESTION'; questionId: string } // Added REMOVE_QUESTION action
-  | { type: 'RESTART_GAME' };
+  | { type: 'ADD_QUESTION'; question: Question }
+  | { type: 'UPDATE_QUESTION'; question: Question }
+  | { type: 'REMOVE_QUESTION'; questionId: string }
+  | { type: 'RESTART_GAME' }
+  | { type: 'REVERT_QUESTION'; questionId: string }
+  | { type: 'MARK_QUESTION_USED'; questionId: string };
 
 // Initial state
 const initialState: GameState = {
@@ -53,6 +56,13 @@ function gameReducer(state: GameState, action: GameAction): GameState {
         currentRound: action.roundType,
         roundStarted: true,
         roundEnded: false,
+        
+        // Reset lives if starting Round 3 (Wheel)
+        players: action.roundType === 'wheel' ? 
+          state.players.map(player => ({
+            ...player,
+            lives: INITIAL_LIVES,
+          })) : state.players
       };
     
     case 'END_ROUND':
@@ -116,8 +126,20 @@ function gameReducer(state: GameState, action: GameAction): GameState {
         }
       }
       
+      // Mark the current question as used
+      const updatedQuestions = state.questions.map(q => {
+        if (state.currentQuestion && q.id === state.currentQuestion.id) {
+          return {
+            ...q,
+            used: true
+          };
+        }
+        return q;
+      });
+      
       return {
         ...state,
+        questions: updatedQuestions,
         players: state.players.map(player => {
           if (player.id === action.playerId) {
             return {
@@ -229,7 +251,8 @@ function gameReducer(state: GameState, action: GameAction): GameState {
     case 'ADD_QUESTION':
       return {
         ...state,
-        questions: [...state.questions, action.question]
+        questions: [...state.questions, action.question],
+        remainingQuestions: [...state.remainingQuestions, action.question],
       };
     
     case 'UPDATE_QUESTION':
@@ -237,14 +260,43 @@ function gameReducer(state: GameState, action: GameAction): GameState {
         ...state,
         questions: state.questions.map(question => 
           question.id === action.question.id ? action.question : question
+        ),
+        remainingQuestions: state.remainingQuestions.map(question => 
+          question.id === action.question.id ? action.question : question
         )
       };
     
     case 'REMOVE_QUESTION':
       return {
         ...state,
-        questions: state.questions.filter(question => question.id !== action.questionId)
+        questions: state.questions.filter(question => question.id !== action.questionId),
+        remainingQuestions: state.remainingQuestions.filter(question => question.id !== action.questionId)
       };
+    
+    case 'REVERT_QUESTION': {
+      // Find the question from all questions
+      const question = state.questions.find(q => q.id === action.questionId);
+      if (!question) return state;
+
+      // Add it back to remaining questions
+      return {
+        ...state,
+        currentQuestion: undefined,
+        remainingQuestions: [...state.remainingQuestions, question]
+      };
+    }
+
+    case 'MARK_QUESTION_USED': {
+      // Mark a question as used
+      return {
+        ...state,
+        questions: state.questions.map(q => 
+          q.id === action.questionId 
+            ? { ...q, used: true } 
+            : q
+        )
+      };
+    }
     
     case 'RESTART_GAME':
       return {
@@ -257,8 +309,8 @@ function gameReducer(state: GameState, action: GameAction): GameState {
           eliminated: false,
           isActive: false
         })),
-        questions: [...SAMPLE_QUESTIONS],
-        remainingQuestions: [...SAMPLE_QUESTIONS]
+        questions: state.questions,
+        remainingQuestions: state.questions.filter(q => !q.used)
       };
     
     default:
