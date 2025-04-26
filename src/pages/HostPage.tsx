@@ -3,6 +3,9 @@ import React from 'react';
 import { GameProvider } from '@/context/GameContext';
 import HostPanel from '@/components/host/HostPanel';
 import { motion } from 'framer-motion';
+import { Button } from '@/components/ui/button';
+import { Settings } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 const HostPage = () => {
   return (
@@ -12,7 +15,16 @@ const HostPage = () => {
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         transition={{ duration: 0.3 }}
+        className="relative"
       >
+        <div className="absolute top-4 right-4 z-10">
+          <Button asChild variant="outline">
+            <Link to="/settings" className="flex items-center gap-2">
+              <Settings size={16} />
+              Ustawienia
+            </Link>
+          </Button>
+        </div>
         <HostPanel />
       </motion.div>
     </GameProvider>
