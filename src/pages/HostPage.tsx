@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { GameProvider } from '@/context/GameContext';
-import HostPanel from '@/components/host/HostPanel';
+import GameHostPanel from '@/components/host/GameHostPanel';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Settings } from 'lucide-react';
@@ -25,7 +25,7 @@ const HostPage = () => {
             </Link>
           </Button>
         </div>
-        <HostPanel />
+        <GameHostPanel />
       </motion.div>
     </GameProvider>
   );
