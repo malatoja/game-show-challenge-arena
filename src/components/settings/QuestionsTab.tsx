@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -159,7 +160,7 @@ export const QuestionsTab = () => {
               const question: Question = {
                 id: `question-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
                 text: q.text || q.question || '',
-                answers: q.answers || ['', '', '', ''],
+                answers: q.answers || ['', '', '', ''].map(a => ({ text: a, isCorrect: false })),
                 correctAnswerIndex: q.correctAnswerIndex || 0,
                 category: q.category || 'Importowane',
                 difficulty: q.difficulty || 'medium',
@@ -252,6 +253,14 @@ export const QuestionsTab = () => {
         toast.error('Wystąpił błąd podczas importu pliku');
       }
     };
+
+    // Add file reading method
+    if (file.name.endsWith('.json') || file.name.endsWith('.csv')) {
+      reader.readAsText(file);
+    } else {
+      toast.error('Nieobsługiwany format pliku. Używaj .json lub .csv');
+    }
+  };
 
   return (
     <div>
