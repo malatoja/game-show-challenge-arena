@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useGame } from '@/context/GameContext';
 import { CardType } from '@/types/gameTypes';
@@ -9,7 +8,7 @@ import CardDeck from '../cards/CardDeck';
 import FortuneWheel from '../wheel/FortuneWheel';
 import { ROUND_NAMES } from '@/constants/gameConstants';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Confetti } from 'lucide-react';
+import { Star, Trophy } from 'lucide-react';
 
 export function PlayerView({ playerId }: { playerId: string }) {
   const { state } = useGame();
@@ -63,9 +62,9 @@ export function PlayerView({ playerId }: { playerId: string }) {
         <Card className="max-w-lg w-full bg-gameshow-card">
           <CardHeader className="text-center bg-gradient-to-r from-gameshow-primary/30 to-gameshow-secondary/30">
             <CardTitle className="text-2xl font-bold flex items-center justify-center gap-2">
-              <Confetti className="h-6 w-6 text-yellow-400" />
+              <Star className="h-6 w-6 text-yellow-400" />
               Koniec rundy: {ROUND_NAMES[currentRound]}
-              <Confetti className="h-6 w-6 text-yellow-400" />
+              <Trophy className="h-6 w-6 text-yellow-400" />
             </CardTitle>
           </CardHeader>
           <CardContent className="pt-6 text-center">

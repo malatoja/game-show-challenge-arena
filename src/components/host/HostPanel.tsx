@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useGame } from '@/context/GameContext';
 import { CardType, Player, Question, RoundType } from '@/types/gameTypes';
@@ -13,7 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
 import { createCard } from '@/constants/gameConstants';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Confetti } from 'lucide-react';
+import { Star, Trophy } from 'lucide-react';
 import { toast } from 'sonner';
 
 export function HostPanel() {
@@ -170,7 +169,7 @@ export function HostPanel() {
     });
   };
 
-  // Render results view when showing results
+  // Replace Confetti with Star and Trophy in the results view
   if (showResults) {
     const sortedPlayers = [...players].sort((a, b) => b.points - a.points);
     const winner = sortedPlayers[0];
@@ -183,9 +182,9 @@ export function HostPanel() {
             <CardTitle className="text-3xl font-bold text-gameshow-text flex items-center justify-center gap-2">
               {resultType === 'final' ? (
                 <>
-                  <Confetti className="h-8 w-8 text-yellow-400 animate-bounce" />
+                  <Star className="h-8 w-8 text-yellow-400 animate-bounce" />
                   Zwycięzca gry: {winner?.name}!
-                  <Confetti className="h-8 w-8 text-yellow-400 animate-bounce" />
+                  <Trophy className="h-8 w-8 text-yellow-400 animate-bounce" />
                 </>
               ) : (
                 `Wyniki rundy: ${ROUND_NAMES[currentRound]}`
