@@ -1,0 +1,130 @@
+
+/* Base styles for the game overlay */
+.game-overlay {
+  width: 100vw;
+  height: 100vh;
+  background: #0D0221;
+  display: grid;
+  grid-template-rows: 0.8fr 3fr 0.8fr;
+  grid-template-columns: 1fr;
+  grid-template-areas:
+    "top"
+    "center"
+    "bottom";
+  overflow: hidden;
+  font-family: 'Montserrat', sans-serif;
+  position: relative;
+  color: white;
+}
+
+/* Round title styling */
+.round-title {
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 24px;
+  font-weight: bold;
+  text-transform: uppercase;
+  padding: 5px 15px;
+  border: 2px solid #39FF14;
+  border-radius: 4px;
+  box-shadow: 0 0 10px #39FF14, 0 0 20px rgba(57, 255, 20, 0.5);
+  z-index: 10;
+  animation: pulse 2s infinite;
+}
+
+/* Neon text effect */
+.neon-text {
+  text-shadow: 
+    0 0 5px #fff,
+    0 0 10px #fff,
+    0 0 15px #fff,
+    0 0 20px #39FF14,
+    0 0 35px #39FF14,
+    0 0 40px #39FF14;
+}
+
+/* Player rows */
+.player-row {
+  display: flex;
+  justify-content: space-around;
+  padding: 10px;
+  width: 100%;
+  z-index: 5;
+}
+
+.top-row {
+  grid-area: top;
+}
+
+.bottom-row {
+  grid-area: bottom;
+}
+
+/* Center content area */
+.center-content {
+  grid-area: center;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+  padding: 20px;
+}
+
+/* Animations */
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+    box-shadow: 0 0 10px #39FF14, 0 0 20px rgba(57, 255, 20, 0.5);
+  }
+  50% {
+    opacity: 0.8;
+    box-shadow: 0 0 15px #39FF14, 0 0 30px rgba(57, 255, 20, 0.7);
+  }
+}
+
+@keyframes fast-pulse {
+  0%, 100% {
+    opacity: 1;
+    box-shadow: 0 0 15px #FF3864, 0 0 30px rgba(255, 56, 100, 0.7);
+  }
+  50% {
+    opacity: 0.7;
+    box-shadow: 0 0 25px #FF3864, 0 0 40px rgba(255, 56, 100, 0.9);
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes glow {
+  0%, 100% {
+    box-shadow: 0 0 5px #fff, 0 0 10px #fff, 0 0 15px #2E9CCA, 0 0 20px #2E9CCA;
+  }
+  50% {
+    box-shadow: 0 0 10px #fff, 0 0 15px #fff, 0 0 25px #2E9CCA, 0 0 30px #2E9CCA;
+  }
+}
+
+/* Responsive adjustments */
+@media (max-width: 1600px) {
+  .round-title {
+    font-size: 20px;
+  }
+}
+
+@media (max-width: 1200px) {
+  .player-row {
+    flex-wrap: wrap;
+  }
+}

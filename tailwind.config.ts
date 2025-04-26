@@ -162,17 +162,21 @@ export default {
         'fade-in': {
           '0%': { 
             opacity: '0',
+            transform: 'translateY(10px)'
           },
           '100%': {
             opacity: '1',
+            transform: 'translateY(0)'
           }
         },
         'fade-out': {
           '0%': { 
             opacity: '1',
+            transform: 'translateY(0)'
           },
           '100%': {
             opacity: '0',
+            transform: 'translateY(10px)'
           }
         },
         'bounce': {
@@ -194,7 +198,25 @@ export default {
             transform: 'translateY(100vh) rotate(720deg)',
             opacity: '0'
           }
-        }
+        },
+        'marquee': {
+          '0%': {
+            transform: 'translateX(100%)'
+          },
+          '100%': {
+            transform: 'translateX(-100%)'
+          }
+        },
+        'fast-pulse': {
+          '0%, 100%': {
+            opacity: '1',
+            boxShadow: '0 0 15px rgba(255, 56, 100, 0.7), 0 0 30px rgba(255, 56, 100, 0.5)'
+          },
+          '50%': {
+            opacity: '0.8',
+            boxShadow: '0 0 25px rgba(255, 56, 100, 0.9), 0 0 40px rgba(255, 56, 100, 0.7)'
+          }
+        },
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
@@ -208,9 +230,16 @@ export default {
         'fade-in': 'fade-in 0.3s ease-out',
         'fade-out': 'fade-out 0.3s ease-out',
         'bounce': 'bounce 1s infinite',
-        'confetti': 'confetti 2s cubic-bezier(0, 0.5, 0.5, 1) forwards'
-			}
+        'confetti': 'confetti 2s cubic-bezier(0, 0.5, 0.5, 1) forwards',
+        'marquee': 'marquee 20s linear infinite',
+        'fast-pulse': 'fast-pulse 0.5s infinite',
+			},
+      backgroundImage: {
+        'gradient-neon': 'linear-gradient(135deg, rgba(46, 156, 202, 0.8), rgba(157, 78, 221, 0.8))',
+        'gradient-glow': 'radial-gradient(circle, rgba(57, 255, 20, 0.3) 0%, rgba(46, 156, 202, 0.3) 100%)',
+      },
 		}
 	},
 	plugins: [require("tailwindcss-animate")],
 } satisfies Config;
+

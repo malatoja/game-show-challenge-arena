@@ -10,6 +10,7 @@ import PlayerPage from "./pages/PlayerPage";
 import NotFound from "./pages/NotFound";
 import GameRulesPage from "./pages/GameRulesPage";
 import SettingsPage from "./pages/SettingsPage";
+import OverlayPage from "./pages/OverlayPage";
 import { GameProvider } from "./context/GameContext";
 
 const queryClient = new QueryClient();
@@ -27,6 +28,7 @@ const App = () => (
             <Route path="/player" element={<PlayerPage />} />
             <Route path="/rules" element={<GameRulesPage />} />
             <Route path="/settings" element={<SettingsPage />} />
+            <Route path="/overlay" element={<OverlayPage />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

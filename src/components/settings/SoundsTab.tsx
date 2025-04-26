@@ -1,237 +1,231 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { toast } from 'sonner';
 import { Input } from '@/components/ui/input';
+import { Slider } from '@/components/ui/slider';
+import { Switch } from '@/components/ui/switch';
+import { toast } from 'sonner';
+import { 
+  Volume2, 
+  VolumeX, 
+  Play, 
+  RefreshCw,
+  Upload
+} from 'lucide-react';
+import { soundService, SoundType } from '@/lib/soundService';
 
-export const SoundsTab = () => {
-  const [volumeLevels, setVolumeLevels] = useState({
-    music: 80,
-    effects: 100,
-    presenter: 90,
-    system: 70
-  });
+type SoundItem = {
+  id: SoundType;
+  name: string;
+  description: string;
+};
+
+export function SoundsTab() {
+  const [volume, setVolume] = useState(soundService.getVolume());
+  const [isMuted, setIsMuted] = useState(soundService.isSoundMuted());
   
-  // Mock data for audio tracks
-  const audioTracks = [
-    { id: 'track1', name: 'Oczekiwanie', duration: '2:34', type: 'built-in', src: '#' },
-    { id: 'track2', name: 'Suspense', duration: '1:45', type: 'built-in', src: '#' },
-    { id: 'track3', name: 'Victory', duration: '0:18', type: 'built-in', src: '#' },
-    { id: 'track4', name: 'Countdown', duration: '0:30', type: 'built-in', src: '#' },
-  ];
-  
-  // Mock data for sound effects
-  const soundEffects = [
-    { id: 'effect1', name: 'Poprawna odpowiedź', event: 'correctAnswer', src: '#' },
-    { id: 'effect2', name: 'Błędna odpowiedź', event: 'wrongAnswer', src: '#' },
-    { id: 'effect3', name: 'Koniec czasu', event: 'timeUp', src: '#' },
-    { id: 'effect4', name: 'Karta użyta', event: 'cardUsed', src: '#' },
-    { id: 'effect5', name: 'Zwycięstwo', event: 'victory', src: '#' },
+  const soundItems: SoundItem[] = [
+    { id: 'timer', name: 'Timer', description: 'Dźwięk odliczania czasu' },
+    { id: 'correct', name: 'Poprawna odpowiedź', description: 'Dźwięk dla poprawnej odpowiedzi' },
+    { id: 'wrong', name: 'Błędna odpowiedź', description: 'Dźwięk dla błędnej odpowiedzi' },
+    { id: 'round_start', name: 'Początek rundy', description: 'Dźwięk rozpoczęcia rundy' },
+    { id: 'round_end', name: 'Koniec rundy', description: 'Dźwięk zakończenia rundy' },
+    { id: 'card_use', name: 'Użycie karty', description: 'Dźwięk użycia karty specjalnej' },
+    { id: 'wheel_spin', name: 'Koło fortuny', description: 'Dźwięk obracającego się koła fortuny' },
+    { id: 'player_join', name: 'Dołączenie gracza', description: 'Dźwięk gdy gracz dołącza do gry' },
+    { id: 'player_leave', name: 'Opuszczenie gry', description: 'Dźwięk gdy gracz opuszcza grę' },
+    { id: 'game_over', name: 'Koniec gry', description: 'Dźwięk końca gry' },
   ];
 
-  const handleVolumeChange = (type: string, value: number) => {
-    setVolumeLevels(prev => ({
-      ...prev,
-      [type]: value
-    }));
-    
-    toast.success(`Głośność ${type} ustawiona na ${value}%`);
+  const handleVolumeChange = (newVolume: number[]) => {
+    const value = newVolume[0];
+    setVolume(value);
+    soundService.setVolume(value);
   };
-  
-  const handlePlaySound = (soundId: string) => {
-    // In a real implementation, this would play the sound
-    toast.info(`Odtwarzanie dźwięku: ${soundId}`);
+
+  const handleToggleMute = () => {
+    soundService.toggleMute();
+    setIsMuted(soundService.isSoundMuted());
   };
-  
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+
+  const handlePlaySound = (type: SoundType) => {
+    soundService.play(type);
+  };
+
+  const handleUploadSound = (type: SoundType, event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
-    
-    if (file.type.startsWith('audio/')) {
-      // In a real implementation, this would upload and process the audio file
-      toast.success(`Przesłano plik audio: ${file.name}`);
-    } else {
-      toast.error('Wybierz prawidłowy plik audio (mp3, wav)');
+
+    if (!file.type.startsWith('audio/')) {
+      toast.error('Please upload an audio file');
+      return;
+    }
+
+    soundService.setCustomSound(type, file)
+      .then(() => {
+        toast.success(`Dźwięk "${type}" został zaktualizowany`);
+      })
+      .catch(error => {
+        console.error('Error uploading sound:', error);
+        toast.error('Wystąpił błąd podczas zapisywania dźwięku');
+      });
+      
+    // Clear the input value so the same file can be selected again
+    event.target.value = '';
+  };
+
+  const handleResetSound = (type: SoundType) => {
+    soundService.resetSound(type);
+    toast.success(`Dźwięk "${type}" został zresetowany do domyślnego`);
+  };
+
+  const handleResetAllSounds = () => {
+    if (confirm('Czy na pewno chcesz zresetować wszystkie dźwięki do ustawień domyślnych?')) {
+      soundService.resetAllSounds();
+      toast.success('Wszystkie dźwięki zostały zresetowane do ustawień domyślnych');
     }
   };
 
   return (
     <div>
-      <h2 className="text-2xl font-bold mb-4">Dźwięki</h2>
-      <p className="text-gray-600 mb-6">
-        Kontroluj efekty dźwiękowe i tło audio.
-      </p>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Volume controls */}
-        <div className="space-y-6">
-          <h3 className="text-xl font-medium mb-4">Kontrola głośności</h3>
+      <h2 className="text-2xl font-bold mb-6 text-gameshow-text">
+        Zarządzanie dźwiękami
+      </h2>
+      
+      <div className="space-y-8">
+        {/* Global sound controls */}
+        <div className="bg-gameshow-background/40 p-5 rounded-lg">
+          <h3 className="text-xl font-semibold mb-4 text-gameshow-text">
+            Ustawienia globalne
+          </h3>
           
           <div className="space-y-4">
-            <div>
-              <div className="flex justify-between mb-1">
-                <label>Muzyka</label>
-                <span>{volumeLevels.music}%</span>
-              </div>
-              <input
-                type="range"
-                min="0"
-                max="100"
-                value={volumeLevels.music}
-                onChange={(e) => handleVolumeChange('music', Number(e.target.value))}
-                className="w-full"
-              />
-            </div>
-            
-            <div>
-              <div className="flex justify-between mb-1">
-                <label>Efekty dźwiękowe</label>
-                <span>{volumeLevels.effects}%</span>
-              </div>
-              <input
-                type="range"
-                min="0"
-                max="100"
-                value={volumeLevels.effects}
-                onChange={(e) => handleVolumeChange('effects', Number(e.target.value))}
-                className="w-full"
-              />
-            </div>
-            
-            <div>
-              <div className="flex justify-between mb-1">
-                <label>Prowadzący</label>
-                <span>{volumeLevels.presenter}%</span>
-              </div>
-              <input
-                type="range"
-                min="0"
-                max="100"
-                value={volumeLevels.presenter}
-                onChange={(e) => handleVolumeChange('presenter', Number(e.target.value))}
-                className="w-full"
-              />
-            </div>
-            
-            <div>
-              <div className="flex justify-between mb-1">
-                <label>Systemowe</label>
-                <span>{volumeLevels.system}%</span>
-              </div>
-              <input
-                type="range"
-                min="0"
-                max="100"
-                value={volumeLevels.system}
-                onChange={(e) => handleVolumeChange('system', Number(e.target.value))}
-                className="w-full"
-              />
-            </div>
-          </div>
-          
-          <div className="mt-6">
-            <h3 className="text-xl font-medium mb-4">Efekty dźwiękowe</h3>
-            <div className="space-y-3">
-              {soundEffects.map(effect => (
-                <div 
-                  key={effect.id} 
-                  className="flex justify-between items-center p-3 bg-gameshow-background/20 rounded-lg"
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={handleToggleMute}
+                  className="h-8 w-8"
                 >
-                  <div>
-                    <h4 className="font-medium">{effect.name}</h4>
-                    <p className="text-xs text-gray-500">Zdarzenie: {effect.event}</p>
-                  </div>
-                  <div className="flex gap-2">
-                    <Button 
-                      size="sm" 
-                      variant="outline"
-                      onClick={() => handlePlaySound(effect.id)}
-                    >
-                      ▶ Odsłuchaj
-                    </Button>
-                    <Button size="sm" variant="outline">
-                      Zmień
-                    </Button>
-                  </div>
-                </div>
-              ))}
+                  {isMuted ? <VolumeX size={16} /> : <Volume2 size={16} />}
+                </Button>
+                <span className="text-gameshow-text">
+                  {isMuted ? 'Dźwięki wyciszone' : 'Dźwięki włączone'}
+                </span>
+              </div>
+              
+              <Switch
+                checked={!isMuted}
+                onCheckedChange={() => handleToggleMute()}
+              />
+            </div>
+            
+            <div className="flex items-center space-x-4">
+              <span className="text-gameshow-text">Głośność:</span>
+              <div className="flex-1">
+                <Slider
+                  value={[volume]}
+                  min={0}
+                  max={1}
+                  step={0.01}
+                  onValueChange={handleVolumeChange}
+                />
+              </div>
+              <span className="text-gameshow-text w-8 text-right">
+                {Math.round(volume * 100)}%
+              </span>
+            </div>
+            
+            <div className="mt-4">
+              <Button
+                variant="outline"
+                onClick={handleResetAllSounds}
+                className="flex items-center space-x-2"
+              >
+                <RefreshCw size={16} />
+                <span>Resetuj wszystkie dźwięki</span>
+              </Button>
             </div>
           </div>
         </div>
         
-        {/* Music library */}
-        <div>
-          <h3 className="text-xl font-medium mb-4">Biblioteka muzyczna</h3>
+        {/* Individual sound settings */}
+        <div className="bg-gameshow-background/40 p-5 rounded-lg">
+          <h3 className="text-xl font-semibold mb-4 text-gameshow-text">
+            Dźwięki gry
+          </h3>
           
-          <div className="mb-4 flex gap-2">
-            <Button variant="outline">Wszystkie</Button>
-            <Button variant="outline">Wbudowane</Button>
-            <Button variant="outline">Własne</Button>
-          </div>
-          
-          <div className="space-y-3 max-h-[400px] overflow-y-auto p-1">
-            {audioTracks.map(track => (
+          <div className="space-y-4">
+            {soundItems.map((sound) => (
               <div 
-                key={track.id} 
-                className="flex justify-between items-center p-3 bg-gameshow-background/20 rounded-lg"
+                key={sound.id}
+                className="flex flex-col sm:flex-row sm:items-center justify-between p-3 rounded-md bg-gameshow-card"
               >
-                <div>
-                  <h4 className="font-medium">{track.name}</h4>
-                  <div className="flex gap-2 text-xs text-gray-500">
-                    <span>{track.duration}</span>
-                    <span>{track.type === 'built-in' ? 'Wbudowany' : 'Własny'}</span>
-                  </div>
+                <div className="mb-3 sm:mb-0">
+                  <h4 className="font-medium text-gameshow-text">{sound.name}</h4>
+                  <p className="text-sm text-gameshow-muted">{sound.description}</p>
                 </div>
-                <div className="flex gap-2">
-                  <Button 
-                    size="sm" 
+                
+                <div className="flex flex-wrap gap-2">
+                  <Button
                     variant="outline"
-                    onClick={() => handlePlaySound(track.id)}
+                    size="sm"
+                    onClick={() => handlePlaySound(sound.id)}
+                    className="flex items-center space-x-1"
                   >
-                    ▶ Odtwórz
+                    <Play size={14} />
+                    <span>Test</span>
                   </Button>
-                  <Button size="sm" variant="outline">
-                    Użyj
+                  
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleResetSound(sound.id)}
+                    className="flex items-center space-x-1"
+                  >
+                    <RefreshCw size={14} />
+                    <span>Reset</span>
                   </Button>
+                  
+                  <div className="relative">
+                    <Input
+                      id={`upload-${sound.id}`}
+                      type="file"
+                      accept="audio/*"
+                      onChange={(e) => handleUploadSound(sound.id, e)}
+                      className="hidden"
+                    />
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => document.getElementById(`upload-${sound.id}`)?.click()}
+                      className="flex items-center space-x-1"
+                    >
+                      <Upload size={14} />
+                      <span>Zmień</span>
+                    </Button>
+                  </div>
                 </div>
               </div>
             ))}
           </div>
+        </div>
+        
+        {/* Upload custom sounds */}
+        <div className="bg-gameshow-background/40 p-5 rounded-lg">
+          <h3 className="text-xl font-semibold mb-4 text-gameshow-text">
+            Wskazówki
+          </h3>
           
-          <div className="mt-6">
-            <h4 className="font-medium mb-2">Dodaj własną muzykę</h4>
-            <div className="flex gap-2 items-center">
-              <Input
-                id="audio-upload"
-                type="file"
-                accept="audio/*"
-                onChange={handleFileUpload}
-              />
-              <Button size="sm">Prześlij</Button>
-            </div>
-            <p className="text-xs text-gray-500 mt-2">
-              Obsługiwane formaty: MP3, WAV (max 10MB)
-            </p>
-          </div>
-          
-          <div className="mt-6">
-            <h4 className="font-medium mb-2">Playlisty</h4>
-            <div className="space-y-2">
-              <div className="flex justify-between items-center p-2 bg-gameshow-background/20 rounded">
-                <span>Standardowa runda</span>
-                <Button size="sm" variant="outline">Edytuj</Button>
-              </div>
-              <div className="flex justify-between items-center p-2 bg-gameshow-background/20 rounded">
-                <span>Finałowa runda</span>
-                <Button size="sm" variant="outline">Edytuj</Button>
-              </div>
-              <div className="mt-2">
-                <Button size="sm">Nowa playlista</Button>
-              </div>
-            </div>
+          <div className="space-y-2 text-gameshow-muted">
+            <p>• Wszystkie dźwięki są zapisywane lokalnie w przeglądarce.</p>
+            <p>• Zalecane formaty plików: MP3, WAV, OGG.</p>
+            <p>• Maksymalny rozmiar pliku: 2MB.</p>
+            <p>• Dla najlepszej kompatybilności, używaj krótkich dźwięków (poniżej 5 sekund).</p>
           </div>
         </div>
       </div>
     </div>
   );
-};
+}
