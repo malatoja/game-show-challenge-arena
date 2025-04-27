@@ -22,12 +22,12 @@ type SoundItem = {
 
 export function SoundsTab() {
   const [volume, setVolume] = useState(soundService.getVolume());
-  const [isMuted, setIsMuted] = useState(soundService.isSoundMuted());
+  const [isMuted, setIsMuted] = useState(soundService.isMuted());
   
   const soundItems: SoundItem[] = [
     { id: 'timer', name: 'Timer', description: 'Dźwięk odliczania czasu' },
-    { id: 'correct', name: 'Poprawna odpowiedź', description: 'Dźwięk dla poprawnej odpowiedzi' },
-    { id: 'wrong', name: 'Błędna odpowiedź', description: 'Dźwięk dla błędnej odpowiedzi' },
+    { id: 'correct_answer', name: 'Poprawna odpowiedź', description: 'Dźwięk dla poprawnej odpowiedzi' },
+    { id: 'wrong_answer', name: 'Błędna odpowiedź', description: 'Dźwięk dla błędnej odpowiedzi' },
     { id: 'round_start', name: 'Początek rundy', description: 'Dźwięk rozpoczęcia rundy' },
     { id: 'round_end', name: 'Koniec rundy', description: 'Dźwięk zakończenia rundy' },
     { id: 'card_use', name: 'Użycie karty', description: 'Dźwięk użycia karty specjalnej' },
@@ -45,7 +45,7 @@ export function SoundsTab() {
 
   const handleToggleMute = () => {
     soundService.toggleMute();
-    setIsMuted(soundService.isSoundMuted());
+    setIsMuted(soundService.isMuted());
   };
 
   const handlePlaySound = (type: SoundType) => {

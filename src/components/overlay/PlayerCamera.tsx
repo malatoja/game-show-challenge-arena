@@ -19,7 +19,7 @@ export const PlayerCamera: React.FC<PlayerCameraProps> = ({ player, position = '
   }, [player.lives]);
 
   return (
-    <div className="player-container">
+    <div className="player-container relative w-[150px] h-[150px] mx-[10px]">
       {/* Active player indicator */}
       <AnimatePresence>
         {player.isActive && (
@@ -40,11 +40,11 @@ export const PlayerCamera: React.FC<PlayerCameraProps> = ({ player, position = '
       </AnimatePresence>
       
       {/* Player camera container */}
-      <div className={`player-camera ${position === 'top' ? 'top-camera' : 'bottom-camera'}`}>
+      <div className={`player-camera w-full h-full bg-[#0A0A1A] rounded-lg overflow-hidden relative border border-white/10 flex flex-col justify-end shadow-lg transition-transform duration-300 ease-in-out z-1 ${position === 'top' ? 'origin-bottom' : 'origin-top'}`}>
         {/* Player health bar */}
-        <div className="health-bar-container">
+        <div className="absolute bottom-[25px] left-0 w-full h-[5px] bg-black/50">
           <div 
-            className="health-bar"
+            className="h-full transition-all duration-500"
             style={{ 
               width: `${lifePercentage}%`,
               backgroundColor: lifePercentage > 50 ? '#39FF14' : lifePercentage > 20 ? '#FFC107' : '#FF3864',
@@ -54,90 +54,15 @@ export const PlayerCamera: React.FC<PlayerCameraProps> = ({ player, position = '
         </div>
         
         {/* Player name */}
-        <div className="player-name">
+        <div className="absolute bottom-[5px] left-0 w-full text-center text-white text-xs font-bold px-[5px] py-[2px] truncate">
           {player.name}
         </div>
         
         {/* Points display */}
-        <div className="player-points">
+        <div className="absolute top-[5px] right-[5px] bg-black/60 text-[#39FF14] text-[10px] px-[5px] py-[2px] rounded-[3px] font-bold">
           {player.points} pkt
         </div>
       </div>
-      
-      {/* Style for the component */}
-      <style jsx>{`
-        .player-container {
-          position: relative;
-          width: 150px;
-          height: 150px;
-          margin: 0 10px;
-        }
-        
-        .player-camera {
-          width: 100%;
-          height: 100%;
-          background-color: #0A0A1A;
-          border-radius: 8px;
-          overflow: hidden;
-          position: relative;
-          border: 1px solid rgba(255, 255, 255, 0.1);
-          display: flex;
-          flex-direction: column;
-          justify-content: flex-end;
-          box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
-          transition: transform 0.3s ease, box-shadow 0.3s ease;
-          z-index: 1;
-        }
-        
-        .player-camera.top-camera {
-          transform-origin: bottom center;
-        }
-        
-        .player-camera.bottom-camera {
-          transform-origin: top center;
-        }
-        
-        .health-bar-container {
-          position: absolute;
-          bottom: 25px;
-          left: 0;
-          width: 100%;
-          height: 5px;
-          background-color: rgba(0, 0, 0, 0.5);
-        }
-        
-        .health-bar {
-          height: 100%;
-          background-color: #39FF14;
-          transition: width 0.5s ease, background-color 0.5s ease;
-        }
-        
-        .player-name {
-          position: absolute;
-          bottom: 5px;
-          left: 0;
-          width: 100%;
-          text-align: center;
-          color: white;
-          font-size: 12px;
-          padding: 2px 5px;
-          font-weight: bold;
-          text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
-        }
-        
-        .player-points {
-          position: absolute;
-          top: 5px;
-          right: 5px;
-          background-color: rgba(0, 0, 0, 0.6);
-          color: #39FF14;
-          font-size: 10px;
-          padding: 2px 5px;
-          border-radius: 3px;
-          font-weight: bold;
-          text-shadow: 0 0 2px #39FF14;
-        }
-      `}</style>
     </div>
   );
 };
