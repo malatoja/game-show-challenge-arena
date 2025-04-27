@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { GameOverlay } from '@/components/overlay/GameOverlay';
 import { Player } from '@/types/gameTypes';
@@ -55,13 +56,23 @@ const OverlayPage = () => {
       });
       
       websocketService.addListener('PLAYER_UPDATE', (data: any) => {
-        setPlayers(prev => prev.map(player => 
-          player.id === data.id ? { ...player, ...data } : player
-        ));
-        
-        if (data.isActive && !prev.find((p: Player) => p.id === data.id)?.isActive) {
-          soundService.play('player_join');
-        }
+        setPlayers(prevState => {
+          // First capture the current state for our later comparison
+          const currentPlayers = prevState;
+          // Then update the players
+          const updatedPlayers = prevState.map(player => 
+            player.id === data.id ? { ...player, ...data } : player
+          );
+          
+          // Check if this player's 'isActive' status changed
+          if (data.isActive && 
+              currentPlayers.find((p: Player) => p.id === data.id) && 
+              !currentPlayers.find((p: Player) => p.id === data.id)?.isActive) {
+            soundService.play('player_join');
+          }
+          
+          return updatedPlayers;
+        });
       });
       
       websocketService.addListener('CATEGORY_SELECT', (data: any) => {
@@ -116,14 +127,18 @@ const OverlayPage = () => {
       // Simulate activating different players periodically
       const playerTimer = setInterval(() => {
         const randomIndex = Math.floor(Math.random() * players.length);
-        setPlayers(prev => {
-          const updatedPlayers = prev.map((player, index) => ({
+        setPlayers(prevState => {
+          // Capture current state for comparison
+          const currentPlayers = prevState;
+          
+          // Update players with new active state
+          const updatedPlayers = currentPlayers.map((player, index) => ({
             ...player,
             isActive: index === randomIndex
           }));
           
           // Play sound if active player changed
-          if (!prev[randomIndex].isActive) {
+          if (!currentPlayers[randomIndex].isActive) {
             soundService.play('player_join');
           }
           
