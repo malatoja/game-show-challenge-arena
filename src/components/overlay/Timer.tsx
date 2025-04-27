@@ -8,12 +8,11 @@ interface TimerProps {
 }
 
 export const Timer: React.FC<TimerProps> = ({ currentTime, maxTime, isPulsing = false }) => {
-  // Calculate percentage for visual representation
   const percentage = (currentTime / maxTime) * 100;
   
   return (
-    <div className={`timer ${isPulsing ? 'timer-pulsing' : ''}`}>
-      <div className="timer-circle">
+    <div className={`absolute top-5 right-5 z-10 ${isPulsing ? 'animate-timer-pulse' : ''}`}>
+      <div className="relative flex justify-center items-center w-20 h-20">
         <svg width="80" height="80" viewBox="0 0 100 100">
           <circle
             cx="50"
@@ -35,39 +34,10 @@ export const Timer: React.FC<TimerProps> = ({ currentTime, maxTime, isPulsing = 
             transform="rotate(-90 50 50)"
           />
         </svg>
-        <span className="timer-text">{currentTime}</span>
+        <span className="absolute text-2xl font-bold text-white text-shadow-neon">
+          {currentTime}
+        </span>
       </div>
-      <style jsx>{`
-        .timer {
-          position: absolute;
-          top: 20px;
-          right: 20px;
-          z-index: 10;
-        }
-        
-        .timer-circle {
-          position: relative;
-          display: flex;
-          justify-content: center;
-          align-items: center;
-          width: 80px;
-          height: 80px;
-          border-radius: 50%;
-          box-shadow: 0 0 10px rgba(255, 56, 100, 0.5);
-        }
-        
-        .timer-text {
-          position: absolute;
-          font-size: 24px;
-          font-weight: bold;
-          color: white;
-          text-shadow: 0 0 5px #FF3864, 0 0 10px #FF3864;
-        }
-        
-        .timer-pulsing {
-          animation: fast-pulse 0.5s infinite;
-        }
-      `}</style>
     </div>
   );
 };

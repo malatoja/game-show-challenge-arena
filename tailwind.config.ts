@@ -1,9 +1,8 @@
-
 import type { Config } from "tailwindcss";
 
 export default {
-	darkMode: ["class"],
-	content: [
+  darkMode: ["class"],
+  content: [
 		"./pages/**/*.{ts,tsx}",
 		"./components/**/*.{ts,tsx}",
 		"./app/**/*.{ts,tsx}",
@@ -217,6 +216,26 @@ export default {
             boxShadow: '0 0 25px rgba(255, 56, 100, 0.9), 0 0 40px rgba(255, 56, 100, 0.7)'
           }
         },
+        'pulse-logo': {
+          '0%, 100%': { 
+            transform: 'scale(1)',
+            boxShadow: '0 0 10px #9D4EDD, 0 0 20px rgba(157, 78, 221, 0.5)'
+          },
+          '50%': { 
+            transform: 'scale(1.05)',
+            boxShadow: '0 0 15px #9D4EDD, 0 0 25px rgba(157, 78, 221, 0.7)'
+          }
+        },
+        'timer-pulse': {
+          '0%, 100%': { 
+            opacity: '1',
+            boxShadow: '0 0 10px rgba(255, 56, 100, 0.5), 0 0 20px rgba(255, 56, 100, 0.3)'
+          },
+          '50%': { 
+            opacity: '0.8',
+            boxShadow: '0 0 15px rgba(255, 56, 100, 0.7), 0 0 25px rgba(255, 56, 100, 0.5)'
+          }
+        }
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
@@ -233,6 +252,8 @@ export default {
         'confetti': 'confetti 2s cubic-bezier(0, 0.5, 0.5, 1) forwards',
         'marquee': 'marquee 20s linear infinite',
         'fast-pulse': 'fast-pulse 0.5s infinite',
+        'pulse-logo': 'pulse-logo 2s infinite',
+        'timer-pulse': 'timer-pulse 0.5s infinite'
 			},
       backgroundImage: {
         'gradient-neon': 'linear-gradient(135deg, rgba(46, 156, 202, 0.8), rgba(157, 78, 221, 0.8))',
@@ -242,4 +263,3 @@ export default {
 	},
 	plugins: [require("tailwindcss-animate")],
 } satisfies Config;
-

@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Player } from '@/types/gameTypes';
 
@@ -11,33 +10,32 @@ export const PlayerCamera: React.FC<PlayerCameraProps> = ({ player, position }) 
   const playerColor = player.color || getRandomNeonColor(player.id);
   
   return (
-    <div className="player-camera-container">
+    <div className="flex flex-col items-center w-[18%] min-w-[150px]">
       <div 
-        className={`player-camera ${player.isActive ? 'active' : ''}`}
+        className={`w-full aspect-video border-2 rounded-md overflow-hidden transition-all duration-300 ${player.isActive ? 'animate-pulse' : ''}`}
         style={{ 
           borderColor: playerColor,
           boxShadow: player.isActive ? `0 0 10px ${playerColor}, 0 0 20px ${playerColor}` : 'none'
         }}
       >
-        {/* This would be a placeholder for the actual camera feed */}
-        <div className="camera-placeholder">
+        <div className="w-full h-full bg-black/50 flex justify-center items-center">
           {player.streamUrl ? (
-            <img src={player.streamUrl} alt={player.name} className="camera-feed" />
+            <img src={player.streamUrl} alt={player.name} className="w-full h-full object-cover" />
           ) : (
-            <div className="no-stream">No Feed</div>
+            <div className="text-white/50 text-sm">No Feed</div>
           )}
         </div>
       </div>
       <div 
-        className="player-name"
+        className="mt-1 font-bold text-center text-shadow-neon"
         style={{ color: playerColor }}
       >
         {player.name}
       </div>
       {position === 'bottom' && (
-        <div className="player-health-bar-container">
+        <div className="w-full h-1.5 bg-white/20 rounded-full mt-1 overflow-hidden">
           <div 
-            className="player-health-bar"
+            className="h-full transition-all duration-500 ease-in-out"
             style={{ 
               width: `${player.lives}%`,
               backgroundColor: getHealthColor(player.lives)
@@ -45,69 +43,6 @@ export const PlayerCamera: React.FC<PlayerCameraProps> = ({ player, position }) 
           ></div>
         </div>
       )}
-      <style jsx>{`
-        .player-camera-container {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          width: 18%;
-          min-width: 150px;
-        }
-        
-        .player-camera {
-          width: 100%;
-          aspect-ratio: 16/9;
-          border: 2px solid;
-          border-radius: 4px;
-          overflow: hidden;
-          transition: all 0.3s ease;
-        }
-        
-        .player-camera.active {
-          animation: glow 1.5s infinite;
-        }
-        
-        .camera-placeholder {
-          width: 100%;
-          height: 100%;
-          background-color: rgba(0, 0, 0, 0.5);
-          display: flex;
-          justify-content: center;
-          align-items: center;
-        }
-        
-        .camera-feed {
-          width: 100%;
-          height: 100%;
-          object-fit: cover;
-        }
-        
-        .no-stream {
-          color: rgba(255, 255, 255, 0.5);
-          font-size: 14px;
-        }
-        
-        .player-name {
-          margin-top: 5px;
-          font-weight: bold;
-          text-align: center;
-          text-shadow: 0 0 5px currentColor, 0 0 10px currentColor;
-        }
-        
-        .player-health-bar-container {
-          width: 100%;
-          height: 6px;
-          background-color: rgba(255, 255, 255, 0.2);
-          border-radius: 3px;
-          margin-top: 5px;
-          overflow: hidden;
-        }
-        
-        .player-health-bar {
-          height: 100%;
-          transition: width 0.5s ease, background-color 0.5s ease;
-        }
-      `}</style>
     </div>
   );
 };
