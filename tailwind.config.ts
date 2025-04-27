@@ -62,6 +62,15 @@ export default {
         'gameshow-muted': '#a0a0b0',
         'gameshow-primary': '#FF3864',
         'gameshow-secondary': '#261447',
+        'gameshow': {
+          background: '#0D0221',
+          card: '#1A1031',
+          text: '#FFFFFF',
+          muted: '#B9B9BE',
+          primary: '#39FF14',
+          secondary: '#FF3864',
+          accent: '#2E9CCA'
+        },
       },
       borderRadius: {
         lg: "var(--radius)",
