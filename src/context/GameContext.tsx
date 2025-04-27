@@ -38,6 +38,30 @@ const initialState: GameState = {
   wheelSpinning: false,
 };
 
+// Load saved questions from localStorage if available
+const loadQuestionsFromStorage = (): Question[] => {
+  try {
+    const savedQuestions = localStorage.getItem('gameShowQuestions');
+    if (savedQuestions) {
+      const parsedQuestions = JSON.parse(savedQuestions) as Question[];
+      return parsedQuestions;
+    }
+  } catch (error) {
+    console.error('Error loading questions from localStorage:', error);
+  }
+  return SAMPLE_QUESTIONS;
+};
+
+// Initialize state with saved questions
+const initialStateWithSavedQuestions = (): GameState => {
+  const loadedQuestions = loadQuestionsFromStorage();
+  return {
+    ...initialState,
+    questions: loadedQuestions,
+    remainingQuestions: loadedQuestions.filter(q => !q.used),
+  };
+};
+
 // Reducer
 function gameReducer(state: GameState, action: GameAction): GameState {
   switch (action.type) {
@@ -47,7 +71,7 @@ function gameReducer(state: GameState, action: GameAction): GameState {
         roundStarted: false,
         roundEnded: false,
         currentRound: 'knowledge',
-        remainingQuestions: [...state.questions],
+        remainingQuestions: [...state.questions.filter(q => !q.used)],
       };
     
     case 'START_ROUND':
@@ -82,12 +106,27 @@ function gameReducer(state: GameState, action: GameAction): GameState {
         currentPlayerIndex: state.players.findIndex(p => p.id === action.playerId)
       };
     
-    case 'SET_CURRENT_QUESTION':
+    case 'SET_CURRENT_QUESTION': {
+      // Automatically mark the question as used
+      const updatedQuestions = state.questions.map(q => 
+        q.id === action.question.id ? { ...q, used: true } : q
+      );
+      
+      // Save the updated questions to localStorage
+      try {
+        localStorage.setItem('gameShowQuestions', JSON.stringify(updatedQuestions));
+      } catch (error) {
+        console.error('Error saving questions to localStorage:', error);
+      }
+      
+      // Remove the question from remaining questions
       return {
         ...state,
         currentQuestion: action.question,
+        questions: updatedQuestions,
         remainingQuestions: state.remainingQuestions.filter(q => q.id !== action.question.id)
       };
+    }
     
     case 'ANSWER_QUESTION': {
       const activePlayer = state.players.find(p => p.id === action.playerId);
@@ -126,20 +165,11 @@ function gameReducer(state: GameState, action: GameAction): GameState {
         }
       }
       
-      // Mark the current question as used
-      const updatedQuestions = state.questions.map(q => {
-        if (state.currentQuestion && q.id === state.currentQuestion.id) {
-          return {
-            ...q,
-            used: true
-          };
-        }
-        return q;
-      });
+      // We don't need to mark the current question as used here anymore,
+      // as it's already marked when selected via SET_CURRENT_QUESTION
       
       return {
         ...state,
-        questions: updatedQuestions,
         players: state.players.map(player => {
           if (player.id === action.playerId) {
             return {
@@ -248,30 +278,60 @@ function gameReducer(state: GameState, action: GameAction): GameState {
       };
     }
 
-    case 'ADD_QUESTION':
+    case 'ADD_QUESTION': {
+      const updatedQuestions = [...state.questions, action.question];
+      
+      // Save questions to localStorage
+      try {
+        localStorage.setItem('gameShowQuestions', JSON.stringify(updatedQuestions));
+      } catch (error) {
+        console.error('Error saving questions to localStorage:', error);
+      }
+      
       return {
         ...state,
-        questions: [...state.questions, action.question],
+        questions: updatedQuestions,
         remainingQuestions: [...state.remainingQuestions, action.question],
       };
+    }
     
-    case 'UPDATE_QUESTION':
+    case 'UPDATE_QUESTION': {
+      const updatedQuestions = state.questions.map(question => 
+        question.id === action.question.id ? action.question : question
+      );
+      
+      // Save questions to localStorage
+      try {
+        localStorage.setItem('gameShowQuestions', JSON.stringify(updatedQuestions));
+      } catch (error) {
+        console.error('Error saving questions to localStorage:', error);
+      }
+      
       return {
         ...state,
-        questions: state.questions.map(question => 
-          question.id === action.question.id ? action.question : question
-        ),
+        questions: updatedQuestions,
         remainingQuestions: state.remainingQuestions.map(question => 
           question.id === action.question.id ? action.question : question
         )
       };
+    }
     
-    case 'REMOVE_QUESTION':
+    case 'REMOVE_QUESTION': {
+      const updatedQuestions = state.questions.filter(question => question.id !== action.questionId);
+      
+      // Save questions to localStorage
+      try {
+        localStorage.setItem('gameShowQuestions', JSON.stringify(updatedQuestions));
+      } catch (error) {
+        console.error('Error saving questions to localStorage:', error);
+      }
+      
       return {
         ...state,
-        questions: state.questions.filter(question => question.id !== action.questionId),
+        questions: updatedQuestions,
         remainingQuestions: state.remainingQuestions.filter(question => question.id !== action.questionId)
       };
+    }
     
     case 'REVERT_QUESTION': {
       // Find the question from all questions
@@ -288,19 +348,29 @@ function gameReducer(state: GameState, action: GameAction): GameState {
 
     case 'MARK_QUESTION_USED': {
       // Mark a question as used
+      const updatedQuestions = state.questions.map(q => 
+        q.id === action.questionId 
+          ? { ...q, used: true } 
+          : q
+      );
+      
+      // Save questions to localStorage
+      try {
+        localStorage.setItem('gameShowQuestions', JSON.stringify(updatedQuestions));
+      } catch (error) {
+        console.error('Error saving questions to localStorage:', error);
+      }
+      
       return {
         ...state,
-        questions: state.questions.map(q => 
-          q.id === action.questionId 
-            ? { ...q, used: true } 
-            : q
-        )
+        questions: updatedQuestions,
+        remainingQuestions: state.remainingQuestions.filter(q => q.id !== action.questionId)
       };
     }
     
     case 'RESTART_GAME':
       return {
-        ...initialState,
+        ...initialStateWithSavedQuestions(),
         players: state.players.map(player => ({
           ...player,
           points: 0,
@@ -308,9 +378,7 @@ function gameReducer(state: GameState, action: GameAction): GameState {
           cards: [],
           eliminated: false,
           isActive: false
-        })),
-        questions: state.questions,
-        remainingQuestions: state.questions.filter(q => !q.used)
+        }))
       };
     
     default:
@@ -328,7 +396,7 @@ const GameContext = createContext<GameContextType | undefined>(undefined);
 
 // Provider component
 export function GameProvider({ children }: { children: ReactNode }) {
-  const [state, dispatch] = useReducer(gameReducer, initialState);
+  const [state, dispatch] = useReducer(gameReducer, initialStateWithSavedQuestions());
   
   return (
     <GameContext.Provider value={{ state, dispatch }}>

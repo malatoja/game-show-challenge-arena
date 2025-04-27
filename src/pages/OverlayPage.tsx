@@ -3,12 +3,14 @@ import React, { useEffect, useState } from 'react';
 import { GameOverlay } from '@/components/overlay/GameOverlay';
 import { Player } from '@/types/gameTypes';
 import { websocketService } from '@/lib/websocketService';
+import { soundService } from '@/lib/soundService';
 
 const OverlayPage = () => {
   const [roundTitle, setRoundTitle] = useState("RUNDA 1 – ZRÓŻNICOWANA WIEDZA");
   const [currentTime, setCurrentTime] = useState(30);
   const [question, setQuestion] = useState("");
   const [showCategoryTable, setShowCategoryTable] = useState(true);
+  const [timerPulsing, setTimerPulsing] = useState(false);
   const [players, setPlayers] = useState<Player[]>([
     { id: "1", name: "Gracz 1", lives: 100, points: 0, cards: [], isActive: true, eliminated: false },
     { id: "2", name: "Gracz 2", lives: 80, points: 0, cards: [], isActive: false, eliminated: false },
@@ -41,25 +43,37 @@ const OverlayPage = () => {
       websocketService.addListener('QUESTION_UPDATE', (data: any) => {
         setQuestion(data.text);
         setShowCategoryTable(false);
+        soundService.play('question');
       });
       
       websocketService.addListener('TIMER_UPDATE', (data: any) => {
         setCurrentTime(data.time);
+        setTimerPulsing(data.time <= 5);
+        
+        if (data.time <= 5 && data.time > 0) {
+          soundService.play('timer');
+        }
       });
       
       websocketService.addListener('PLAYER_UPDATE', (data: any) => {
         setPlayers(prev => prev.map(player => 
           player.id === data.id ? { ...player, ...data } : player
         ));
+        
+        if (data.isActive && !prev.find((p: Player) => p.id === data.id)?.isActive) {
+          soundService.play('player_join');
+        }
       });
       
       websocketService.addListener('CATEGORY_SELECT', (data: any) => {
         setSelectedCategory(data.category);
         setSelectedDifficulty(data.difficulty);
+        soundService.play('wheel_spin');
       });
       
       websocketService.addListener('ROUND_UPDATE', (data: any) => {
         setRoundTitle(data.title);
+        soundService.play('round_start');
       });
       
       return () => {
@@ -69,30 +83,53 @@ const OverlayPage = () => {
       // Demo mode: Simulate WebSocket updates
       const timer = setInterval(() => {
         setCurrentTime(prev => {
-          if (prev <= 0) return 30;
+          if (prev <= 0) {
+            setTimerPulsing(false);
+            return 30;
+          }
+          
+          if (prev <= 5) {
+            setTimerPulsing(true);
+          } else {
+            setTimerPulsing(false);
+          }
+          
           return prev - 1;
         });
       }, 1000);
       
       // Simulate category selection after 5 seconds
       const categoryTimer = setTimeout(() => {
-        setSelectedCategory(categories[Math.floor(Math.random() * categories.length)]);
-        setSelectedDifficulty(difficulties[Math.floor(Math.random() * difficulties.length)]);
+        const randomCategory = categories[Math.floor(Math.random() * categories.length)];
+        const randomDifficulty = difficulties[Math.floor(Math.random() * difficulties.length)];
+        setSelectedCategory(randomCategory);
+        setSelectedDifficulty(randomDifficulty);
+        soundService.play('wheel_spin');
       }, 5000);
       
       // Simulate showing question after 8 seconds
       const questionTimer = setTimeout(() => {
         setShowCategoryTable(false);
         setQuestion("Jaki streamer na polskim Twitchu pobił rekord widzów w 2023 roku?");
+        soundService.play('question');
       }, 8000);
       
       // Simulate activating different players periodically
       const playerTimer = setInterval(() => {
         const randomIndex = Math.floor(Math.random() * players.length);
-        setPlayers(prev => prev.map((player, index) => ({
-          ...player,
-          isActive: index === randomIndex
-        })));
+        setPlayers(prev => {
+          const updatedPlayers = prev.map((player, index) => ({
+            ...player,
+            isActive: index === randomIndex
+          }));
+          
+          // Play sound if active player changed
+          if (!prev[randomIndex].isActive) {
+            soundService.play('player_join');
+          }
+          
+          return updatedPlayers;
+        });
       }, 3000);
       
       return () => {
@@ -117,6 +154,7 @@ const OverlayPage = () => {
         difficulties={difficulties}
         selectedCategory={selectedCategory}
         selectedDifficulty={selectedDifficulty}
+        timerPulsing={timerPulsing}
       />
       
       {/* Demo mode controls - visible only during development */}
