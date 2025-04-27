@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useGame } from '@/context/GameContext';
 import { Player, CardType, RoundType } from '@/types/gameTypes';
@@ -211,7 +210,7 @@ export function GameHostPanel() {
   }
   
   return (
-    <div className="bg-gameshow-background min-h-screen flex flex-col">
+    <div className="min-h-screen bg-gameshow-background flex flex-col gap-4 p-4">
       <TopBar 
         currentRound={currentRound}
         timer={timer}
@@ -223,37 +222,47 @@ export function GameHostPanel() {
         onResetTimer={resetTimer}
       />
       
-      <div className="flex flex-1 p-2 gap-2">
-        <div className="flex flex-col gap-2 flex-1">
-          <PlayerGrid
-            players={players}
-            onSelectPlayer={handleSelectPlayer}
-            onAddTestCards={handleAddTestCards}
-            onUseCard={handleUseCard}
-          />
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-            <QuestionControls 
-              currentRound={currentRound}
-              isTimerRunning={isTimerRunning}
-              onStartTimer={startTimer}
-              onStopTimer={stopTimer}
-              onResetTimer={resetTimer}
-              onSkipQuestion={handleSkipQuestion}
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 flex-1">
+        {/* Left column - Players */}
+        <div className="lg:col-span-3">
+          <div className="panel-section mb-4">
+            <PlayerGrid
+              players={players}
+              onSelectPlayer={handleSelectPlayer}
+              onAddTestCards={handleAddTestCards}
+              onUseCard={handleUseCard}
             />
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="panel-section">
+              <QuestionControls 
+                currentRound={currentRound}
+                isTimerRunning={isTimerRunning}
+                onStartTimer={startTimer}
+                onStopTimer={stopTimer}
+                onResetTimer={resetTimer}
+                onSkipQuestion={handleSkipQuestion}
+              />
+            </div>
             
-            <CardManagement playerId={activePlayerId} />
+            <div className="panel-section">
+              <CardManagement playerId={activePlayerId} />
+            </div>
           </div>
         </div>
         
-        <RightColumn 
-          onEndRound={handleEndRound}
-          onResetRound={handleResetGame}
-          onPause={handlePause}
-          onSkipQuestion={handleSkipQuestion}
-          onEndGame={handleEndGame}
-          canEndRound={canEndRound}
-        />
+        {/* Right column - Game controls */}
+        <div className="lg:col-span-1">
+          <RightColumn 
+            onEndRound={handleEndRound}
+            onResetRound={handleResetGame}
+            onPause={handlePause}
+            onSkipQuestion={handleSkipQuestion}
+            onEndGame={handleEndGame}
+            canEndRound={canEndRound}
+          />
+        </div>
       </div>
       
       <BottomBar events={events} />
