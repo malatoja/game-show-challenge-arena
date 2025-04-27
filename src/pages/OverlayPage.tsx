@@ -43,7 +43,7 @@ const OverlayPage = () => {
       websocketService.addListener('QUESTION_UPDATE', (data: any) => {
         setQuestion(data.text);
         setShowCategoryTable(false);
-        soundService.play('question');
+        soundService.play('question_show'); // Fixed to use valid sound type
       });
       
       websocketService.addListener('TIMER_UPDATE', (data: any) => {
@@ -56,11 +56,11 @@ const OverlayPage = () => {
       });
       
       websocketService.addListener('PLAYER_UPDATE', (data: any) => {
-        setPlayers(prev => prev.map(player => 
+        setPlayers(prevPlayers => prevPlayers.map(player => 
           player.id === data.id ? { ...player, ...data } : player
         ));
         
-        if (data.isActive && !prev.find((p: Player) => p.id === data.id)?.isActive) {
+        if (data.isActive && !prevPlayers.find((p: Player) => p.id === data.id)?.isActive) {
           soundService.play('player_join');
         }
       });
@@ -111,20 +111,20 @@ const OverlayPage = () => {
       const questionTimer = setTimeout(() => {
         setShowCategoryTable(false);
         setQuestion("Jaki streamer na polskim Twitchu pobił rekord widzów w 2023 roku?");
-        soundService.play('question');
+        soundService.play('question_show'); // Fixed to use valid sound type
       }, 8000);
       
       // Simulate activating different players periodically
       const playerTimer = setInterval(() => {
         const randomIndex = Math.floor(Math.random() * players.length);
-        setPlayers(prev => {
-          const updatedPlayers = prev.map((player, index) => ({
+        setPlayers(prevPlayers => {
+          const updatedPlayers = prevPlayers.map((player, index) => ({
             ...player,
             isActive: index === randomIndex
           }));
           
           // Play sound if active player changed
-          if (!prev[randomIndex].isActive) {
+          if (!prevPlayers[randomIndex].isActive) {
             soundService.play('player_join');
           }
           

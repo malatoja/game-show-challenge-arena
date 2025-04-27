@@ -9,7 +9,8 @@ export type SoundType =
   | 'wheel_spin'
   | 'player_join'
   | 'player_leave'
-  | 'game_over';
+  | 'game_over'
+  | 'question_show'; // Added this new sound type
 
 class SoundService {
   private sounds: Map<SoundType, HTMLAudioElement> = new Map();
@@ -28,6 +29,7 @@ class SoundService {
     player_join: '/sounds/player_join.mp3',
     player_leave: '/sounds/player_leave.mp3',
     game_over: '/sounds/game_over.mp3',
+    question_show: '/sounds/question_show.mp3', // Added default path for new sound
   };
 
   constructor() {

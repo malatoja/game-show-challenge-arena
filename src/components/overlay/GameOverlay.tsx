@@ -19,6 +19,7 @@ interface GameOverlayProps {
   difficulties?: number[];
   selectedCategory?: string;
   selectedDifficulty?: number;
+  timerPulsing?: boolean;
 }
 
 export const GameOverlay: React.FC<GameOverlayProps> = ({
@@ -32,9 +33,9 @@ export const GameOverlay: React.FC<GameOverlayProps> = ({
   difficulties = [10, 20, 30],
   selectedCategory = "",
   selectedDifficulty = 0,
+  timerPulsing = false,
 }) => {
   const [time, setTime] = useState(currentTime);
-  const [isPulsing, setIsPulsing] = useState(false);
   
   // Split players into top and bottom rows
   const topRowPlayers = players.slice(0, 5);
@@ -42,8 +43,6 @@ export const GameOverlay: React.FC<GameOverlayProps> = ({
   
   useEffect(() => {
     setTime(currentTime);
-    // Set pulsing effect when timer goes below 5 seconds
-    setIsPulsing(currentTime <= 5);
   }, [currentTime]);
 
   return (
@@ -60,7 +59,7 @@ export const GameOverlay: React.FC<GameOverlayProps> = ({
       <Timer 
         currentTime={time} 
         maxTime={maxTime} 
-        isPulsing={isPulsing}
+        isPulsing={timerPulsing}
       />
       
       {/* Top Row Players */}
