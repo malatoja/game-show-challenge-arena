@@ -1,183 +1,95 @@
 
-export type SoundType = 
-  | 'timer'
-  | 'correct'
-  | 'wrong'
-  | 'round_start'
-  | 'round_end'
-  | 'card_use'
+export type SoundType =
   | 'wheel_spin'
+  | 'round_start'
+  | 'question_show'
+  | 'timer'
   | 'player_join'
-  | 'player_leave'
+  | 'correct_answer'
+  | 'wrong_answer'
   | 'game_over'
-  | 'question_show'; // Added this new sound type
+  | 'card_awarded'
+  | 'card_use';
 
 class SoundService {
-  private sounds: Map<SoundType, HTMLAudioElement> = new Map();
-  private isMuted: boolean = false;
+  private sounds: Map<SoundType, HTMLAudioElement>;
+  private muted: boolean = false;
   private volume: number = 1.0;
-
-  // Default sound paths
-  private defaultSoundPaths: Record<SoundType, string> = {
-    timer: '/sounds/timer.mp3',
-    correct: '/sounds/correct.mp3',
-    wrong: '/sounds/wrong.mp3',
-    round_start: '/sounds/round_start.mp3',
-    round_end: '/sounds/round_end.mp3',
-    card_use: '/sounds/card_use.mp3',
-    wheel_spin: '/sounds/wheel_spin.mp3',
-    player_join: '/sounds/player_join.mp3',
-    player_leave: '/sounds/player_leave.mp3',
-    game_over: '/sounds/game_over.mp3',
-    question_show: '/sounds/question_show.mp3', // Added default path for new sound
-  };
-
+  
   constructor() {
-    // Load user sound preferences from localStorage
-    this.loadPreferences();
-    
-    // Preload sounds
-    this.preloadSounds();
+    this.sounds = new Map();
+    this.initSounds();
   }
 
-  private loadPreferences(): void {
-    const savedVolume = localStorage.getItem('gameShowSoundVolume');
-    if (savedVolume !== null) {
-      this.volume = parseFloat(savedVolume);
-    }
-    
-    const savedMuteState = localStorage.getItem('gameShowSoundMuted');
-    if (savedMuteState !== null) {
-      this.isMuted = savedMuteState === 'true';
-    }
-  }
+  private initSounds(): void {
+    const soundFiles: Record<SoundType, string> = {
+      wheel_spin: '/sounds/wheel_spin.mp3',
+      round_start: '/sounds/round_start.mp3',
+      question_show: '/sounds/question_show.mp3',
+      timer: '/sounds/timer.mp3',
+      player_join: '/sounds/player_join.mp3',
+      correct_answer: '/sounds/correct_answer.mp3',
+      wrong_answer: '/sounds/wrong_answer.mp3',
+      game_over: '/sounds/game_over.mp3',
+      card_awarded: '/sounds/card_awarded.mp3',
+      card_use: '/sounds/card_use.mp3',
+    };
 
-  private savePreferences(): void {
-    localStorage.setItem('gameShowSoundVolume', this.volume.toString());
-    localStorage.setItem('gameShowSoundMuted', this.isMuted.toString());
-  }
-
-  private preloadSounds(): void {
-    Object.entries(this.defaultSoundPaths).forEach(([type, path]) => {
-      // Check if there is a custom path defined in localStorage
-      const customSoundPath = localStorage.getItem(`gameShowSound_${type}`);
-      const finalPath = customSoundPath || path;
-      
-      // Create audio element
-      const audio = new Audio(finalPath);
+    Object.entries(soundFiles).forEach(([type, path]) => {
+      const audio = new Audio(path);
       audio.preload = 'auto';
       audio.volume = this.volume;
-      
-      // Store in map
       this.sounds.set(type as SoundType, audio);
     });
   }
 
-  public play(type: SoundType): void {
-    if (this.isMuted) return;
+  play(type: SoundType): void {
+    if (this.muted) return;
     
     const sound = this.sounds.get(type);
-    if (sound) {
-      // Reset sound to beginning if it's already playing
-      sound.pause();
-      sound.currentTime = 0;
-      
-      // Play sound
-      sound.play().catch(error => {
-        console.error(`Error playing sound (${type}):`, error);
-      });
-    } else {
-      console.warn(`Sound '${type}' not found`);
-    }
+    if (!sound) return;
+
+    // Reset the audio to the beginning in case it's already playing
+    sound.pause();
+    sound.currentTime = 0;
+    sound.play().catch(error => {
+      console.error(`Error playing sound ${type}:`, error);
+    });
   }
 
-  public setVolume(volume: number): void {
+  setVolume(volume: number): void {
     this.volume = Math.max(0, Math.min(1, volume));
-    
-    // Apply new volume to all sounds
     this.sounds.forEach(sound => {
       sound.volume = this.volume;
     });
-    
-    this.savePreferences();
   }
 
-  public mute(): void {
-    this.isMuted = true;
-    this.savePreferences();
+  mute(): void {
+    this.muted = true;
+    this.sounds.forEach(sound => {
+      sound.pause();
+      sound.currentTime = 0;
+    });
   }
 
-  public unmute(): void {
-    this.isMuted = false;
-    this.savePreferences();
+  unmute(): void {
+    this.muted = false;
   }
 
-  public toggleMute(): void {
-    this.isMuted = !this.isMuted;
-    this.savePreferences();
+  isMuted(): boolean {
+    return this.muted;
   }
 
-  public isSoundMuted(): boolean {
-    return this.isMuted;
-  }
-
-  public getVolume(): number {
+  getVolume(): number {
     return this.volume;
   }
 
-  public setCustomSound(type: SoundType, file: File): Promise<void> {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      
-      reader.onload = (event) => {
-        try {
-          // Create object URL for the file
-          const blob = new Blob([event.target!.result as ArrayBuffer], { type: file.type });
-          const objectUrl = URL.createObjectURL(blob);
-          
-          // Update sound in the map
-          const audio = new Audio(objectUrl);
-          audio.volume = this.volume;
-          this.sounds.set(type, audio);
-          
-          // Store path in localStorage
-          localStorage.setItem(`gameShowSound_${type}`, objectUrl);
-          
-          resolve();
-        } catch (error) {
-          reject(error);
-        }
-      };
-      
-      reader.onerror = () => {
-        reject(new Error('Failed to read sound file'));
-      };
-      
-      reader.readAsArrayBuffer(file);
+  // Pre-load audio to avoid delays
+  preload(): void {
+    this.sounds.forEach(sound => {
+      sound.load();
     });
-  }
-
-  public resetSound(type: SoundType): void {
-    // Remove custom sound path from localStorage
-    localStorage.removeItem(`gameShowSound_${type}`);
-    
-    // Reset to default sound
-    const defaultPath = this.defaultSoundPaths[type];
-    const audio = new Audio(defaultPath);
-    audio.volume = this.volume;
-    this.sounds.set(type, audio);
-  }
-
-  public resetAllSounds(): void {
-    // Clear all custom sound paths
-    Object.keys(this.defaultSoundPaths).forEach(type => {
-      localStorage.removeItem(`gameShowSound_${type}`);
-    });
-    
-    // Reload all sounds with default paths
-    this.preloadSounds();
   }
 }
 
-// Create a singleton instance
 export const soundService = new SoundService();

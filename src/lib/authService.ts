@@ -11,9 +11,9 @@ const defaultAuthSettings: AuthSettings = {
 };
 
 // Local storage keys
-const AUTH_SETTINGS_KEY = 'gameShowAuthSettings';
-const AUTH_HOST_SESSION_KEY = 'gameShowHostSession';
-const AUTH_SETTINGS_SESSION_KEY = 'gameShowSettingsSession';
+const AUTH_SETTINGS_KEY = 'discordGameShowAuthSettings';
+const AUTH_HOST_SESSION_KEY = 'discordGameShowHostSession';
+const AUTH_SETTINGS_SESSION_KEY = 'discordGameShowSettingsSession';
 
 // Get stored auth settings
 export const getAuthSettings = (): AuthSettings => {

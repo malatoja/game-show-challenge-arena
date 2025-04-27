@@ -1,71 +1,143 @@
-import React from 'react';
+
+import React, { useEffect, useState } from 'react';
 import { Player } from '@/types/gameTypes';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface PlayerCameraProps {
   player: Player;
-  position: 'top' | 'bottom';
+  position?: 'top' | 'bottom';
 }
 
-export const PlayerCamera: React.FC<PlayerCameraProps> = ({ player, position }) => {
-  const playerColor = player.color || getRandomNeonColor(player.id);
+export const PlayerCamera: React.FC<PlayerCameraProps> = ({ player, position = 'top' }) => {
+  const [lifePercentage, setLifePercentage] = useState(100);
   
+  useEffect(() => {
+    // Convert raw lives value to percentage
+    const maxLives = 100;
+    const percentage = (player.lives / maxLives) * 100;
+    setLifePercentage(Math.max(0, Math.min(100, percentage)));
+  }, [player.lives]);
+
   return (
-    <div className="flex flex-col items-center w-[18%] min-w-[150px]">
-      <div 
-        className={`w-full aspect-video border-2 rounded-md overflow-hidden transition-all duration-300 ${player.isActive ? 'animate-pulse' : ''}`}
-        style={{ 
-          borderColor: playerColor,
-          boxShadow: player.isActive ? `0 0 10px ${playerColor}, 0 0 20px ${playerColor}` : 'none'
-        }}
-      >
-        <div className="w-full h-full bg-black/50 flex justify-center items-center">
-          {player.streamUrl ? (
-            <img src={player.streamUrl} alt={player.name} className="w-full h-full object-cover" />
-          ) : (
-            <div className="text-white/50 text-sm">No Feed</div>
-          )}
-        </div>
-      </div>
-      <div 
-        className="mt-1 font-bold text-center text-shadow-neon"
-        style={{ color: playerColor }}
-      >
-        {player.name}
-      </div>
-      {position === 'bottom' && (
-        <div className="w-full h-1.5 bg-white/20 rounded-full mt-1 overflow-hidden">
+    <div className="player-container">
+      {/* Active player indicator */}
+      <AnimatePresence>
+        {player.isActive && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+            className="absolute inset-0 z-0"
+          >
+            <div className="absolute inset-0 rounded-lg border-2"
+              style={{
+                borderColor: '#39FF14',
+                boxShadow: '0 0 10px #39FF14, 0 0 20px rgba(57, 255, 20, 0.5)'
+              }}
+            ></div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+      
+      {/* Player camera container */}
+      <div className={`player-camera ${position === 'top' ? 'top-camera' : 'bottom-camera'}`}>
+        {/* Player health bar */}
+        <div className="health-bar-container">
           <div 
-            className="h-full transition-all duration-500 ease-in-out"
+            className="health-bar"
             style={{ 
-              width: `${player.lives}%`,
-              backgroundColor: getHealthColor(player.lives)
+              width: `${lifePercentage}%`,
+              backgroundColor: lifePercentage > 50 ? '#39FF14' : lifePercentage > 20 ? '#FFC107' : '#FF3864',
+              boxShadow: `0 0 5px ${lifePercentage > 50 ? '#39FF14' : lifePercentage > 20 ? '#FFC107' : '#FF3864'}`
             }}
           ></div>
         </div>
-      )}
+        
+        {/* Player name */}
+        <div className="player-name">
+          {player.name}
+        </div>
+        
+        {/* Points display */}
+        <div className="player-points">
+          {player.points} pkt
+        </div>
+      </div>
+      
+      {/* Style for the component */}
+      <style jsx>{`
+        .player-container {
+          position: relative;
+          width: 150px;
+          height: 150px;
+          margin: 0 10px;
+        }
+        
+        .player-camera {
+          width: 100%;
+          height: 100%;
+          background-color: #0A0A1A;
+          border-radius: 8px;
+          overflow: hidden;
+          position: relative;
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          display: flex;
+          flex-direction: column;
+          justify-content: flex-end;
+          box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+          transition: transform 0.3s ease, box-shadow 0.3s ease;
+          z-index: 1;
+        }
+        
+        .player-camera.top-camera {
+          transform-origin: bottom center;
+        }
+        
+        .player-camera.bottom-camera {
+          transform-origin: top center;
+        }
+        
+        .health-bar-container {
+          position: absolute;
+          bottom: 25px;
+          left: 0;
+          width: 100%;
+          height: 5px;
+          background-color: rgba(0, 0, 0, 0.5);
+        }
+        
+        .health-bar {
+          height: 100%;
+          background-color: #39FF14;
+          transition: width 0.5s ease, background-color 0.5s ease;
+        }
+        
+        .player-name {
+          position: absolute;
+          bottom: 5px;
+          left: 0;
+          width: 100%;
+          text-align: center;
+          color: white;
+          font-size: 12px;
+          padding: 2px 5px;
+          font-weight: bold;
+          text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+        }
+        
+        .player-points {
+          position: absolute;
+          top: 5px;
+          right: 5px;
+          background-color: rgba(0, 0, 0, 0.6);
+          color: #39FF14;
+          font-size: 10px;
+          padding: 2px 5px;
+          border-radius: 3px;
+          font-weight: bold;
+          text-shadow: 0 0 2px #39FF14;
+        }
+      `}</style>
     </div>
   );
 };
-
-// Helper function to generate a random neon color based on player ID
-function getRandomNeonColor(playerId: string): string {
-  const neonColors = [
-    '#2E9CCA', // blue
-    '#9D4EDD', // purple
-    '#39FF14', // green
-    '#FF3864', // pink
-    '#FF6B35', // orange
-    '#FFD700', // yellow
-  ];
-  
-  // Use player ID to consistently get the same color for a player
-  const index = playerId.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0) % neonColors.length;
-  return neonColors[index];
-}
-
-// Helper function to determine health bar color based on percentage
-function getHealthColor(percentage: number): string {
-  if (percentage > 60) return '#39FF14'; // Neon green
-  if (percentage > 30) return '#FFD700'; // Neon yellow
-  return '#FF3864'; // Neon red
-}

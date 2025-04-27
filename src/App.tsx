@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import HostPage from "./pages/HostPage";
 import PlayerPage from "./pages/PlayerPage";
+import PlayersPage from "./pages/PlayersPage";
 import NotFound from "./pages/NotFound";
 import GameRulesPage from "./pages/GameRulesPage";
 import SettingsPage from "./pages/SettingsPage";
@@ -26,6 +27,7 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/host" element={<HostPage />} />
             <Route path="/player" element={<PlayerPage />} />
+            <Route path="/players" element={<PlayersPage />} />
             <Route path="/rules" element={<GameRulesPage />} />
             <Route path="/settings" element={<SettingsPage />} />
             <Route path="/overlay" element={<OverlayPage />} />

@@ -3,166 +3,132 @@
 @tailwind components;
 @tailwind utilities;
 
-@layer utilities {
-  .text-shadow-neon {
-    text-shadow: 0 0 5px rgba(255, 255, 255, 0.7), 0 0 10px rgba(255, 255, 255, 0.5);
+:root {
+  --gameshow-background: #0D0221;
+  --gameshow-card: #1A1031;
+  --gameshow-text: #FFFFFF;
+  --gameshow-muted: #B9B9BE;
+  --gameshow-primary: #39FF14; /* Neon Green */
+  --gameshow-secondary: #FF3864; /* Neon Pink */
+  --gameshow-accent: #2E9CCA;
+}
+
+@layer base {
+  body {
+    @apply bg-gameshow-background text-gameshow-text;
+    font-family: 'Montserrat', sans-serif;
   }
   
-  /* Pulse animation for the logo */
-  .animate-pulse-logo {
-    animation: pulse-logo 2s infinite;
-  }
-
-  /* Timer pulse animation for last 5 seconds */
-  .animate-timer-pulse {
-    animation: timer-pulse 0.5s infinite;
-  }
-
-  /* Marquee animation for bottom events */
-  .animate-marquee {
-    animation: marquee 15s linear infinite;
-  }
-
-  /* Fade-in animation */
-  .animate-fade-in {
-    animation: fade-in 0.5s ease-out forwards;
-  }
-
-  /* Neon pulse animation */
-  .animate-neon-pulse {
-    animation: neon-pulse 1.5s infinite;
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-bold text-gameshow-text;
   }
 }
 
-@keyframes pulse-logo {
+@layer components {
+  .game-btn {
+    @apply bg-gradient-to-r from-gameshow-primary to-gameshow-accent 
+           text-black font-bold py-2 px-4 rounded-lg 
+           shadow-[0_0_10px_rgba(57,255,20,0.6)]
+           hover:shadow-[0_0_15px_rgba(57,255,20,0.8)]
+           transition-all duration-300;
+  }
+  
+  .game-card {
+    @apply bg-gameshow-card border-l-4 border-gameshow-primary 
+           p-4 rounded-lg shadow-md transition-all;
+  }
+  
+  .neon-text {
+    @apply font-bold;
+    text-shadow: 
+      0 0 5px #fff,
+      0 0 10px #fff,
+      0 0 15px #39FF14,
+      0 0 20px #39FF14,
+      0 0 25px #39FF14;
+  }
+  
+  .neon-border {
+    @apply border-2 border-gameshow-primary;
+    box-shadow: 
+      0 0 5px #39FF14,
+      0 0 10px rgba(57, 255, 20, 0.5);
+  }
+}
+
+/* Animated elements */
+@keyframes pulse {
   0%, 100% {
     opacity: 1;
-    transform: scale(1);
+    box-shadow: 0 0 10px var(--gameshow-primary), 0 0 20px rgba(57, 255, 20, 0.5);
   }
   50% {
     opacity: 0.8;
-    transform: scale(0.95);
-  }
-}
-
-@keyframes timer-pulse {
-  0%, 100% {
-    opacity: 1;
-    transform: scale(1);
-  }
-  50% {
-    opacity: 0.8;
-    transform: scale(1.05);
-  }
-}
-
-@keyframes marquee {
-  0% {
-    transform: translateX(100%);
-  }
-  100% {
-    transform: translateX(-100%);
-  }
-}
-
-@keyframes fade-in {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
+    box-shadow: 0 0 15px var(--gameshow-primary), 0 0 30px rgba(57, 255, 20, 0.7);
   }
 }
 
 @keyframes neon-pulse {
   0%, 100% {
-    text-shadow: 0 0 5px rgba(255, 56, 100, 0.7), 0 0 10px rgba(255, 56, 100, 0.5);
+    text-shadow: 
+      0 0 5px #fff,
+      0 0 10px #fff,
+      0 0 15px #39FF14,
+      0 0 20px #39FF14;
   }
   50% {
-    text-shadow: 0 0 10px rgba(255, 56, 100, 0.9), 0 0 20px rgba(255, 56, 100, 0.7), 0 0 30px rgba(255, 56, 100, 0.5);
+    text-shadow: 
+      0 0 5px #fff,
+      0 0 7px #fff,
+      0 0 10px #39FF14,
+      0 0 15px #39FF14;
   }
 }
 
-/* Tailwind extensions for neon colors */
+.animate-neon-pulse {
+  animation: neon-pulse 2s infinite;
+}
+
+/* Custom utility classes */
+.text-shadow {
+  text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.8);
+}
+
+/* Tailwind Customizations */
 @layer utilities {
-  .border-neon-blue {
-    border-color: rgba(0, 195, 255, 0.8);
-    box-shadow: 0 0 5px rgba(0, 195, 255, 0.5), inset 0 0 5px rgba(0, 195, 255, 0.2);
+  .bg-gameshow-background {
+    background-color: var(--gameshow-background);
   }
   
-  .border-neon-purple {
-    border-color: rgba(159, 0, 255, 0.8);
-    box-shadow: 0 0 5px rgba(159, 0, 255, 0.5), inset 0 0 5px rgba(159, 0, 255, 0.2);
+  .bg-gameshow-card {
+    background-color: var(--gameshow-card);
   }
   
-  .border-neon-pink {
-    border-color: rgba(255, 56, 100, 0.8);
-    box-shadow: 0 0 5px rgba(255, 56, 100, 0.5), inset 0 0 5px rgba(255, 56, 100, 0.2);
+  .text-gameshow-text {
+    color: var(--gameshow-text);
   }
   
-  .text-neon-blue {
-    color: rgba(0, 195, 255, 1);
-    text-shadow: 0 0 5px rgba(0, 195, 255, 0.7), 0 0 10px rgba(0, 195, 255, 0.5);
+  .text-gameshow-muted {
+    color: var(--gameshow-muted);
   }
   
-  .text-neon-purple {
-    color: rgba(159, 0, 255, 1);
-    text-shadow: 0 0 5px rgba(159, 0, 255, 0.7), 0 0 10px rgba(159, 0, 255, 0.5);
+  .text-gameshow-primary {
+    color: var(--gameshow-primary);
   }
   
-  .text-neon-pink {
-    color: rgba(255, 56, 100, 1);
-    text-shadow: 0 0 5px rgba(255, 56, 100, 0.7), 0 0 10px rgba(255, 56, 100, 0.5);
+  .text-gameshow-secondary {
+    color: var(--gameshow-secondary);
   }
   
-  .bg-neon-blue {
-    background-color: rgba(0, 195, 255, 1);
-    box-shadow: 0 0 10px rgba(0, 195, 255, 0.7), 0 0 20px rgba(0, 195, 255, 0.5);
+  .text-gameshow-accent {
+    color: var(--gameshow-accent);
   }
   
-  .bg-neon-purple {
-    background-color: rgba(159, 0, 255, 1);
-    box-shadow: 0 0 10px rgba(159, 0, 255, 0.7), 0 0 20px rgba(159, 0, 255, 0.5);
+  .border-gameshow-primary {
+    border-color: var(--gameshow-primary);
   }
   
-  .bg-neon-pink {
-    background-color: rgba(255, 56, 100, 1);
-    box-shadow: 0 0 10px rgba(255, 56, 100, 0.7), 0 0 20px rgba(255, 56, 100, 0.5);
+  .border-gameshow-secondary {
+    border-color: var(--gameshow-secondary);
   }
 }
-
-/* Gameshow specific theme colors */
-.bg-gameshow-background {
-  background-color: #0f0f1a;
-}
-
-.bg-gameshow-card {
-  background-color: #1a1a2e;
-}
-
-.text-gameshow-text {
-  color: #f2f2f2;
-}
-
-.text-gameshow-muted {
-  color: #a0a0b0;
-}
-
-.bg-gameshow-primary {
-  background-color: #FF3864;
-}
-
-.text-gameshow-primary {
-  color: #FF3864;
-}
-
-.bg-gameshow-secondary {
-  background-color: #261447;
-}
-
-.text-gameshow-secondary {
-  color: #261447;
-}
-

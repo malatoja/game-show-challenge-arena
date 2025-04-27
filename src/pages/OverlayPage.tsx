@@ -43,7 +43,7 @@ const OverlayPage = () => {
       websocketService.addListener('QUESTION_UPDATE', (data: any) => {
         setQuestion(data.text);
         setShowCategoryTable(false);
-        soundService.play('question_show'); // Fixed to use valid sound type
+        soundService.play('question_show');
       });
       
       websocketService.addListener('TIMER_UPDATE', (data: any) => {
@@ -121,7 +121,7 @@ const OverlayPage = () => {
       const questionTimer = setTimeout(() => {
         setShowCategoryTable(false);
         setQuestion("Jaki streamer na polskim Twitchu pobił rekord widzów w 2023 roku?");
-        soundService.play('question_show'); // Fixed to use valid sound type
+        soundService.play('question_show');
       }, 8000);
       
       // Simulate activating different players periodically

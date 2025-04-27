@@ -1,8 +1,9 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { RoundType } from '@/types/gameTypes';
 import { ROUND_NAMES } from '@/constants/gameConstants';
+import RoundStartAnimation from '../animations/RoundStartAnimation';
 
 interface GameControlsProps {
   canStartRound: boolean;
@@ -23,6 +24,19 @@ export function GameControls({
   onResetGame,
   onEndGame
 }: GameControlsProps) {
+  const [showRoundAnimation, setShowRoundAnimation] = useState(false);
+  const [activeRound, setActiveRound] = useState<RoundType>('knowledge');
+  
+  const handleStartRound = (roundType: RoundType) => {
+    setActiveRound(roundType);
+    setShowRoundAnimation(true);
+    
+    // Start the round after the animation finishes
+    setTimeout(() => {
+      onStartRound(roundType);
+    }, 3500); // Animation duration is 3.5 seconds
+  };
+  
   return (
     <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-gameshow-card p-4 rounded-lg">
       <div>
@@ -33,21 +47,21 @@ export function GameControls({
           {canStartRound && (
             <>
               <Button 
-                onClick={() => onStartRound('knowledge')} 
+                onClick={() => handleStartRound('knowledge')} 
                 variant="default"
                 className="bg-blue-600 hover:bg-blue-700"
               >
                 Rozpocznij Rundę 1
               </Button>
               <Button 
-                onClick={() => onStartRound('speed')} 
+                onClick={() => handleStartRound('speed')} 
                 variant="default"
                 className="bg-amber-600 hover:bg-amber-700"
               >
                 Rozpocznij Rundę 2
               </Button>
               <Button 
-                onClick={() => onStartRound('wheel')} 
+                onClick={() => handleStartRound('wheel')} 
                 variant="default"
                 className="bg-purple-600 hover:bg-purple-700"
               >
@@ -77,8 +91,15 @@ export function GameControls({
           Zakończ grę
         </Button>
       </div>
+      
+      {/* Round Start Animation */}
+      <RoundStartAnimation 
+        roundType={activeRound} 
+        show={showRoundAnimation}
+        onComplete={() => setShowRoundAnimation(false)}
+      />
     </div>
   );
-}
+};
 
 export default GameControls;

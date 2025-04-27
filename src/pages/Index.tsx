@@ -2,6 +2,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
+import { Settings, Users, Eye, Shield, Cog } from 'lucide-react';
 
 const Index = () => {
   return (
@@ -9,16 +10,16 @@ const Index = () => {
       <div className="flex-1 flex flex-col items-center justify-center px-4 py-16 text-center">
         <h1 className="text-4xl md:text-6xl font-extrabold text-white mb-6">
           <span className="text-transparent bg-clip-text bg-gradient-to-r from-gameshow-primary via-gameshow-accent to-gameshow-secondary">
-            Game Show Challenge Arena
+            Discord Game Show
           </span>
         </h1>
         
         <p className="text-xl text-gameshow-muted max-w-2xl mb-8">
-          Interaktywny teleturniej z trzema rundami, specjalnymi kartami i animacjami dla streamów na Twitchu. 
+          Interaktywny teleturniej z trzema rundami, specjalnymi kartami i animacjami dla streamów na Twitchu i Discordzie. 
           Pytania z polskiego internetu, Twitcha i gier w Polsce.
         </p>
         
-        <div className="flex flex-col md:flex-row gap-4">
+        <div className="flex flex-col md:flex-row gap-4 mb-12">
           <Link to="/host">
             <Button className="game-btn text-lg px-8 py-6" size="lg">
               Panel Hosta
@@ -28,6 +29,36 @@ const Index = () => {
           <Link to="/player">
             <Button variant="outline" className="text-lg px-8 py-6 bg-gameshow-card border-gameshow-primary/50" size="lg">
               Widok Gracza
+            </Button>
+          </Link>
+        </div>
+        
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-3xl w-full">
+          <Link to="/settings" className="flex-1">
+            <Button variant="outline" className="w-full h-full py-6 flex flex-col items-center justify-center gap-2 bg-gameshow-card/50">
+              <Settings size={24} className="text-gameshow-primary" />
+              <span>Ustawienia</span>
+            </Button>
+          </Link>
+          
+          <Link to="/overlay" className="flex-1">
+            <Button variant="outline" className="w-full h-full py-6 flex flex-col items-center justify-center gap-2 bg-gameshow-card/50">
+              <Eye size={24} className="text-gameshow-primary" />
+              <span>Overlay</span>
+            </Button>
+          </Link>
+          
+          <Link to="/players" className="flex-1">
+            <Button variant="outline" className="w-full h-full py-6 flex flex-col items-center justify-center gap-2 bg-gameshow-card/50">
+              <Users size={24} className="text-gameshow-primary" />
+              <span>Gracze</span>
+            </Button>
+          </Link>
+          
+          <Link to="/rules" className="flex-1">
+            <Button variant="outline" className="w-full h-full py-6 flex flex-col items-center justify-center gap-2 bg-gameshow-card/50">
+              <Shield size={24} className="text-gameshow-primary" />
+              <span>Zasady</span>
             </Button>
           </Link>
         </div>
@@ -54,11 +85,15 @@ const Index = () => {
         <div className="bg-gameshow-card rounded-lg p-6 shadow-lg">
           <h2 className="text-2xl font-bold text-gameshow-text mb-4">Idealny dla Streamerów</h2>
           <p className="text-gameshow-muted">
-            Zaprojektowany z myślą o streamowaniu na Twitchu. Łatwy w obsłudze panel hosta i 
+            Zaprojektowany z myślą o streamowaniu na Twitchu i Discordzie. Łatwy w obsłudze panel hosta i 
             interaktywne widoki dla graczy tworzą wciągające doświadczenie dla widzów.
           </p>
         </div>
       </div>
+      
+      <footer className="py-6 text-center text-sm text-gameshow-muted">
+        <p>Discord Game Show &copy; {new Date().getFullYear()}</p>
+      </footer>
     </div>
   );
 };
