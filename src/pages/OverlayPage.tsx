@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { GameOverlay } from '@/components/overlay/GameOverlay';
 import { Player } from '@/types/gameTypes';
@@ -56,11 +55,11 @@ const OverlayPage = () => {
       });
       
       websocketService.addListener('PLAYER_UPDATE', (data: any) => {
-        setPlayers(prevPlayers => prevPlayers.map(player => 
+        setPlayers(prev => prev.map(player => 
           player.id === data.id ? { ...player, ...data } : player
         ));
         
-        if (data.isActive && !prevPlayers.find((p: Player) => p.id === data.id)?.isActive) {
+        if (data.isActive && !prev.find((p: Player) => p.id === data.id)?.isActive) {
           soundService.play('player_join');
         }
       });
@@ -117,14 +116,14 @@ const OverlayPage = () => {
       // Simulate activating different players periodically
       const playerTimer = setInterval(() => {
         const randomIndex = Math.floor(Math.random() * players.length);
-        setPlayers(prevPlayers => {
-          const updatedPlayers = prevPlayers.map((player, index) => ({
+        setPlayers(prev => {
+          const updatedPlayers = prev.map((player, index) => ({
             ...player,
             isActive: index === randomIndex
           }));
           
           // Play sound if active player changed
-          if (!prevPlayers[randomIndex].isActive) {
+          if (!prev[randomIndex].isActive) {
             soundService.play('player_join');
           }
           
