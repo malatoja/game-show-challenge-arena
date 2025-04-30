@@ -11,10 +11,12 @@ import { useEvents } from './EventsContext';
 import { useGame } from '@/context/GameContext';
 import { Player, RoundType, CardType } from '@/types/gameTypes';
 
-interface GameControlContext {
+// Export this interface so it can be imported by GameController
+export interface GameControlContext {
   activePlayerId: string | null;
   canStartRound: boolean;
   canEndRound: boolean;
+  isRoundActive: boolean;
   handleSelectPlayer: (player: Player) => void;
   handleStartRound: (roundType: RoundType) => void;
   handleEndRound: () => void;
@@ -27,7 +29,7 @@ interface GameControlContext {
   handleAddTestCards: (playerId: string) => void;
 }
 
-interface GameLayoutProps {
+export interface GameLayoutProps {
   gameControl: GameControlContext;
 }
 

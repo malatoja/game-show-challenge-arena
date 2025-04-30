@@ -7,7 +7,7 @@ import { ROUND_NAMES } from '@/constants/gameConstants';
 import { useEvents } from './EventsContext';
 import { useTimer } from './TimerContext';
 import GameResults from './GameResults';
-import GameLayout, { GameLayoutProps } from './GameLayout';
+import GameLayout, { GameControlContext } from './GameLayout';
 
 interface GameControllerProps {
   children?: React.ReactNode;
@@ -151,7 +151,7 @@ export function GameController({ children }: GameControllerProps) {
   }
   
   // Context object with all the handler functions
-  const gameControlContext = {
+  const gameControlContext: GameControlContext = {
     activePlayerId,
     canStartRound,
     canEndRound,
