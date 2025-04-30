@@ -175,3 +175,62 @@ export const saveCardRules = (rules: Record<string, boolean>): void => {
     console.error('Error saving card rules:', error);
   }
 };
+
+// Get all question categories
+export const getAllCategories = (): string[] => {
+  try {
+    // First try to get custom categories from localStorage
+    const customCategories = localStorage.getItem('customQuestionCategories');
+    if (customCategories) {
+      return JSON.parse(customCategories);
+    }
+    
+    // If no custom categories, return default ones
+    return ['Historia', 'Geografia', 'Nauka', 'Sport', 'Kultura', 'Technologia', 'Gaming', 'Memy'];
+  } catch (error) {
+    console.error('Error loading question categories:', error);
+    return ['Historia', 'Geografia', 'Nauka', 'Sport', 'Kultura', 'Technologia'];
+  }
+};
+
+// Save custom question categories to localStorage
+export const saveCategories = (categories: string[]): void => {
+  try {
+    localStorage.setItem('customQuestionCategories', JSON.stringify(categories));
+  } catch (error) {
+    console.error('Error saving question categories:', error);
+  }
+};
+
+// Add a new category
+export const addCategory = (newCategory: string): string[] => {
+  try {
+    const currentCategories = getAllCategories();
+    
+    // Check if category already exists (case insensitive)
+    if (currentCategories.some(cat => cat.toLowerCase() === newCategory.toLowerCase())) {
+      throw new Error('Kategoria już istnieje');
+    }
+    
+    // Add new category
+    const updatedCategories = [...currentCategories, newCategory];
+    saveCategories(updatedCategories);
+    return updatedCategories;
+  } catch (error) {
+    console.error('Error adding category:', error);
+    throw error;
+  }
+};
+
+// Remove a category
+export const removeCategory = (categoryToRemove: string): string[] => {
+  try {
+    const currentCategories = getAllCategories();
+    const updatedCategories = currentCategories.filter(cat => cat !== categoryToRemove);
+    saveCategories(updatedCategories);
+    return updatedCategories;
+  } catch (error) {
+    console.error('Error removing category:', error);
+    throw error;
+  }
+};

@@ -1,9 +1,9 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { RoundType } from '@/types/gameTypes';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { WHEEL_CATEGORIES } from '@/constants/gameConstants';
+import { getAllCategories } from '@/utils/gameUtils';
 
 interface QuestionFiltersProps {
   roundFilter: RoundType | 'all';
@@ -22,6 +22,13 @@ export function QuestionFilters({
   onCategoryFilterChange,
   onSearchTermChange
 }: QuestionFiltersProps) {
+  const [categories, setCategories] = useState<string[]>([]);
+
+  // Load categories on component mount
+  useEffect(() => {
+    setCategories(getAllCategories());
+  }, []);
+
   return (
     <div className="flex flex-col md:flex-row justify-between gap-4 mb-6">
       <div className="flex-1">
@@ -59,7 +66,7 @@ export function QuestionFilters({
           </SelectTrigger>
           <SelectContent className="bg-gameshow-card border-gameshow-primary/30">
             <SelectItem value="all">Wszystkie kategorie</SelectItem>
-            {WHEEL_CATEGORIES.map((cat) => (
+            {categories.map((cat) => (
               <SelectItem key={cat} value={cat}>{cat}</SelectItem>
             ))}
           </SelectContent>

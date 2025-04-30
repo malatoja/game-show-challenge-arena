@@ -16,12 +16,15 @@ import { KnowledgeRoundTab } from './question-editor/tabs/KnowledgeRoundTab';
 import { SpeedRoundTab } from './question-editor/tabs/SpeedRoundTab';
 import { WheelRoundTab } from './question-editor/tabs/WheelRoundTab';
 import { StandardQuestionsTab } from './question-editor/tabs/StandardQuestionsTab';
+import { CategoryManager } from './question-editor/CategoryManager';
+import { getAllCategories } from '@/utils/gameUtils';
 
 export function QuestionsTab() {
   const [questions, setQuestions] = useState<Question[]>([]);
   const [isImporting, setIsImporting] = useState(false);
   const [activeTab, setActiveTab] = useState<string>("all");
   const [importFormat, setImportFormat] = useState<"json" | "csv">("json");
+  const [categories, setCategories] = useState<string[]>([]);
 
   // Define form for round settings
   const form = useForm<RoundSettingsFormValues>({
@@ -33,7 +36,7 @@ export function QuestionsTab() {
     },
   });
 
-  // Load settings and questions from localStorage on component mount
+  // Load settings, questions and categories from localStorage on component mount
   useEffect(() => {
     // Load questions
     const storedQuestions = localStorage.getItem('gameShowQuestions');
@@ -55,6 +58,9 @@ export function QuestionsTab() {
         console.error('Error parsing round settings from localStorage:', error);
       }
     }
+    
+    // Load categories
+    setCategories(getAllCategories());
   }, []);
 
   // Save round settings when they change
@@ -174,6 +180,11 @@ export function QuestionsTab() {
     }
   };
 
+  // Handle categories update
+  const handleCategoriesChange = (updatedCategories: string[]) => {
+    setCategories(updatedCategories);
+  };
+
   // Calculate questions statistics by round
   const roundStats = {
     all: questions.length,
@@ -198,6 +209,11 @@ export function QuestionsTab() {
         <p className="text-gameshow-muted mb-4">
           Tutaj możesz dodawać, edytować, importować i eksportować pytania do teleturnieju.
         </p>
+        
+        {/* Category Manager */}
+        <div className="bg-gameshow-background/30 p-4 rounded-md border border-gameshow-primary/20">
+          <CategoryManager categories={categories} onCategoriesChange={handleCategoriesChange} />
+        </div>
 
         <Tabs 
           value={activeTab} 
