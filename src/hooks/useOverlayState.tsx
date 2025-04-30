@@ -57,13 +57,18 @@ export const useOverlayState = (demoMode: boolean) => {
     if (demoMode) return;
 
     // Listen for overlay update events from the host
-    on('overlay:update', (data) => {
+    on('overlay:update', (data: any) => {
       console.log('Overlay update received:', data);
       
       // Update question if provided
       if (data.question) {
         setQuestion(data.question.text);
-        setHint(data.question.hint || ""); // Use empty string if hint is undefined
+        // Check if hint exists and set it
+        if (data.question.hint) {
+          setHint(data.question.hint);
+        } else {
+          setHint("");
+        }
         setShowCategoryTable(false);
       }
       
@@ -86,29 +91,29 @@ export const useOverlayState = (demoMode: boolean) => {
       // Show hint if provided
       if (data.showHint) {
         setShowHint(true);
-        playSound("hint");
+        playSound('hint-sound');
         toast.info("Wskazówka dostępna!");
       }
     });
 
     // Listen for player update events
-    on('players:update', (updatedPlayers) => {
+    on('players:update', (updatedPlayers: Player[]) => {
       console.log('Players update received:', updatedPlayers);
       setPlayers(updatedPlayers);
     });
 
     // Listen for card activation events
-    on('card:activate', ({ cardType, playerName }) => {
-      console.log('Card activation received:', cardType, playerName);
-      setActiveCardType(cardType);
-      setActivePlayerName(playerName);
+    on('card:activate', (data: { cardType: CardType, playerName: string }) => {
+      console.log('Card activation received:', data.cardType, data.playerName);
+      setActiveCardType(data.cardType);
+      setActivePlayerName(data.playerName);
       setShowCardAnimation(true);
     });
 
     // Listen for round start events
-    on('round:start', ({ roundNumber, title }) => {
-      console.log('Round start received:', roundNumber, title);
-      setRoundTitle(title || `RUNDA ${roundNumber}`);
+    on('round:start', (data: { roundType: string, roundName: string }) => {
+      console.log('Round start received:', data);
+      setRoundTitle(data.roundName || `RUNDA ${data.roundType}`);
       setShowCategoryTable(true);
       setQuestion("");
       setHint("");
