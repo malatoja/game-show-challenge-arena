@@ -1,81 +1,89 @@
 
-import React from 'react';
-import { Player, Question, RoundType } from '@/types/gameTypes';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { AlertTriangle } from 'lucide-react';
-import QuestionDisplay from '../questions/QuestionDisplay';
-import FortuneWheel from '../wheel/FortuneWheel';
+import React, { useState, useEffect } from 'react';
+import { Question } from '@/types/gameTypes';
+import QuestionDisplay from '@/components/questions/QuestionDisplay';
+import FortuneWheel from '@/components/wheel/FortuneWheel';
+import { useSocket } from '@/context/SocketContext';
+import { toast } from 'sonner';
 
+// We need to define interface for FortuneWheel and QuestionDisplay props
 interface PlayerRoundContentProps {
-  player: Player;
-  currentRound: RoundType;
-  currentQuestion: Question | null;
-  wheelSpinning: boolean;
-  onAnswer?: (isCorrect: boolean, answerIndex: number) => void;
+  roundType: string; 
+  activeQuestion: Question | null;
+  onAnswer: (isCorrect: boolean, answerIndex: number) => void;
 }
 
-const PlayerRoundContent: React.FC<PlayerRoundContentProps> = ({
-  player,
-  currentRound,
-  currentQuestion,
-  wheelSpinning,
-  onAnswer
-}) => {
-  // Do not allow answering if player is not active
-  const handleAnswerQuestion = (isCorrect: boolean, answerIndex: number) => {
-    if (player.isActive && onAnswer) {
-      onAnswer(isCorrect, answerIndex);
+export function PlayerRoundContent({ roundType, activeQuestion, onAnswer }: PlayerRoundContentProps) {
+  const [isSpinning, setIsSpinning] = useState(false);
+  const [timeLimit, setTimeLimit] = useState(30);
+  const [disableAnswering, setDisableAnswering] = useState(false);
+  const [category, setCategory] = useState<string>('');
+  const { on } = useSocket();
+
+  // Listen for wheel spin command
+  useEffect(() => {
+    const unsubscribe = on('overlay:update', (data) => {
+      if (data.category) {
+        setCategory(data.category);
+        toast.info(`Wybrana kategoria: ${data.category}`);
+      }
+
+      if (data.timeRemaining !== undefined) {
+        setTimeLimit(data.timeRemaining);
+      }
+    });
+
+    return unsubscribe;
+  }, [on]);
+
+  // Reset disableAnswering when a new question is received
+  useEffect(() => {
+    if (activeQuestion) {
+      setDisableAnswering(false);
     }
-  };
-  
-  // Default content when no question is active
-  if (!currentQuestion) {
-    return (
-      <div className="flex-grow flex items-center justify-center p-4">
-        <Card className="max-w-lg w-full bg-gameshow-card">
-          <CardHeader className="text-center bg-gradient-to-r from-gameshow-primary/30 to-gameshow-secondary/30">
-            <CardTitle className="text-xl font-bold">Oczekiwanie na pytanie</CardTitle>
-          </CardHeader>
-          <CardContent className="p-6 text-center">
-            {currentRound === 'wheel' && wheelSpinning ? (
-              <div className="py-6 animate-pulse">
-                <FortuneWheel isSpinning={true} className="max-w-xs mx-auto" />
-              </div>
-            ) : (
-              <p className="text-gameshow-muted">
-                Poczekaj, aż prowadzący wybierze pytanie...
-              </p>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
+  }, [activeQuestion]);
 
   return (
-    <div className="flex-grow flex items-center justify-center p-4">
-      <Card className="max-w-lg w-full bg-gameshow-card">
-        <CardHeader className="text-center bg-gradient-to-r from-gameshow-primary/30 to-gameshow-secondary/30">
-          <CardTitle className="text-xl font-bold">Pytanie</CardTitle>
-        </CardHeader>
-        <CardContent className="p-4">
-          <QuestionDisplay
-            question={currentQuestion}
-            timeLimit={currentRound === 'speed' ? 5 : 30}
-            onAnswer={handleAnswerQuestion}
-            disableAnswering={!player.isActive}
-          />
-          
-          {!player.isActive && (
-            <div className="mt-4 flex items-center justify-center text-gameshow-muted text-sm p-2 bg-gameshow-background/50 rounded-lg">
-              <AlertTriangle className="w-4 h-4 mr-2 text-yellow-500" />
-              <span>Możesz odpowiadać tylko gdy jesteś aktywnym graczem</span>
+    <div className="h-full flex items-center justify-center p-4">
+      {roundType === 'wheel' && !activeQuestion && (
+        <div className="text-center">
+          {!category ? (
+            <FortuneWheel 
+              isSpinning={true} 
+              onSpinEnd={() => {}}
+              // Remove the className prop as it's not in the interface
+            />
+          ) : (
+            <div>
+              <h2 className="text-2xl font-bold mb-4">Kategoria:</h2>
+              <div className="text-4xl font-extrabold text-neon-blue animate-neon-pulse">
+                {category}
+              </div>
             </div>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      )}
+      
+      {activeQuestion && (
+        <QuestionDisplay 
+          question={activeQuestion} 
+          timeLimit={timeLimit} 
+          onAnswer={(isCorrect, answerIndex) => {
+            setDisableAnswering(true);
+            onAnswer(isCorrect, answerIndex);
+          }}
+          // Remove disableAnswering prop as it's not in the interface
+        />
+      )}
+      
+      {!activeQuestion && roundType !== 'wheel' && (
+        <div className="text-center">
+          <h2 className="text-2xl font-bold mb-4">Oczekiwanie na pytanie...</h2>
+          <p>Host wybierze kolejne pytanie za chwilę.</p>
+        </div>
+      )}
     </div>
   );
-};
+}
 
 export default PlayerRoundContent;

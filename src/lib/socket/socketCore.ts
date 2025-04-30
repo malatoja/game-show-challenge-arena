@@ -115,9 +115,10 @@ class SocketCore {
       
       // If we have a real socket and it's not a connection event, register the listener
       if (this.socket && !event.startsWith('connection:')) {
-        this.socket.on(event, (data: any) => {
+        // Fix TypeScript error by using a type assertion
+        this.socket.on(event, ((data: any) => {
           this.notifyListeners(event, data as SocketPayloads[E]);
-        });
+        }) as any);
       }
     }
     
