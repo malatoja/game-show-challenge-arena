@@ -5,6 +5,7 @@ import { useSocket } from '@/context/SocketContext';
 import { toast } from 'sonner';
 import { playSound } from '@/lib/soundService';
 import { SoundType } from '@/types/soundTypes';
+import { SocketEvent } from '@/lib/socket/socketTypes';
 
 export interface OverlayState {
   roundTitle: string;
@@ -58,7 +59,7 @@ export const useOverlayState = (demoMode: boolean) => {
     if (demoMode) return;
 
     // Listen for overlay update events from the host
-    on('overlay:update', (data: any) => {
+    on('overlay:update' as SocketEvent, (data: any) => {
       console.log('Overlay update received:', data);
       
       // Update question if provided
@@ -98,13 +99,13 @@ export const useOverlayState = (demoMode: boolean) => {
     });
 
     // Listen for player update events
-    on('players:update', (updatedPlayers: Player[]) => {
+    on('players:update' as SocketEvent, (updatedPlayers: Player[]) => {
       console.log('Players update received:', updatedPlayers);
       setPlayers(updatedPlayers);
     });
 
     // Listen for card activation events
-    on('card:activate', (data: { cardType: CardType, playerName: string }) => {
+    on('card:activate' as SocketEvent, (data: { cardType: CardType, playerName: string }) => {
       console.log('Card activation received:', data.cardType, data.playerName);
       setActiveCardType(data.cardType);
       setActivePlayerName(data.playerName);
@@ -112,7 +113,7 @@ export const useOverlayState = (demoMode: boolean) => {
     });
 
     // Listen for round start events
-    on('round:start', (data: { roundType: string, roundName: string }) => {
+    on('round:start' as SocketEvent, (data: { roundType: string, roundName: string }) => {
       console.log('Round start received:', data);
       setRoundTitle(data.roundName || `RUNDA ${data.roundType}`);
       setShowCategoryTable(true);
