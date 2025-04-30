@@ -24,6 +24,7 @@ export interface Player {
   streamUrl?: string; // URL to Twitch stream
   eliminated: boolean;
   color?: string; // Adding color property
+  consecutiveCorrect?: number; // Track consecutive correct answers
 }
 
 export interface Card {

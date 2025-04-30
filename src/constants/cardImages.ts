@@ -1,12 +1,29 @@
 
-export const CARD_IMAGES = {
-  dejavu: '/lovable-uploads/619aac92-dd4b-4929-a6c9-0b6ccedfddb3.png',
-  kontra: '/lovable-uploads/74402b49-d6b0-43a1-a889-65e6b9965c8a.png',
-  reanimacja: '/lovable-uploads/b798eed1-c97a-4bc8-a1c0-0c883f9ef7b2.png',
-  skip: '/lovable-uploads/92f5f655-e274-450a-84ea-a4321db0f0d0.png',
-  turbo: '/lovable-uploads/97c010ed-4942-4620-a843-a07f440d493e.png',
-  refleks2: '/lovable-uploads/b1853ce1-f049-4f90-9417-7e90f0f79cae.png',
-  refleks3: '/lovable-uploads/f789b659-f58b-4bc6-bb14-e53c258141cd.png',
-  lustro: '/lovable-uploads/caaf7673-437f-4693-b3e9-ffe8e74dae5f.png',
-  oswiecenie: '/lovable-uploads/f9b278dc-af0f-476c-b08d-b297f23f2609.png'
-} as const;
+import { CardType } from '@/types/gameTypes';
+
+// Map of card types to their image paths
+// In the future, these could be real images instead of placeholders
+export const CARD_IMAGES: Record<CardType, string> = {
+  'dejavu': '/images/cards/dejavu.png',
+  'kontra': '/images/cards/kontra.png',
+  'reanimacja': '/images/cards/reanimacja.png',
+  'skip': '/images/cards/skip.png',
+  'turbo': '/images/cards/turbo.png',
+  'refleks2': '/images/cards/refleks2.png',
+  'refleks3': '/images/cards/refleks3.png',
+  'lustro': '/images/cards/lustro.png',
+  'oswiecenie': '/images/cards/oswiecenie.png'
+};
+
+// Map of card types to their animation paths
+export const CARD_ANIMATIONS: Record<CardType, string> = {
+  'dejavu': '/animations/cards/dejavu.webm',
+  'kontra': '/animations/cards/kontra.webm',
+  'reanimacja': '/animations/cards/reanimacja.webm',
+  'skip': '/animations/cards/skip.webm',
+  'turbo': '/animations/cards/turbo.webm',
+  'refleks2': '/animations/cards/refleks2.webm',
+  'refleks3': '/animations/cards/refleks3.webm',
+  'lustro': '/animations/cards/lustro.webm',
+  'oswiecenie': '/animations/cards/oswiecenie.webm'
+};

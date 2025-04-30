@@ -1,8 +1,8 @@
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { soundService } from '@/lib/soundService';
 import { RoundType } from '@/types/gameTypes';
+import { playSound } from '@/lib/soundService';
 import { ROUND_NAMES } from '@/constants/gameConstants';
 
 interface RoundStartAnimationProps {
@@ -11,98 +11,128 @@ interface RoundStartAnimationProps {
   onComplete?: () => void;
 }
 
-export const RoundStartAnimation: React.FC<RoundStartAnimationProps> = ({ 
-  roundType, 
-  show, 
-  onComplete 
-}) => {
-  const [visible, setVisible] = useState(false);
-  
+const RoundStartAnimation: React.FC<RoundStartAnimationProps> = ({ roundType, show, onComplete }) => {
+  // Play sound when animation starts
   useEffect(() => {
     if (show) {
-      setVisible(true);
-      soundService.play('round_start');
+      playSound('round_start.mp3');
       
+      // Trigger onComplete callback after animation finishes
       const timer = setTimeout(() => {
-        setVisible(false);
-        if (onComplete) onComplete();
-      }, 3500); // Animation lasts 3.5 seconds
+        onComplete && onComplete();
+      }, 3500);
       
       return () => clearTimeout(timer);
     }
   }, [show, onComplete]);
-
-  // Get the appropriate color for the round
-  const getRoundColor = (): string => {
-    switch(roundType) {
-      case 'knowledge': return '#39FF14'; // Green
-      case 'speed': return '#FF3864'; // Pink
-      case 'wheel': return '#2E9CCA'; // Blue
-      default: return '#39FF14';
+  
+  // Get round color based on type
+  const getRoundColor = () => {
+    switch (roundType) {
+      case 'knowledge':
+        return 'from-blue-500 to-blue-700';
+      case 'speed':
+        return 'from-amber-500 to-amber-700';
+      case 'wheel':
+        return 'from-purple-500 to-purple-700';
+      default:
+        return 'from-neon-pink to-neon-purple';
     }
   };
   
-  const roundColor = getRoundColor();
-  
   return (
     <AnimatePresence>
-      {visible && (
+      {show && (
         <motion.div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 flex items-center justify-center z-50 bg-black/80"
-          style={{ backdropFilter: 'blur(8px)' }}
+          transition={{ duration: 0.3 }}
         >
-          <motion.div
-            initial={{ scale: 0.5, opacity: 0 }}
-            animate={{ 
-              scale: [0.5, 1.2, 1],
-              opacity: 1,
-            }}
-            transition={{
-              duration: 1.2,
-              times: [0, 0.7, 1],
-              ease: "easeInOut"
-            }}
-            className="text-center"
-          >
+          <div className="relative">
+            {/* Circle background */}
             <motion.div
-              animate={{
-                textShadow: [
-                  `0 0 7px #fff, 0 0 10px #fff, 0 0 15px ${roundColor}, 0 0 20px ${roundColor}`,
-                  `0 0 10px #fff, 0 0 15px #fff, 0 0 20px ${roundColor}, 0 0 30px ${roundColor}`,
-                  `0 0 7px #fff, 0 0 10px #fff, 0 0 15px ${roundColor}, 0 0 20px ${roundColor}`
-                ],
-                scale: [1, 1.1, 1]
+              className={`w-96 h-96 rounded-full bg-gradient-to-r ${getRoundColor()} opacity-70`}
+              initial={{ scale: 0, opacity: 0 }}
+              animate={{ 
+                scale: [0, 1.2, 1],
+                opacity: [0, 0.8, 0.7],
               }}
               transition={{ 
-                duration: 3, 
-                repeat: 0, 
-                repeatType: "loop",
-                times: [0, 0.5, 1]
+                duration: 1,
+                times: [0, 0.7, 1],
+                ease: "easeInOut" 
               }}
-              className="text-5xl md:text-7xl font-bold uppercase text-white mb-4"
-              style={{
-                textShadow: `0 0 7px #fff, 0 0 10px #fff, 0 0 15px ${roundColor}, 0 0 20px ${roundColor}`
-              }}
-            >
-              {`Runda ${roundType === 'knowledge' ? '1' : roundType === 'speed' ? '2' : '3'}`}
-            </motion.div>
+            />
             
+            {/* Text content */}
+            <div className="absolute inset-0 flex flex-col items-center justify-center text-white">
+              <motion.h2
+                className="text-lg mb-2 text-white/80"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.5, duration: 0.5 }}
+              >
+                ROZPOCZYNAMY
+              </motion.h2>
+              
+              <motion.h1
+                className="text-4xl font-bold animate-pulse"
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.8, duration: 0.5 }}
+              >
+                {ROUND_NAMES[roundType]}
+              </motion.h1>
+              
+              <motion.div
+                className="mt-6 h-1 bg-white"
+                initial={{ width: 0 }}
+                animate={{ width: 200 }}
+                transition={{ delay: 1.2, duration: 1.5 }}
+              />
+              
+              <motion.p
+                className="mt-6 text-lg"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 1.5, duration: 0.5 }}
+              >
+                Przygotuj się!
+              </motion.p>
+            </div>
+            
+            {/* Pulsing outer circles */}
             <motion.div
-              animate={{
-                opacity: [0, 1, 1]
+              className={`absolute inset-0 rounded-full bg-gradient-to-r ${getRoundColor()} opacity-30`}
+              initial={{ scale: 0.8 }}
+              animate={{ 
+                scale: [0.8, 1.5],
+                opacity: [0.3, 0],
               }}
               transition={{ 
                 duration: 1.5,
-                delay: 0.8
+                repeat: Infinity,
+                repeatDelay: 0.5,
               }}
-              className="text-2xl md:text-3xl text-white"
-            >
-              {ROUND_NAMES[roundType]}
-            </motion.div>
-          </motion.div>
+            />
+            
+            <motion.div
+              className={`absolute inset-0 rounded-full bg-gradient-to-r ${getRoundColor()} opacity-20`}
+              initial={{ scale: 0.8 }}
+              animate={{ 
+                scale: [0.8, 1.8],
+                opacity: [0.2, 0],
+              }}
+              transition={{ 
+                duration: 2,
+                repeat: Infinity,
+                repeatDelay: 0.2,
+                delay: 0.3,
+              }}
+            />
+          </div>
         </motion.div>
       )}
     </AnimatePresence>
