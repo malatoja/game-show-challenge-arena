@@ -1,3 +1,4 @@
+
 import { Howl } from 'howler';
 
 // Define the sound types
@@ -46,6 +47,12 @@ export const playSound = (type: SoundType): void => {
   sound.play();
 };
 
+// Play a card sound - wrapper for playSound specific to card activation
+export const playCardSound = (cardType: string): void => {
+  // Use the card_use sound for now, could be customized per card type in future
+  playSound('card_use');
+};
+
 // Stop a sound
 export const stopSound = (type: SoundType): void => {
   if (soundInstances[type]) {
@@ -85,9 +92,84 @@ export const getVolume = (): number => masterVolume;
 // Check if sound is enabled
 export const isSoundEnabled = (): boolean => soundEnabled;
 
+// Check if sound is muted (inverse of enabled)
+export const isMuted = (): boolean => !soundEnabled;
+
+// Toggle mute state
+export const toggleMute = (): void => {
+  setSoundEnabled(!soundEnabled);
+};
+
 // Preload all sounds
 export const preloadAllSounds = (): void => {
   Object.keys(SOUND_FILES).forEach(type => {
     initSound(type as SoundType);
   });
+};
+
+// For custom sounds and sound management
+export const setCustomSound = async (type: SoundType, file: File): Promise<void> => {
+  // Create object URL from the file
+  const objectUrl = URL.createObjectURL(file);
+  
+  // Stop and unload the existing sound if any
+  if (soundInstances[type]) {
+    soundInstances[type]!.stop();
+    soundInstances[type]!.unload();
+  }
+  
+  // Create a new sound instance with the custom file
+  soundInstances[type] = new Howl({
+    src: [objectUrl],
+    volume: masterVolume,
+    preload: true,
+  });
+  
+  // Return after preloading
+  return new Promise((resolve) => {
+    soundInstances[type]!.once('load', () => {
+      resolve();
+    });
+  });
+};
+
+// Reset a sound to its default
+export const resetSound = (type: SoundType): void => {
+  if (soundInstances[type]) {
+    soundInstances[type]!.stop();
+    soundInstances[type]!.unload();
+    delete soundInstances[type];
+  }
+  // This will reinitialize with the default sound
+  initSound(type);
+};
+
+// Reset all sounds to defaults
+export const resetAllSounds = (): void => {
+  Object.keys(soundInstances).forEach(key => {
+    const type = key as SoundType;
+    soundInstances[type]?.stop();
+    soundInstances[type]?.unload();
+    delete soundInstances[type];
+  });
+  
+  // Reinitialize all default sounds
+  preloadAllSounds();
+};
+
+// Export as a unified service object for components that need multiple functions
+export const soundService = {
+  play: playSound,
+  stop: stopSound,
+  playCardSound,
+  setVolume,
+  getVolume,
+  setSoundEnabled,
+  isSoundEnabled,
+  isMuted,
+  toggleMute,
+  preloadAllSounds,
+  setCustomSound,
+  resetSound,
+  resetAllSounds
 };

@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { GameOverlay } from '@/components/overlay/GameOverlay';
 import { Player } from '@/types/gameTypes';
 import { websocketService } from '@/lib/websocketService';
-import { soundService } from '@/lib/soundService';
+import { soundService, SoundType } from '@/lib/soundService';
 
 const OverlayPage = () => {
   const [roundTitle, setRoundTitle] = useState("RUNDA 1 – ZRÓŻNICOWANA WIEDZA");
@@ -68,7 +68,7 @@ const OverlayPage = () => {
           if (data.isActive && 
               currentPlayers.find((p: Player) => p.id === data.id) && 
               !currentPlayers.find((p: Player) => p.id === data.id)?.isActive) {
-            soundService.play('player_join');
+            soundService.play('buzzer');
           }
           
           return updatedPlayers;
@@ -83,7 +83,7 @@ const OverlayPage = () => {
       
       websocketService.addListener('ROUND_UPDATE', (data: any) => {
         setRoundTitle(data.title);
-        soundService.play('round_start');
+        soundService.play('start_round');
       });
       
       return () => {
@@ -139,7 +139,7 @@ const OverlayPage = () => {
           
           // Play sound if active player changed
           if (!currentPlayers[randomIndex].isActive) {
-            soundService.play('player_join');
+            soundService.play('buzzer');
           }
           
           return updatedPlayers;

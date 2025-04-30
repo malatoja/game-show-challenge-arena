@@ -26,15 +26,15 @@ export function SoundsTab() {
   
   const soundItems: SoundItem[] = [
     { id: 'timer', name: 'Timer', description: 'Dźwięk odliczania czasu' },
-    { id: 'correct_answer', name: 'Poprawna odpowiedź', description: 'Dźwięk dla poprawnej odpowiedzi' },
-    { id: 'wrong_answer', name: 'Błędna odpowiedź', description: 'Dźwięk dla błędnej odpowiedzi' },
-    { id: 'round_start', name: 'Początek rundy', description: 'Dźwięk rozpoczęcia rundy' },
-    { id: 'round_end', name: 'Koniec rundy', description: 'Dźwięk zakończenia rundy' },
+    { id: 'correct', name: 'Poprawna odpowiedź', description: 'Dźwięk dla poprawnej odpowiedzi' },
+    { id: 'wrong', name: 'Błędna odpowiedź', description: 'Dźwięk dla błędnej odpowiedzi' },
+    { id: 'start_round', name: 'Początek rundy', description: 'Dźwięk rozpoczęcia rundy' },
+    { id: 'end_round', name: 'Koniec rundy', description: 'Dźwięk zakończenia rundy' },
     { id: 'card_use', name: 'Użycie karty', description: 'Dźwięk użycia karty specjalnej' },
     { id: 'wheel_spin', name: 'Koło fortuny', description: 'Dźwięk obracającego się koła fortuny' },
-    { id: 'player_join', name: 'Dołączenie gracza', description: 'Dźwięk gdy gracz dołącza do gry' },
-    { id: 'player_leave', name: 'Opuszczenie gry', description: 'Dźwięk gdy gracz opuszcza grę' },
-    { id: 'game_over', name: 'Koniec gry', description: 'Dźwięk końca gry' },
+    { id: 'buzzer', name: 'Buzzer', description: 'Dźwięk buzzera' },
+    { id: 'winner', name: 'Zwycięzca', description: 'Dźwięk ogłoszenia zwycięzcy' },
+    { id: 'question_show', name: 'Pytanie', description: 'Dźwięk wyświetlenia nowego pytania' },
   ];
 
   const handleVolumeChange = (newVolume: number[]) => {

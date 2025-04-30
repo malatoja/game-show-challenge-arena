@@ -1,9 +1,10 @@
+
 import React from 'react';
 import { Player } from '@/types/gameTypes';
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from '@/components/ui/button';
 import { PlusCircle } from 'lucide-react';
-import PlayerCardIndicator from '../players/PlayerCardIndicator';
+import { PlayerCardCollection } from '../players/PlayerCardIndicator';
 
 interface PlayerGridProps {
   players: Player[];
@@ -51,7 +52,7 @@ export function PlayerGrid({ players, onSelectPlayer, onAddTestCards, onUseCard 
             
             <div className="flex items-center gap-2">
               <span className="text-xs font-medium text-gameshow-muted">Karty:</span>
-              <PlayerCardIndicator 
+              <PlayerCardCollection 
                 cards={player.cards} 
                 onUseCard={(cardType) => onUseCard(player.id, cardType)}
               />

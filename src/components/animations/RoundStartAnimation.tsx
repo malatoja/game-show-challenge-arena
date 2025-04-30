@@ -15,7 +15,7 @@ const RoundStartAnimation: React.FC<RoundStartAnimationProps> = ({ roundType, sh
   // Play sound when animation starts
   useEffect(() => {
     if (show) {
-      playSound('round_start.mp3');
+      playSound('start_round');
       
       // Trigger onComplete callback after animation finishes
       const timer = setTimeout(() => {

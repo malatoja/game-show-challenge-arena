@@ -36,7 +36,7 @@ const PlayerCardIndicator: React.FC<PlayerCardIndicatorProps> = ({
         />
       ) : (
         <div className="w-full h-full bg-gameshow-primary/30 flex items-center justify-center text-xs font-bold">
-          {card.name.substring(0, 1)}
+          {card.name ? card.name.substring(0, 1) : card.type.substring(0, 1)}
         </div>
       )}
     </div>
@@ -50,7 +50,7 @@ const PlayerCardIndicator: React.FC<PlayerCardIndicatorProps> = ({
             {content}
           </TooltipTrigger>
           <TooltipContent side="top" className="bg-gameshow-card border-gameshow-primary p-2">
-            <p className="font-bold text-sm">{card.name}</p>
+            <p className="font-bold text-sm">{card.name || CARD_DETAILS[card.type].name}</p>
             <p className="text-xs text-gameshow-muted">{CARD_DETAILS[card.type].description}</p>
           </TooltipContent>
         </Tooltip>
@@ -59,6 +59,32 @@ const PlayerCardIndicator: React.FC<PlayerCardIndicatorProps> = ({
   }
 
   return content;
+};
+
+// Add a cards collection variant
+interface PlayerCardCollectionProps {
+  cards: Card[];
+  onUseCard?: (cardType: CardType) => void;
+}
+
+export const PlayerCardCollection: React.FC<PlayerCardCollectionProps> = ({ cards, onUseCard }) => {
+  if (!cards || cards.length === 0) {
+    return <div className="text-xs text-gameshow-muted">No cards</div>;
+  }
+
+  return (
+    <div className="flex gap-1">
+      {cards.map((card, index) => (
+        <div 
+          key={index} 
+          onClick={() => !card.isUsed && onUseCard?.(card.type)}
+          className={!card.isUsed && onUseCard ? "cursor-pointer" : ""}
+        >
+          <PlayerCardIndicator card={card} size="sm" />
+        </div>
+      ))}
+    </div>
+  );
 };
 
 export default PlayerCardIndicator;
