@@ -10,10 +10,12 @@ export type SocketEvent =
   // Card events
   | 'card:use'
   | 'card:resolve'
+  | 'card:activate'  // Dodane brakujące zdarzenie
   // Player events
   | 'player:update'
   | 'player:active'
   | 'player:reset'
+  | 'players:update'  // Dodane brakujące zdarzenie
   // Overlay events
   | 'overlay:update'
   | 'overlay:confetti'
@@ -30,15 +32,18 @@ export interface SocketPayloads {
   'player:eliminate': { playerId: string };
   'card:use': { playerId: string, cardType: import('@/types/gameTypes').CardType };
   'card:resolve': { playerId: string, cardType: import('@/types/gameTypes').CardType, success: boolean };
+  'card:activate': { cardType: import('@/types/gameTypes').CardType, playerName: string };  // Dodany typ ładunku
   'player:update': { player: import('@/types/gameTypes').Player };
   'player:active': { playerId: string };
   'player:reset': {};
+  'players:update': { players: import('@/types/gameTypes').Player[] };  // Dodany typ ładunku
   'overlay:update': { 
     question?: import('@/types/gameTypes').Question, 
     activePlayerId?: string, 
     category?: string, 
     difficulty?: number,
-    timeRemaining?: number
+    timeRemaining?: number,
+    showHint?: boolean  // Dodana obsługa wskazówek
   };
   'overlay:confetti': { playerId: string };
   'connection:status': { connected: boolean };

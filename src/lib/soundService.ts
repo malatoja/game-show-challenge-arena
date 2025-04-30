@@ -1,10 +1,10 @@
-
 import { Howl } from 'howler';
 
 // Define the sound types
 export type SoundType = 
   | 'correct' | 'wrong' | 'buzzer' | 'start_round' | 'end_round' 
-  | 'card_use' | 'wheel_spin' | 'winner' | 'timer' | 'question_show';
+  | 'card_use' | 'wheel_spin' | 'winner' | 'timer' | 'question_show'
+  | 'hint';  // Dodany typ dźwięku wskazówki
 
 // Map of sound types to their file paths
 const SOUND_FILES: Record<SoundType, string> = {
@@ -17,7 +17,8 @@ const SOUND_FILES: Record<SoundType, string> = {
   'wheel_spin': '/sounds/wheel_spin.mp3',
   'winner': '/sounds/winner.mp3',
   'timer': '/sounds/timer.mp3',
-  'question_show': '/sounds/question_show.mp3'
+  'question_show': '/sounds/question_show.mp3',
+  'hint': '/sounds/hint.mp3'  // Dodany plik dźwięku dla wskazówki
 };
 
 // Sound instances cache
