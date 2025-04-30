@@ -1,220 +1,165 @@
+import { CardType, Question, RoundType } from '@/types/gameTypes';
+import { DEFAULT_QUESTIONS } from '@/constants/gameConstants';
 
-import { CardType, PlayerId, Question, RoundType } from '../types/gameTypes';
-import { createCard } from '../constants/gameConstants';
+// Function to generate a unique ID for questions
+export const generateQuestionId = (): string => {
+  return `question-${Date.now()}-${Math.random().toString(36).substring(2, 15)}`;
+};
 
-/**
- * Utility functions for game operations
- */
-
-// Filter questions by category and difficulty
+// Function to filter questions based on search term, round, and category
 export const filterQuestions = (
-  questions: Question[], 
-  category?: string, 
-  round?: RoundType
+  questions: Question[],
+  searchTerm: string,
+  roundFilter: RoundType | 'all',
+  categoryFilter: string | 'all'
 ): Question[] => {
-  return questions.filter(question => {
-    const matchesCategory = !category || question.category === category;
-    const matchesRound = !round || question.round === round;
-    return matchesCategory && matchesRound && !question.used;
-  });
-};
+  let filteredQuestions = [...questions];
 
-// Check if a player has a specific card type that is not used
-export const playerHasUnusedCard = (
-  playerId: PlayerId, 
-  cardType: CardType, 
-  players: Array<{ id: PlayerId; cards: Array<{ type: CardType; isUsed: boolean }> }>
-): boolean => {
-  const player = players.find(p => p.id === playerId);
-  if (!player) return false;
-  
-  return player.cards.some(card => card.type === cardType && !card.isUsed);
-};
-
-// Count unused cards for a player
-export const countUnusedCards = (
-  playerId: PlayerId,
-  players: Array<{ id: PlayerId; cards: Array<{ isUsed: boolean }> }>
-): number => {
-  const player = players.find(p => p.id === playerId);
-  if (!player) return 0;
-  
-  return player.cards.filter(card => !card.isUsed).length;
-};
-
-// Check if player can receive more cards (max 3 unused)
-export const canReceiveMoreCards = (
-  playerId: PlayerId,
-  players: Array<{ id: PlayerId; cards: Array<{ isUsed: boolean }> }>
-): boolean => {
-  return countUnusedCards(playerId, players) < 3;
-};
-
-// Calculate if player should be awarded a bonus card
-export const shouldAwardBonusCard = (
-  consecutiveCorrect: number, 
-  pointsThreshold: number, 
-  currentPoints: number, 
-  roundType: RoundType,
-  cardRules: Record<string, boolean> = {}
-): { award: boolean; cardType: CardType } => {
-  // Load custom rules from localStorage
-  try {
-    const storedRules = localStorage.getItem('customCardRules');
-    const customRules = storedRules ? JSON.parse(storedRules) : [];
-    
-    // Check if any enabled custom rules apply
-    for (const rule of customRules) {
-      if (rule.isEnabled) {
-        // Check rule conditions
-        if (rule.condition === 'consecutive_correct' && consecutiveCorrect >= 3) {
-          return { award: true, cardType: rule.cardType };
-        }
-        
-        if (rule.condition === 'points_threshold' && currentPoints >= pointsThreshold) {
-          return { award: true, cardType: rule.cardType };
-        }
-      }
-    }
-  } catch (error) {
-    console.error('Error checking custom rules:', error);
+  if (searchTerm) {
+    const lowerCaseSearchTerm = searchTerm.toLowerCase();
+    filteredQuestions = filteredQuestions.filter(question =>
+      question.text.toLowerCase().includes(lowerCaseSearchTerm) ||
+      question.category.toLowerCase().includes(lowerCaseSearchTerm)
+    );
   }
-  
-  // Check default built-in rules
-  // Award for consecutive correct answers
-  if (cardRules.consecutiveCorrect !== false && consecutiveCorrect >= 3) {
-    return { award: true, cardType: 'dejavu' };
+
+  if (roundFilter !== 'all') {
+    filteredQuestions = filteredQuestions.filter(question => question.round === roundFilter);
   }
-  
-  // Award for reaching points threshold in round 1
-  if (cardRules.pointsThreshold !== false && roundType === 'knowledge' && currentPoints >= pointsThreshold) {
-    return { award: true, cardType: 'turbo' };
+
+  if (categoryFilter !== 'all') {
+    filteredQuestions = filteredQuestions.filter(question => question.category === categoryFilter);
   }
-  
-  return { award: false, cardType: 'dejavu' };
+
+  return filteredQuestions;
 };
 
-// Get random card of specified type (for rewards)
-export const getRandomCardForReward = (roundType: RoundType): CardType => {
-  const roundCards: Record<RoundType, CardType[]> = {
-    'knowledge': ['dejavu', 'kontra', 'skip'],
-    'speed': ['reanimacja', 'turbo', 'refleks2'],
-    'wheel': ['refleks3', 'lustro', 'oswiecenie'],
-    'standard': ['dejavu', 'skip', 'turbo'],
-    'all': ['dejavu', 'skip', 'turbo']
-  };
-  
-  const availableCards = roundCards[roundType] || ['dejavu'];
-  const randomIndex = Math.floor(Math.random() * availableCards.length);
-  return availableCards[randomIndex];
+// Function to sort questions alphabetically by text
+export const sortQuestionsAlphabetically = (questions: Question[]): Question[] => {
+  return [...questions].sort((a, b) => a.text.localeCompare(b.text));
 };
 
-// Get a random card based on specific game conditions
-export const getRandomCardForAction = (
-  action: 'consecutive_correct' | 'round_win' | 'no_life_loss' | 'top_score' | 'lowest_score',
-  roundType: RoundType
-): CardType => {
-  // Define card pools for different actions
-  const actionCardPools: Record<string, CardType[]> = {
-    consecutive_correct: ['dejavu', 'turbo', 'refleks2'],
-    round_win: ['kontra', 'skip', 'oswiecenie'],
-    no_life_loss: ['reanimacja', 'lustro'],
-    top_score: ['turbo', 'refleks3'],
-    lowest_score: ['reanimacja', 'dejavu', 'refleks2']
-  };
-  
-  // Get the appropriate pool
-  const cardPool = actionCardPools[action] || ['dejavu'];
-  
-  // Select a random card from the pool
-  const randomIndex = Math.floor(Math.random() * cardPool.length);
-  return cardPool[randomIndex];
-};
-
-// Create a new player with default values
-export const createNewPlayer = (name: string): { id: string, name: string, lives: number, points: number, cards: any[], isActive: boolean, eliminated: boolean } => {
-  return {
-    id: `player-${Date.now()}`,
-    name,
-    lives: 3,
-    points: 0,
-    cards: [],
-    isActive: false,
-    eliminated: false
-  };
-};
-
-// Load card rules from localStorage
-export const loadCardRules = (): Record<string, boolean> => {
-  try {
-    const savedRules = localStorage.getItem('cardRules');
-    if (savedRules) {
-      return JSON.parse(savedRules);
-    }
-  } catch (error) {
-    console.error('Error loading card rules:', error);
-  }
-  
-  // Default rules
-  return {
-    consecutiveCorrect: true,
-    pointsThreshold: true,
-    noLifeLoss: true,
-    topPoints: true,
-    advanceRound: true,
-    lowestPoints: true,
-    lowestLives: true
-  };
-};
-
-// Save card rules to localStorage
-export const saveCardRules = (rules: Record<string, boolean>): void => {
-  try {
-    localStorage.setItem('cardRules', JSON.stringify(rules));
-  } catch (error) {
-    console.error('Error saving card rules:', error);
+// Function to create a card
+export const createCard = (cardType: CardType) => {
+  switch (cardType) {
+    case 'dejavu':
+      return {
+        type: 'dejavu',
+        name: 'Dejavu',
+        description: 'Powtórzenie pytania po błędnej odpowiedzi',
+        isUsed: false
+      };
+    case 'kontra':
+      return {
+        type: 'kontra',
+        name: 'Kontra',
+        description: 'Przekazanie pytania innemu graczowi',
+        isUsed: false
+      };
+    case 'reanimacja':
+      return {
+        type: 'reanimacja',
+        name: 'Reanimacja',
+        description: 'Ochrona przed utratą życia w rundzie 2',
+        isUsed: false
+      };
+    case 'skip':
+      return {
+        type: 'skip',
+        name: 'Skip',
+        description: 'Pominięcie pytania',
+        isUsed: false
+      };
+    case 'turbo':
+      return {
+        type: 'turbo',
+        name: 'Turbo',
+        description: 'Podwojenie punktów za pytanie',
+        isUsed: false
+      };
+    case 'refleks2':
+      return {
+        type: 'refleks2',
+        name: 'Refleks x2',
+        description: 'Podwojenie czasu na odpowiedź',
+        isUsed: false
+      };
+    case 'refleks3':
+      return {
+        type: 'refleks3',
+        name: 'Refleks x3',
+        description: 'Potrojenie czasu na odpowiedź',
+        isUsed: false
+      };
+    case 'lustro':
+      return {
+        type: 'lustro',
+        name: 'Lustro',
+        description: 'Usunięcie błędnej odpowiedzi',
+        isUsed: false
+      };
+    case 'oswiecenie':
+      return {
+        type: 'oswiecenie',
+        name: 'Oświecenie',
+        description: 'Podpowiedź do pytania',
+        isUsed: false
+      };
+    default:
+      return {
+        type: 'dejavu',
+        name: 'Dejavu',
+        description: 'Powtórzenie pytania po błędnej odpowiedzi',
+        isUsed: false
+      };
   }
 };
 
-// Get all question categories
+// Default categories
+const DEFAULT_CATEGORIES = [
+  'Historia', 
+  'Geografia', 
+  'Nauka', 
+  'Sztuka', 
+  'Sport', 
+  'Rozrywka',
+  'Technologia',
+  'Muzyka',
+  'Film',
+  'Literatura'
+];
+
+// Get all categories from localStorage or use defaults
 export const getAllCategories = (): string[] => {
   try {
-    // First try to get custom categories from localStorage
-    const customCategories = localStorage.getItem('customQuestionCategories');
-    if (customCategories) {
-      return JSON.parse(customCategories);
+    const savedCategories = localStorage.getItem('gameShowCategories');
+    if (savedCategories) {
+      return JSON.parse(savedCategories);
     }
     
-    // If no custom categories, return default ones
-    return ['Historia', 'Geografia', 'Nauka', 'Sport', 'Kultura', 'Technologia', 'Gaming', 'Memy'];
+    // If no saved categories, store defaults and return them
+    localStorage.setItem('gameShowCategories', JSON.stringify(DEFAULT_CATEGORIES));
+    return DEFAULT_CATEGORIES;
   } catch (error) {
-    console.error('Error loading question categories:', error);
-    return ['Historia', 'Geografia', 'Nauka', 'Sport', 'Kultura', 'Technologia'];
-  }
-};
-
-// Save custom question categories to localStorage
-export const saveCategories = (categories: string[]): void => {
-  try {
-    localStorage.setItem('customQuestionCategories', JSON.stringify(categories));
-  } catch (error) {
-    console.error('Error saving question categories:', error);
+    console.error('Error loading categories:', error);
+    return DEFAULT_CATEGORIES;
   }
 };
 
 // Add a new category
-export const addCategory = (newCategory: string): string[] => {
+export const addCategory = (category: string): string[] => {
   try {
-    const currentCategories = getAllCategories();
+    const categories = getAllCategories();
     
     // Check if category already exists (case insensitive)
-    if (currentCategories.some(cat => cat.toLowerCase() === newCategory.toLowerCase())) {
-      throw new Error('Kategoria już istnieje');
+    if (categories.some(cat => cat.toLowerCase() === category.toLowerCase())) {
+      throw new Error(`Kategoria "${category}" już istnieje`);
     }
     
     // Add new category
-    const updatedCategories = [...currentCategories, newCategory];
-    saveCategories(updatedCategories);
+    const updatedCategories = [...categories, category];
+    localStorage.setItem('gameShowCategories', JSON.stringify(updatedCategories));
+    
     return updatedCategories;
   } catch (error) {
     console.error('Error adding category:', error);
@@ -223,14 +168,86 @@ export const addCategory = (newCategory: string): string[] => {
 };
 
 // Remove a category
-export const removeCategory = (categoryToRemove: string): string[] => {
+export const removeCategory = (category: string): string[] => {
   try {
-    const currentCategories = getAllCategories();
-    const updatedCategories = currentCategories.filter(cat => cat !== categoryToRemove);
-    saveCategories(updatedCategories);
+    const categories = getAllCategories();
+    
+    // Check if it's the last category
+    if (categories.length <= 1) {
+      throw new Error('Nie można usunąć ostatniej kategorii');
+    }
+    
+    // Remove category
+    const updatedCategories = categories.filter(cat => cat !== category);
+    localStorage.setItem('gameShowCategories', JSON.stringify(updatedCategories));
+    
     return updatedCategories;
   } catch (error) {
     console.error('Error removing category:', error);
     throw error;
   }
+};
+
+// Default card rules
+const DEFAULT_CARD_RULES = {
+  consecutiveCorrect: {
+    threshold: 3,
+    cards: ['dejavu', 'refleks2']
+  },
+  pointsThreshold: {
+    threshold: 50,
+    cards: ['turbo']
+  },
+  roundSpecific: {
+    knowledge: ['dejavu', 'kontra', 'skip'],
+    speed: ['reanimacja', 'turbo', 'refleks2'],
+    wheel: ['refleks3', 'lustro', 'oswiecenie'],
+    standard: ['dejavu', 'skip', 'turbo'],
+    all: ['dejavu', 'skip', 'turbo']
+  }
+};
+
+// Load card rules from storage or use defaults
+export const loadCardRules = () => {
+  try {
+    const savedRules = localStorage.getItem('gameShowCardRules');
+    if (savedRules) {
+      return JSON.parse(savedRules);
+    }
+    
+    // If no saved rules, store defaults and return them
+    localStorage.setItem('gameShowCardRules', JSON.stringify(DEFAULT_CARD_RULES));
+    return DEFAULT_CARD_RULES;
+  } catch (error) {
+    console.error('Error loading card rules:', error);
+    return DEFAULT_CARD_RULES;
+  }
+};
+
+// Function to decide if a player should get a bonus card
+export const shouldAwardBonusCard = (
+  consecutiveCorrect: number,
+  pointsThreshold: number,
+  playerPoints: number,
+  currentRound: import('@/types/gameTypes').RoundType,
+  cardRules: any
+): { award: boolean; cardType: import('@/types/gameTypes').CardType } => {
+  // Check consecutive correct answers rule
+  if (cardRules.consecutiveCorrect && 
+      consecutiveCorrect >= cardRules.consecutiveCorrect.threshold) {
+    const possibleCards = cardRules.consecutiveCorrect.cards;
+    const randomCard = possibleCards[Math.floor(Math.random() * possibleCards.length)];
+    return { award: true, cardType: randomCard as import('@/types/gameTypes').CardType };
+  }
+  
+  // Check points threshold rule
+  if (cardRules.pointsThreshold && 
+      playerPoints >= cardRules.pointsThreshold.threshold) {
+    const possibleCards = cardRules.pointsThreshold.cards;
+    const randomCard = possibleCards[Math.floor(Math.random() * possibleCards.length)];
+    return { award: true, cardType: randomCard as import('@/types/gameTypes').CardType };
+  }
+  
+  // No card award
+  return { award: false, cardType: 'dejavu' };
 };

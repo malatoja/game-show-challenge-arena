@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { WHEEL_CATEGORIES } from '@/constants/gameConstants';
+import { getAllCategories } from '@/utils/gameUtils';
 import {
   Form,
   FormControl,
@@ -27,6 +27,8 @@ interface Round3SettingsFormProps {
 }
 
 export function Round3SettingsForm({ form, onSubmit }: Round3SettingsFormProps) {
+  const categories = getAllCategories();
+  
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 bg-gameshow-background/20 p-4 rounded-lg">
@@ -46,7 +48,7 @@ export function Round3SettingsForm({ form, onSubmit }: Round3SettingsFormProps) 
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent className="bg-gameshow-background border-gameshow-primary/30">
-                  {WHEEL_CATEGORIES.map((category) => (
+                  {categories.map((category) => (
                     <SelectItem key={category} value={category}>
                       {category}
                     </SelectItem>

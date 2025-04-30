@@ -1,6 +1,7 @@
 
 import React from 'react';
-import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 
 interface ImportFormatSelectorProps {
   importFormat: "json" | "csv";
@@ -9,35 +10,28 @@ interface ImportFormatSelectorProps {
 
 export function ImportFormatSelector({ importFormat, setImportFormat }: ImportFormatSelectorProps) {
   return (
-    <div className="flex flex-wrap gap-4 mb-4 bg-gameshow-background/20 p-4 rounded-lg">
-      <div>
-        <label className="text-sm font-medium mb-2 block">Format importu</label>
-        <div className="flex gap-2">
-          <Button 
-            type="button" 
-            variant={importFormat === "json" ? "default" : "outline"}
-            onClick={() => setImportFormat("json")}
-            size="sm"
-          >
-            JSON
-          </Button>
-          <Button 
-            type="button" 
-            variant={importFormat === "csv" ? "default" : "outline"}
-            onClick={() => setImportFormat("csv")}
-            size="sm"
-          >
-            CSV
-          </Button>
+    <div className="space-y-3">
+      <Label>Format importu</Label>
+      <RadioGroup
+        defaultValue={importFormat}
+        onValueChange={(value) => setImportFormat(value as "json" | "csv")}
+        className="flex space-x-4"
+      >
+        <div className="flex items-center space-x-2">
+          <RadioGroupItem value="json" id="json" />
+          <Label htmlFor="json">JSON</Label>
         </div>
-      </div>
+        <div className="flex items-center space-x-2">
+          <RadioGroupItem value="csv" id="csv" />
+          <Label htmlFor="csv">CSV</Label>
+        </div>
+      </RadioGroup>
       
-      <div className="flex-1">
-        {importFormat === "csv" && (
-          <div className="text-xs text-gameshow-muted">
-            <p>Format CSV: pytanie,kategoria,odp1,odp2,odp3,odp4,indeksPoprawnej,trudność,runda</p>
-            <p>Przykład: Co to jest React?,Programowanie,Framework,Library,Język,Platforma,1,10,speed</p>
-          </div>
+      <div className="text-sm text-gameshow-muted">
+        {importFormat === "json" ? (
+          <p>Format JSON pozwala na import złożonych pytań z pełnymi metadanymi.</p>
+        ) : (
+          <p>Format CSV jest prosty do tworzenia w Excelu: pytanie,kategoria,odp1,odp2,odp3,odp4,poprawny_index,trudność,runda</p>
         )}
       </div>
     </div>
