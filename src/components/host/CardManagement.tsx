@@ -4,20 +4,13 @@ import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { CardType, PlayerId } from '@/types/gameTypes';
 import { useGame } from '@/context/GameContext';
-import { CreditCard, Gift, X, Zap } from 'lucide-react';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { CARD_DETAILS } from '@/constants/gameConstants';
-import SpecialCard from '../cards/SpecialCard';
+import { CreditCard, Gift } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { playCardSound } from '@/lib/soundService';
+import CardActivationAnimation from '../animations/CardActivationAnimation';
+import NoCardsView from './cards/NoCardsView';
+import AvailableCardsList from './cards/AvailableCardsList';
+import UsedCardsList from './cards/UsedCardsList';
+import AwardCardDialog from './cards/AwardCardDialog';
 
 interface CardManagementProps {
   playerId: PlayerId | null;
@@ -30,7 +23,6 @@ export function CardManagement({ playerId }: CardManagementProps) {
   const [showActivation, setShowActivation] = useState(false);
   
   const player = playerId ? state.players.find(p => p.id === playerId) : null;
-  const allCardTypes = Object.keys(CARD_DETAILS) as CardType[];
   
   const handleAwardCard = (cardType: CardType) => {
     if (!playerId) {
@@ -45,7 +37,7 @@ export function CardManagement({ playerId }: CardManagementProps) {
     }
     
     dispatch({ type: 'AWARD_CARD', playerId, cardType });
-    toast.success(`Przyznano kartę ${CARD_DETAILS[cardType].name} graczowi ${player?.name}`);
+    toast.success(`Przyznano kartę ${player?.name} graczowi ${player?.name}`);
     setIsOpen(false);
   };
 
@@ -61,9 +53,7 @@ export function CardManagement({ playerId }: CardManagementProps) {
     setTimeout(() => {
       dispatch({ type: 'USE_CARD', playerId, cardType });
       
-      playCardSound(cardType);
-      
-      toast.success(`Aktywowano kartę ${CARD_DETAILS[cardType].name} dla gracza ${player?.name}`);
+      toast.success(`Aktywowano kartę dla gracza ${player?.name}`);
       setTimeout(() => {
         setShowActivation(false);
         setActiveCardType(null);
@@ -85,43 +75,14 @@ export function CardManagement({ playerId }: CardManagementProps) {
   
   return (
     <div className="bg-gameshow-card p-4 rounded-lg shadow-[0_0_15px_rgba(255,56,100,0.2)] relative">
+      {/* Card activation animation */}
       {showActivation && activeCardType && (
-        <div className="fixed inset-0 flex items-center justify-center z-50 bg-black/70">
-          <motion.div
-            initial={{ scale: 0.5, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ type: "spring", stiffness: 300, damping: 20 }}
-            className="text-center"
-          >
-            <div className="flex justify-center mb-2">
-              <SpecialCard 
-                card={{ 
-                  type: activeCardType, 
-                  description: CARD_DETAILS[activeCardType].description, 
-                  isUsed: false 
-                }}
-                size="lg"
-                showAnimation={true}
-              />
-            </div>
-            <motion.h3 
-              className="text-2xl font-bold text-neon-pink animate-pulse"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.3 }}
-            >
-              {CARD_DETAILS[activeCardType].name}
-            </motion.h3>
-            <motion.p 
-              className="text-lg text-white/80 mt-2"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.6 }}
-            >
-              {CARD_DETAILS[activeCardType].description}
-            </motion.p>
-          </motion.div>
-        </div>
+        <CardActivationAnimation 
+          cardType={activeCardType}
+          playerName={player.name}
+          show={showActivation}
+          onComplete={() => setShowActivation(false)}
+        />
       )}
       
       <h3 className="text-lg font-semibold text-neon-pink animate-neon-pulse mb-2 flex items-center">
@@ -129,142 +90,38 @@ export function CardManagement({ playerId }: CardManagementProps) {
         Karty specjalne
       </h3>
       
+      <div className="mb-3">
+        <p className="text-sm text-gameshow-muted mb-1">Dostępne karty: {availableCards.length}/3</p>
+      </div>
+      
       {player.cards.length === 0 ? (
-        <div className="text-center py-4 text-gameshow-muted">
-          <p className="mb-3">Gracz nie posiada kart specjalnych</p>
-          <Dialog open={isOpen} onOpenChange={setIsOpen}>
-            <DialogTrigger asChild>
-              <Button 
-                className="bg-neon-pink/20 hover:bg-neon-pink/30 border border-neon-pink text-neon-pink shadow-[0_0_10px_rgba(255,56,100,0.3)]"
-              >
-                <Gift className="h-5 w-5 mr-2" />
-                Przyznaj kartę
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="bg-gameshow-card border-gameshow-primary/30">
-              <DialogHeader>
-                <DialogTitle className="text-neon-pink">Przyznaj kartę dla {player.name}</DialogTitle>
-                <DialogDescription>
-                  Wybierz kartę, którą chcesz przyznać graczowi
-                </DialogDescription>
-              </DialogHeader>
-              
-              <div className="grid grid-cols-3 gap-2 mt-4">
-                {allCardTypes.map((cardType) => (
-                  <Button
-                    key={cardType}
-                    onClick={() => handleAwardCard(cardType)}
-                    className="justify-start text-left p-2 bg-neon-purple/10 hover:bg-neon-purple/20 border border-neon-purple/30 h-auto flex flex-col items-center"
-                  >
-                    <SpecialCard 
-                      card={{ 
-                        type: cardType, 
-                        description: CARD_DETAILS[cardType].description, 
-                        isUsed: false 
-                      }}
-                      size="sm"
-                    />
-                    <div className="mt-2 text-center">
-                      <div className="font-bold text-neon-purple">{CARD_DETAILS[cardType].name}</div>
-                    </div>
-                  </Button>
-                ))}
-              </div>
-              
-              <DialogFooter>
-                <Button variant="outline" onClick={() => setIsOpen(false)}>
-                  <X className="h-4 w-4 mr-2" />
-                  Anuluj
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-        </div>
+        <NoCardsView onOpenAwardDialog={() => setIsOpen(true)} />
       ) : (
         <>
-          <div className="mb-3">
-            <p className="text-sm text-gameshow-muted mb-1">Dostępne karty: {availableCards.length}/3</p>
-          </div>
+          <AvailableCardsList 
+            cards={availableCards} 
+            onUseCard={handleUseCard} 
+          />
           
-          <div className="grid grid-cols-2 gap-2 mb-4">
-            {availableCards.map((card, index) => (
-              <Button
-                key={index}
-                onClick={() => handleUseCard(card.type)}
-                className="justify-start text-left px-2 py-1 bg-neon-purple/20 hover:bg-neon-purple/30 h-auto"
-              >
-                <div className="w-full flex items-center gap-2">
-                  <SpecialCard card={card} size="sm" />
-                  <div>
-                    <div className="font-bold text-neon-purple">{CARD_DETAILS[card.type].name}</div>
-                    <div className="text-xs text-gameshow-muted">{card.description}</div>
-                  </div>
-                </div>
-              </Button>
-            ))}
-          </div>
+          <UsedCardsList cards={usedCards} />
           
-          {usedCards.length > 0 && (
-            <div>
-              <h4 className="text-sm font-medium text-gameshow-muted mb-2">Karty użyte:</h4>
-              <div className="flex flex-wrap gap-1">
-                {usedCards.map((card, index) => (
-                  <SpecialCard key={index} card={card} size="sm" />
-                ))}
-              </div>
-            </div>
-          )}
-          
-          <Dialog open={isOpen} onOpenChange={setIsOpen}>
-            <DialogTrigger asChild>
-              <Button 
-                className="w-full mt-3 bg-neon-pink/20 hover:bg-neon-pink/30 border border-neon-pink text-neon-pink shadow-[0_0_10px_rgba(255,56,100,0.3)]"
-                disabled={availableCards.length >= 3}
-              >
-                <Gift className="h-5 w-5 mr-2" />
-                {availableCards.length >= 3 ? 'Osiągnięto limit kart (3)' : 'Przyznaj kartę'}
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="bg-gameshow-card border-gameshow-primary/30">
-              <DialogHeader>
-                <DialogTitle className="text-neon-pink">Przyznaj kartę dla {player.name}</DialogTitle>
-                <DialogDescription>
-                  Wybierz kartę, którą chcesz przyznać graczowi
-                </DialogDescription>
-              </DialogHeader>
-              
-              <div className="grid grid-cols-3 gap-2 mt-4">
-                {allCardTypes.map((cardType) => (
-                  <Button
-                    key={cardType}
-                    onClick={() => handleAwardCard(cardType)}
-                    className="justify-start text-left p-2 bg-neon-purple/10 hover:bg-neon-purple/20 border border-neon-purple/30 h-auto flex flex-col items-center"
-                  >
-                    <SpecialCard 
-                      card={{ 
-                        type: cardType, 
-                        description: CARD_DETAILS[cardType].description, 
-                        isUsed: false 
-                      }}
-                      size="sm"
-                    />
-                    <div className="mt-2 text-center">
-                      <div className="font-bold text-neon-purple">{CARD_DETAILS[cardType].name}</div>
-                    </div>
-                  </Button>
-                ))}
-              </div>
-              
-              <DialogFooter>
-                <Button variant="outline" onClick={() => setIsOpen(false)}>
-                  <X className="h-4 w-4 mr-2" />
-                  Anuluj
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
+          <Button 
+            className="w-full mt-3 bg-neon-pink/20 hover:bg-neon-pink/30 border border-neon-pink text-neon-pink shadow-[0_0_10px_rgba(255,56,100,0.3)]"
+            disabled={availableCards.length >= 3}
+            onClick={() => setIsOpen(true)}
+          >
+            <Gift className="h-5 w-5 mr-2" />
+            {availableCards.length >= 3 ? 'Osiągnięto limit kart (3)' : 'Przyznaj kartę'}
+          </Button>
         </>
       )}
+      
+      <AwardCardDialog 
+        playerName={player.name}
+        isOpen={isOpen}
+        onClose={() => setIsOpen(false)}
+        onAwardCard={handleAwardCard}
+      />
     </div>
   );
 }
