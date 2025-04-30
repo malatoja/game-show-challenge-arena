@@ -1,25 +1,14 @@
 
 import React from 'react';
-import { Button } from '@/components/ui/button';
-import { getAllCategories } from '@/utils/gameUtils';
-import {
-  Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import * as z from "zod";
+import { Button } from "@/components/ui/button";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { WHEEL_CATEGORIES } from '@/constants/gameConstants';
 import { RoundSettingsFormValues } from './RoundSettingsForm';
-import { UseFormReturn } from "react-hook-form";
+import { UseFormReturn } from 'react-hook-form';
 
 interface Round3SettingsFormProps {
   form: UseFormReturn<RoundSettingsFormValues>;
@@ -27,20 +16,19 @@ interface Round3SettingsFormProps {
 }
 
 export function Round3SettingsForm({ form, onSubmit }: Round3SettingsFormProps) {
-  const categories = getAllCategories();
-  
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 bg-gameshow-background/20 p-4 rounded-lg">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
         <FormField
           control={form.control}
           name="round3Category"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Domyślna kategoria dla koła</FormLabel>
+              <FormLabel>Domyślna kategoria dla Koła Fortuny</FormLabel>
               <Select 
                 onValueChange={field.onChange} 
                 defaultValue={field.value}
+                value={field.value}
               >
                 <FormControl>
                   <SelectTrigger className="bg-gameshow-background border-gameshow-primary/30">
@@ -48,23 +36,18 @@ export function Round3SettingsForm({ form, onSubmit }: Round3SettingsFormProps) 
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent className="bg-gameshow-background border-gameshow-primary/30">
-                  {categories.map((category) => (
-                    <SelectItem key={category} value={category}>
-                      {category}
-                    </SelectItem>
+                  {WHEEL_CATEGORIES.map((category) => (
+                    <SelectItem key={category} value={category}>{category}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
-              <FormDescription>
-                Kategoria tematyczna dla pytań w Rundzie 3 (Koło Fortuny)
-              </FormDescription>
               <FormMessage />
             </FormItem>
           )}
         />
-        
-        <Button type="submit" className="bg-gameshow-primary">
-          Zapisz ustawienia
+
+        <Button type="submit" className="w-full bg-neon-blue hover:bg-neon-blue/90">
+          Zapisz ustawienia rundy 3
         </Button>
       </form>
     </Form>

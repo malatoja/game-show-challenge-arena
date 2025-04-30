@@ -1,73 +1,79 @@
 
-// Default categories
-const DEFAULT_CATEGORIES = [
-  'Historia', 
-  'Geografia', 
-  'Nauka', 
-  'Sztuka', 
-  'Sport', 
-  'Rozrywka',
-  'Technologia',
-  'Muzyka',
-  'Film',
-  'Literatura'
-];
+/**
+ * Category utility functions for the game
+ */
 
-// Get all categories from localStorage or use defaults
-export const getAllCategories = (): string[] => {
+// Get all categories from localStorage with default fallback
+export function getAllCategories(): string[] {
   try {
-    const savedCategories = localStorage.getItem('gameShowCategories');
-    if (savedCategories) {
-      return JSON.parse(savedCategories);
-    }
+    const storedCategories = localStorage.getItem('gameShowCategories');
     
-    // If no saved categories, store defaults and return them
-    localStorage.setItem('gameShowCategories', JSON.stringify(DEFAULT_CATEGORIES));
-    return DEFAULT_CATEGORIES;
+    if (storedCategories) {
+      return JSON.parse(storedCategories);
+    } else {
+      // Default categories if none stored
+      const defaultCategories = [
+        'WIEDZA OGÓLNA', 
+        'MEMY', 
+        'TRENDY', 
+        'TWITCH', 
+        'INTERNET', 
+        'CIEKAWOSTKI', 
+        'GRY', 
+        'FILMY',
+        'MUZYKA',
+        'SPORT'
+      ];
+      
+      // Save default categories to localStorage
+      localStorage.setItem('gameShowCategories', JSON.stringify(defaultCategories));
+      return defaultCategories;
+    }
   } catch (error) {
     console.error('Error loading categories:', error);
-    return DEFAULT_CATEGORIES;
+    return ['WIEDZA OGÓLNA', 'MEMY', 'TRENDY', 'TWITCH', 'INTERNET'];
   }
-};
+}
 
-// Add a new category
-export const addCategory = (category: string): string[] => {
+// Add a new category to localStorage
+export function addCategory(category: string): string[] {
   try {
     const categories = getAllCategories();
     
-    // Check if category already exists (case insensitive)
-    if (categories.some(cat => cat.toLowerCase() === category.toLowerCase())) {
-      throw new Error(`Kategoria "${category}" już istnieje`);
+    // Check if category already exists
+    if (!categories.includes(category)) {
+      const newCategories = [...categories, category];
+      localStorage.setItem('gameShowCategories', JSON.stringify(newCategories));
+      return newCategories;
     }
     
-    // Add new category
-    const updatedCategories = [...categories, category];
-    localStorage.setItem('gameShowCategories', JSON.stringify(updatedCategories));
-    
-    return updatedCategories;
+    return categories;
   } catch (error) {
     console.error('Error adding category:', error);
-    throw error;
+    return getAllCategories();
   }
-};
+}
 
-// Remove a category
-export const removeCategory = (category: string): string[] => {
+// Remove a category from localStorage
+export function removeCategory(category: string): string[] {
   try {
     const categories = getAllCategories();
-    
-    // Check if it's the last category
-    if (categories.length <= 1) {
-      throw new Error('Nie można usunąć ostatniej kategorii');
-    }
-    
-    // Remove category
-    const updatedCategories = categories.filter(cat => cat !== category);
-    localStorage.setItem('gameShowCategories', JSON.stringify(updatedCategories));
-    
-    return updatedCategories;
+    const newCategories = categories.filter(c => c !== category);
+    localStorage.setItem('gameShowCategories', JSON.stringify(newCategories));
+    return newCategories;
   } catch (error) {
     console.error('Error removing category:', error);
-    throw error;
+    return getAllCategories();
   }
-};
+}
+
+// Filter categories by name prefix (for search)
+export function filterCategories(filter: string): string[] {
+  const categories = getAllCategories();
+  
+  if (!filter) return categories;
+  
+  return categories.filter(
+    category => category.toLowerCase().includes(filter.toLowerCase())
+  );
+}

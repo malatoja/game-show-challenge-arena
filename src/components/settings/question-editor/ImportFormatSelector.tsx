@@ -1,7 +1,7 @@
 
 import React from 'react';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { Label } from '@/components/ui/label';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 
 interface ImportFormatSelectorProps {
   importFormat: "json" | "csv";
@@ -10,28 +10,46 @@ interface ImportFormatSelectorProps {
 
 export function ImportFormatSelector({ importFormat, setImportFormat }: ImportFormatSelectorProps) {
   return (
-    <div className="space-y-3">
-      <Label>Format importu</Label>
-      <RadioGroup
-        defaultValue={importFormat}
-        onValueChange={(value) => setImportFormat(value as "json" | "csv")}
-        className="flex space-x-4"
+    <div className="mb-4">
+      <Label className="block mb-2">Format importu</Label>
+      <ToggleGroup 
+        type="single" 
+        value={importFormat} 
+        onValueChange={(value) => {
+          if (value) setImportFormat(value as "json" | "csv");
+        }}
       >
-        <div className="flex items-center space-x-2">
-          <RadioGroupItem value="json" id="json" />
-          <Label htmlFor="json">JSON</Label>
-        </div>
-        <div className="flex items-center space-x-2">
-          <RadioGroupItem value="csv" id="csv" />
-          <Label htmlFor="csv">CSV</Label>
-        </div>
-      </RadioGroup>
+        <ToggleGroupItem value="json" className="text-sm">
+          JSON
+        </ToggleGroupItem>
+        <ToggleGroupItem value="csv" className="text-sm">
+          CSV
+        </ToggleGroupItem>
+      </ToggleGroup>
       
-      <div className="text-sm text-gameshow-muted">
+      <div className="mt-2 text-sm text-gameshow-muted">
         {importFormat === "json" ? (
-          <p>Format JSON pozwala na import złożonych pytań z pełnymi metadanymi.</p>
+          <div>
+            <p>Format JSON: Array z obiektami pytań</p>
+            <pre className="p-2 mt-1 bg-gameshow-background/50 rounded text-xs overflow-x-auto">
+              {`[
+  {
+    "text": "Treść pytania",
+    "category": "Kategoria",
+    "answers": [{"text": "Odp1"}, {"text": "Odp2"}...],
+    "correctAnswerIndex": 0,
+    "round": "speed"
+  }
+]`}
+            </pre>
+          </div>
         ) : (
-          <p>Format CSV jest prosty do tworzenia w Excelu: pytanie,kategoria,odp1,odp2,odp3,odp4,poprawny_index,trudność,runda</p>
+          <div>
+            <p>Format CSV: jeden wiersz na pytanie</p>
+            <pre className="p-2 mt-1 bg-gameshow-background/50 rounded text-xs overflow-x-auto">
+              {"text,category,answer1,answer2,answer3,answer4,correctIndex,difficulty,round"}
+            </pre>
+          </div>
         )}
       </div>
     </div>
