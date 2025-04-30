@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useGame } from '@/context/GameContext';
 import { CardType, Player } from '@/types/gameTypes';
@@ -14,6 +13,7 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { toast } from 'sonner';
 import PlayerHeader from './PlayerHeader';
 import PlayerRoundContent from './PlayerRoundContent';
+import { PlayerRoundContentProps } from './PlayerRoundContentProps';
 import PlayerFooter from './PlayerFooter';
 import { useSocket } from '@/context/SocketContext';
 
