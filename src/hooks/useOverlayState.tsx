@@ -4,6 +4,7 @@ import { Player, CardType } from '@/types/gameTypes';
 import { useSocket } from '@/context/SocketContext';
 import { toast } from 'sonner';
 import { playSound } from '@/lib/soundService';
+import { SoundType } from '@/types/soundTypes';
 
 export interface OverlayState {
   roundTitle: string;
@@ -91,7 +92,7 @@ export const useOverlayState = (demoMode: boolean) => {
       // Show hint if provided
       if (data.showHint) {
         setShowHint(true);
-        playSound('hint-sound');
+        playSound('hint' as SoundType);
         toast.info("Wskazówka dostępna!");
       }
     });

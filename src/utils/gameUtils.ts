@@ -76,7 +76,8 @@ export const getRandomCardForReward = (roundType: RoundType): CardType => {
     'knowledge': ['dejavu', 'kontra', 'skip'],
     'speed': ['reanimacja', 'turbo', 'refleks2'],
     'wheel': ['refleks3', 'lustro', 'oswiecenie'],
-    'standard': ['dejavu', 'skip', 'turbo']
+    'standard': ['dejavu', 'skip', 'turbo'],
+    'all': ['dejavu', 'skip', 'turbo'] // Adding the 'all' option to fix the TypeScript error
   };
   
   const availableCards = roundCards[roundType] || ['dejavu'];
