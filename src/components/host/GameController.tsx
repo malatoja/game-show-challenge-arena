@@ -167,13 +167,12 @@ export function GameController({ children }: GameControllerProps) {
     handleAddTestCards
   };
 
-  // Pass the context as a prop to children components
-  return React.Children.map(children, child => {
-    if (React.isValidElement(child)) {
-      return React.cloneElement(child, { gameControl: gameControlContext });
-    }
-    return child;
-  });
+  // Clone children with context prop
+  if (React.isValidElement(children)) {
+    return React.cloneElement(children, { gameControl: gameControlContext });
+  }
+  
+  return <>{children}</>;
 }
 
 export default GameController;

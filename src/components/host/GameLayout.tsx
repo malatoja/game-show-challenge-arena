@@ -9,21 +9,22 @@ import CardManagement from './CardManagement';
 import { useTimer } from './TimerContext';
 import { useEvents } from './EventsContext';
 import { useGame } from '@/context/GameContext';
+import { Player, RoundType, CardType } from '@/types/gameTypes';
 
 interface GameControlContext {
   activePlayerId: string | null;
   canStartRound: boolean;
   canEndRound: boolean;
-  handleSelectPlayer: Function;
-  handleStartRound: Function;
-  handleEndRound: Function;
-  handleEndGame: Function;
-  handleSkipQuestion: Function;
-  handlePause: Function;
-  handleResetGame: Function;
-  handleUseCard: Function;
-  handleAddPlayer: Function;
-  handleAddTestCards: Function;
+  handleSelectPlayer: (player: Player) => void;
+  handleStartRound: (roundType: RoundType) => void;
+  handleEndRound: () => void;
+  handleEndGame: () => void;
+  handleSkipQuestion: () => void;
+  handlePause: () => void;
+  handleResetGame: () => void;
+  handleUseCard: (playerId: string, cardType: CardType) => void;
+  handleAddPlayer: () => void;
+  handleAddTestCards: (playerId: string) => void;
 }
 
 interface GameLayoutProps {
@@ -36,29 +37,14 @@ export function GameLayout({ gameControl }: GameLayoutProps) {
   const { timer, isTimerRunning, startTimer, stopTimer, resetTimer } = useTimer();
   const { events } = useEvents();
   
-  const { 
-    activePlayerId,
-    canStartRound,
-    canEndRound,
-    handleSelectPlayer,
-    handleStartRound,
-    handleEndRound,
-    handleEndGame,
-    handleSkipQuestion,
-    handlePause,
-    handleResetGame,
-    handleUseCard,
-    handleAddTestCards
-  } = gameControl;
-
   return (
     <div className="min-h-screen bg-gameshow-background flex flex-col gap-4 p-4">
       <TopBar 
         currentRound={currentRound}
         timer={timer}
         isTimerRunning={isTimerRunning}
-        canStartRound={canStartRound}
-        onStartRound={handleStartRound}
+        canStartRound={gameControl.canStartRound}
+        onStartRound={gameControl.handleStartRound}
         onStartTimer={startTimer}
         onStopTimer={stopTimer}
         onResetTimer={resetTimer}
@@ -70,9 +56,9 @@ export function GameLayout({ gameControl }: GameLayoutProps) {
           <div className="panel-section mb-4">
             <PlayerGrid
               players={state.players}
-              onSelectPlayer={handleSelectPlayer}
-              onAddTestCards={handleAddTestCards}
-              onUseCard={handleUseCard}
+              onSelectPlayer={gameControl.handleSelectPlayer}
+              onAddTestCards={gameControl.handleAddTestCards}
+              onUseCard={gameControl.handleUseCard}
             />
           </div>
           
@@ -84,12 +70,12 @@ export function GameLayout({ gameControl }: GameLayoutProps) {
                 onStartTimer={startTimer}
                 onStopTimer={stopTimer}
                 onResetTimer={resetTimer}
-                onSkipQuestion={handleSkipQuestion}
+                onSkipQuestion={gameControl.handleSkipQuestion}
               />
             </div>
             
             <div className="panel-section">
-              <CardManagement playerId={activePlayerId} />
+              <CardManagement playerId={gameControl.activePlayerId} />
             </div>
           </div>
         </div>
@@ -97,12 +83,12 @@ export function GameLayout({ gameControl }: GameLayoutProps) {
         {/* Right column - Game controls */}
         <div className="lg:col-span-1">
           <RightColumn 
-            onEndRound={handleEndRound}
-            onResetRound={handleResetGame}
-            onPause={handlePause}
-            onSkipQuestion={handleSkipQuestion}
-            onEndGame={handleEndGame}
-            canEndRound={canEndRound}
+            onEndRound={gameControl.handleEndRound}
+            onResetRound={gameControl.handleResetGame}
+            onPause={gameControl.handlePause}
+            onSkipQuestion={gameControl.handleSkipQuestion}
+            onEndGame={gameControl.handleEndGame}
+            canEndRound={gameControl.canEndRound}
           />
         </div>
       </div>

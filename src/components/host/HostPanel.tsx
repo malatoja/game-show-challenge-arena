@@ -1,17 +1,15 @@
+
 import React, { useState } from 'react';
 import { useGame } from '@/context/GameContext';
 import { CardType, Player, Question, RoundType } from '@/types/gameTypes';
 import GameControls from './GameControls';
 import GameResults from './GameResults';
 import PlayerGrid from './PlayerGrid';
-import QuestionDisplay from '../questions/QuestionDisplay';
-import QuestionList from '../questions/QuestionList';
-import FortuneWheel from '../wheel/FortuneWheel';
-import CardDeck from '../cards/CardDeck';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
-import { Button } from '@/components/ui/button';
 import { ROUND_NAMES } from '@/constants/gameConstants';
+import ActivePlayerPanel from './panels/ActivePlayerPanel';
+import GameTabContent from './panels/GameTabContent';
+import QuestionListPanel from './panels/QuestionListPanel';
 
 export function HostPanel() {
   const { state, dispatch } = useGame();
@@ -22,7 +20,8 @@ export function HostPanel() {
     wheelSpinning, 
     selectedCategory,
     roundStarted,
-    roundEnded
+    roundEnded,
+    remainingQuestions
   } = state;
   
   const [showResults, setShowResults] = useState<boolean>(false);
@@ -56,9 +55,6 @@ export function HostPanel() {
     dispatch({ type: 'END_ROUND' });
     setShowResults(true);
     setResultType('round');
-    
-    // Auto advance top 5 players to next round logic would be here
-    // For now, just display results
     toast.info('Runda zakończona. Wyświetlanie wyników...');
   };
 
@@ -137,19 +133,6 @@ export function HostPanel() {
     }
   };
   
-  // Function to determine lucky loser
-  const determineLuckyLoser = () => {
-    // In a real implementation, this would apply complex logic
-    // For now, pick the player with the highest score among eliminated players
-    const eliminatedPlayers = players.filter(player => player.eliminated);
-    if (eliminatedPlayers.length === 0) return null;
-    
-    return eliminatedPlayers.reduce((prev, current) => 
-      (prev.points > current.points) ? prev : current
-    );
-  };
-  
-  // Test function to add cards for demonstration
   const handleAddTestCards = (playerId: string) => {
     // Add one of each card type for testing
     const cardTypes: CardType[] = [
@@ -210,121 +193,35 @@ export function HostPanel() {
                 </span>
               )}
             </h2>
-            {activePlayer ? (
-              <div>
-                {/* Placeholder for PlayerCamera */}
-                <div className="player-camera-box w-full h-36 bg-gray-700 rounded-lg mb-4">
-                  {/* Placeholder content, replace with actual PlayerCamera component */}
-                  <div className="flex items-center justify-center h-full text-white text-xl">
-                    {activePlayer.name}
-                  </div>
-                </div>
-                
-                <div className="mt-4 mb-2 flex items-center gap-2">
-                  <h3 className="font-semibold">Życie:</h3>
-                  <div className="w-2/3 bg-gray-400 h-2 rounded-full relative">
-                    <div 
-                      className="bg-red-500 h-2 rounded-full absolute top-0 left-0"
-                      style={{ width: `${(activePlayer.lives / 3) * 100}%` }}
-                    />
-                  </div>
-                  <span className="font-semibold">{activePlayer.lives}/3</span>
-                </div>
-                
-                <div className="mt-4">
-                  <h3 className="font-semibold mb-2">Karty specjalne:</h3>
-                  {activePlayer.cards.length > 0 ? (
-                    <CardDeck 
-                      cards={activePlayer.cards}
-                      onUseCard={(card) => handleUseCard(activePlayer.id, card.type)}
-                    />
-                  ) : (
-                    <div className="text-center py-4 text-gameshow-muted">
-                      <p>Brak kart</p>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleAddTestCards(activePlayer.id)}
-                        className="mt-2"
-                      >
-                        Dodaj karty testowe
-                      </Button>
-                    </div>
-                  )}
-                </div>
-              </div>
-            ) : (
-              <div className="text-center py-8 text-gameshow-muted bg-gameshow-background/50 rounded-lg">
-                <p className="mb-4">Wybierz aktywnego gracza</p>
-                <div className="flex justify-center">
-                  <div className="player-camera-box w-32 h-24 opacity-40 flex items-center justify-center">
-                    <span className="text-3xl text-gameshow-muted">?</span>
-                  </div>
-                </div>
-              </div>
-            )}
+            
+            <ActivePlayerPanel 
+              activePlayer={activePlayer} 
+              onAddTestCards={handleAddTestCards}
+              onUseCard={handleUseCard}
+            />
           </div>
           
           {/* Center column - Current question or wheel */}
           <div className="bg-gameshow-card p-4 rounded-lg">
-            <Tabs defaultValue="question">
-              <TabsList className="mb-4 w-full">
-                <TabsTrigger value="question" className="flex-1">Pytanie</TabsTrigger>
-                {currentRound === 'wheel' && (
-                  <TabsTrigger value="wheel" className="flex-1">Koło Fortuny</TabsTrigger>
-                )}
-              </TabsList>
-              
-              <TabsContent value="question">
-                <div className="flex justify-between items-center mb-3">
-                  <h2 className="text-xl font-semibold text-gameshow-text">Aktualne Pytanie</h2>
-                  
-                  {extensionFactor > 1 && (
-                    <div className="px-2 py-1 bg-blue-500/20 text-blue-500 rounded-full text-xs">
-                      Czas x{extensionFactor}
-                    </div>
-                  )}
-                </div>
-                <QuestionDisplay 
-                  question={currentQuestion}
-                  timeLimit={currentRound === 'speed' ? 5 : 30}
-                  onAnswer={handleAnswerQuestion}
-                  isTimeExtended={extensionFactor > 1}
-                  extensionFactor={extensionFactor}
-                />
-              </TabsContent>
-              
-              <TabsContent value="wheel">
-                <h2 className="text-xl font-semibold text-gameshow-text mb-3">Koło Fortuny</h2>
-                <div className="flex flex-col items-center">
-                  <FortuneWheel 
-                    isSpinning={wheelSpinning} 
-                    onSelectCategory={handleSelectCategory}
-                    onSpinEnd={handleWheelSpinEnd}
-                  />
-                  <Button 
-                    onClick={handleSpinWheel} 
-                    className="mt-4"
-                    disabled={wheelSpinning}
-                  >
-                    {wheelSpinning ? 'Kręcenie...' : 'Zakręć Kołem'}
-                  </Button>
-                </div>
-              </TabsContent>
-            </Tabs>
+            <GameTabContent 
+              currentRound={currentRound}
+              currentQuestion={currentQuestion}
+              wheelSpinning={wheelSpinning}
+              activePlayerId={activePlayerId}
+              extensionFactor={extensionFactor}
+              onSpinWheel={handleSpinWheel}
+              onWheelSpinEnd={handleWheelSpinEnd}
+              onSelectCategory={handleSelectCategory}
+              onAnswerQuestion={handleAnswerQuestion}
+            />
           </div>
           
           {/* Right column - Question selection */}
-          <div className="bg-gameshow-card p-4 rounded-lg">
-            <h2 className="text-xl font-semibold text-gameshow-text mb-3">
-              Lista Pytań {selectedCategory && `- ${selectedCategory}`}
-            </h2>
-            <QuestionList 
-              questions={state.remainingQuestions}
-              onSelectQuestion={handleSelectQuestion}
-              currentCategory={selectedCategory}
-            />
-          </div>
+          <QuestionListPanel
+            questions={remainingQuestions}
+            selectedCategory={selectedCategory}
+            onSelectQuestion={handleSelectQuestion}
+          />
         </div>
       </div>
     </div>
