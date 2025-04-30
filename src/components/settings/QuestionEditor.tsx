@@ -8,6 +8,7 @@ import { Plus } from 'lucide-react';
 import { QuestionFilters } from './question-editor/QuestionFilters';
 import { QuestionList } from './question-editor/QuestionList';
 import { QuestionEditorDialog } from './question-editor/QuestionEditorDialog';
+import { filterQuestions } from '@/utils/question/questionUtils';
 
 interface QuestionEditorProps {
   activeRoundFilter?: RoundType | 'all';
@@ -18,6 +19,8 @@ export function QuestionEditor({ activeRoundFilter = 'all' }: QuestionEditorProp
   const [filteredRound, setFilteredRound] = useState<RoundType | 'all'>(activeRoundFilter);
   const [filteredCategory, setFilteredCategory] = useState<string | 'all'>('all');
   const [searchTerm, setSearchTerm] = useState('');
+  const [showUsed, setShowUsed] = useState(true);
+  const [showFavorites, setShowFavorites] = useState(false);
   const [editingQuestion, setEditingQuestion] = useState<Question | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   
@@ -26,14 +29,14 @@ export function QuestionEditor({ activeRoundFilter = 'all' }: QuestionEditorProp
     setFilteredRound(activeRoundFilter);
   }, [activeRoundFilter]);
   
-  const filteredQuestions = state.questions
-    .filter(q => filteredRound === 'all' || q.round === filteredRound)
-    .filter(q => filteredCategory === 'all' || q.category === filteredCategory)
-    .filter(q => 
-      searchTerm === '' || 
-      q.text.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      q.category.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+  // Apply filtering using the utility function
+  const filteredQuestions = filterQuestions(state.questions, {
+    searchTerm,
+    round: filteredRound,
+    category: filteredCategory === 'all' ? '' : filteredCategory,
+    showUsed,
+    showFavorites
+  });
   
   const handleEditQuestion = (question: Question) => {
     setEditingQuestion(question);
@@ -80,6 +83,14 @@ export function QuestionEditor({ activeRoundFilter = 'all' }: QuestionEditorProp
     );
   };
   
+  const handleClearFilters = () => {
+    setFilteredRound(activeRoundFilter);
+    setFilteredCategory('all');
+    setSearchTerm('');
+    setShowUsed(true);
+    setShowFavorites(false);
+  };
+  
   return (
     <div className="space-y-4">
       <QuestionFilters
@@ -89,6 +100,11 @@ export function QuestionEditor({ activeRoundFilter = 'all' }: QuestionEditorProp
         onRoundFilterChange={setFilteredRound}
         onCategoryFilterChange={setFilteredCategory}
         onSearchTermChange={setSearchTerm}
+        showUsed={showUsed}
+        setShowUsed={setShowUsed}
+        showFavorites={showFavorites}
+        setShowFavorites={setShowFavorites}
+        onClearFilters={handleClearFilters}
       />
       
       <div className="flex justify-between mb-4">

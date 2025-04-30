@@ -3,7 +3,7 @@ import React from 'react';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-import { Search, X, Filter } from 'lucide-react';
+import { Search, X } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { RoundType } from '@/types/gameTypes';
@@ -11,30 +11,30 @@ import { getAllCategories } from '@/utils/gameUtils';
 
 interface QuestionFiltersProps {
   searchTerm: string;
-  setSearchTerm: (term: string) => void;
+  onSearchTermChange: (term: string) => void;
   roundFilter: RoundType | 'all';
-  setRoundFilter: (round: RoundType | 'all') => void;
+  onRoundFilterChange: (round: RoundType | 'all') => void;
   categoryFilter: string;
-  setCategoryFilter: (category: string) => void;
-  showUsed: boolean;
-  setShowUsed: (show: boolean) => void;
-  showFavorites: boolean;
-  setShowFavorites: (show: boolean) => void;
-  onClearFilters: () => void;
+  onCategoryFilterChange: (category: string) => void;
+  showUsed?: boolean;
+  setShowUsed?: (show: boolean) => void;
+  showFavorites?: boolean;
+  setShowFavorites?: (show: boolean) => void;
+  onClearFilters?: () => void;
 }
 
 export function QuestionFilters({ 
   searchTerm,
-  setSearchTerm,
+  onSearchTermChange,
   roundFilter,
-  setRoundFilter,
+  onRoundFilterChange,
   categoryFilter,
-  setCategoryFilter,
-  showUsed,
-  setShowUsed,
-  showFavorites,
-  setShowFavorites,
-  onClearFilters
+  onCategoryFilterChange,
+  showUsed = false,
+  setShowUsed = () => {},
+  showFavorites = false,
+  setShowFavorites = () => {},
+  onClearFilters = () => {}
 }: QuestionFiltersProps) {
   const categories = getAllCategories();
 
@@ -46,12 +46,12 @@ export function QuestionFilters({
           <Input
             placeholder="Szukaj pytań..."
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            onChange={(e) => onSearchTermChange(e.target.value)}
             className="pl-9 bg-gameshow-background border-gameshow-primary/30"
           />
           {searchTerm && (
             <button
-              onClick={() => setSearchTerm('')}
+              onClick={() => onSearchTermChange('')}
               className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gameshow-muted hover:text-gameshow-text"
             >
               <X className="h-4 w-4" />
@@ -59,7 +59,7 @@ export function QuestionFilters({
           )}
         </div>
         
-        <Select value={roundFilter} onValueChange={(value) => setRoundFilter(value as RoundType | 'all')}>
+        <Select value={roundFilter} onValueChange={(value) => onRoundFilterChange(value as RoundType | 'all')}>
           <SelectTrigger className="w-32 bg-gameshow-background border-gameshow-primary/30">
             <SelectValue placeholder="Runda" />
           </SelectTrigger>
@@ -72,12 +72,12 @@ export function QuestionFilters({
           </SelectContent>
         </Select>
         
-        <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+        <Select value={categoryFilter} onValueChange={onCategoryFilterChange}>
           <SelectTrigger className="w-32 bg-gameshow-background border-gameshow-primary/30">
             <SelectValue placeholder="Kategoria" />
           </SelectTrigger>
           <SelectContent className="bg-gameshow-background border-gameshow-primary/30 max-h-[200px]">
-            <SelectItem value="">Wszystkie</SelectItem>
+            <SelectItem value="all">Wszystkie</SelectItem>
             {categories.map((category) => (
               <SelectItem key={category} value={category}>
                 {category}
