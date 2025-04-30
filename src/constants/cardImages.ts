@@ -1,9 +1,19 @@
 
 import { CardType } from '@/types/gameTypes';
 
-// Map of card types to their image paths
-// In the future, these could be real images instead of placeholders
-export const CARD_IMAGES: Record<CardType, string> = {
+// Load custom card images from localStorage if available
+const getCustomCardImages = (): Partial<Record<CardType, string>> => {
+  try {
+    const customImages = localStorage.getItem('customCardImages');
+    return customImages ? JSON.parse(customImages) : {};
+  } catch (error) {
+    console.error('Error loading custom card images:', error);
+    return {};
+  }
+};
+
+// Default image paths for cards
+const DEFAULT_CARD_IMAGES: Record<CardType, string> = {
   'dejavu': '/images/cards/dejavu.png',
   'kontra': '/images/cards/kontra.png',
   'reanimacja': '/images/cards/reanimacja.png',
@@ -14,6 +24,18 @@ export const CARD_IMAGES: Record<CardType, string> = {
   'lustro': '/images/cards/lustro.png',
   'oswiecenie': '/images/cards/oswiecenie.png'
 };
+
+// Get custom images if available, fallback to defaults
+const customImages = typeof window !== 'undefined' ? getCustomCardImages() : {};
+
+// Map of card types to their image paths - override defaults with custom images
+export const CARD_IMAGES: Record<CardType, string> = {
+  ...DEFAULT_CARD_IMAGES,
+  ...customImages
+};
+
+// Export default images for reference
+export const DEFAULT_CARD_IMAGES_PATHS = DEFAULT_CARD_IMAGES;
 
 // Map of card types to their animation paths
 export const CARD_ANIMATIONS: Record<CardType, string> = {
