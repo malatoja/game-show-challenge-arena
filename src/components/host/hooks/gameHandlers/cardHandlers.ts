@@ -1,10 +1,9 @@
-
 import { useGame } from '@/context/GameContext';
 import { CardType } from '@/types/gameTypes';
 import { useEvents } from '../../EventsContext';
 import { useSocket } from '@/context/SocketContext';
 import { toast } from 'sonner';
-import { playCardSound } from '@/lib/soundService';
+import { playSound } from '@/lib/soundService';
 
 export function useCardHandlers() {
   const { state, dispatch } = useGame();
@@ -50,7 +49,7 @@ export function useCardHandlers() {
     } as { playerId: string; cardType: CardType; animationUrl?: string });
     
     // Play card activation sound
-    playCardSound(cardType);
+    playSound('card-use');
     
     // Special card effects handling
     switch (cardType) {

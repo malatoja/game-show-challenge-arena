@@ -54,14 +54,14 @@ export function useRoundHandlers() {
       
       // Top player gets a card if the rule is enabled
       if (sortedPlayers.length > 0) {
-        const randomCard = getRandomCardForAction('top_score', roundType);
+        const randomCard = getRandomCardForAction('correctAnswer');
         dispatch({ type: 'AWARD_CARD', playerId: sortedPlayers[0].id, cardType: randomCard });
         addEvent(`${sortedPlayers[0].name} otrzymuje kartę za najlepszy wynik w Rundzie 1`);
       }
       
       // Player with lowest points gets a "Na Ratunek" card if the rule is enabled
       if (sortedPlayers.length > 1 && cardRules.lowestPoints !== false) {
-        const rescueCard = getRandomCardForAction('lowest_score', roundType);
+        const rescueCard = getRandomCardForAction('wrongAnswer');
         dispatch({ type: 'AWARD_CARD', playerId: sortedPlayers[sortedPlayers.length - 1].id, cardType: rescueCard });
         addEvent(`${sortedPlayers[sortedPlayers.length - 1].name} otrzymuje kartę pomocy`);
       }
@@ -70,7 +70,7 @@ export function useRoundHandlers() {
     if (roundType === 'wheel' && cardRules.advanceRound !== false) {
       // Award cards to players who advanced from Round 2
       state.players.filter(p => !p.eliminated).forEach(player => {
-        const randomCard = getRandomCardForAction('round_win', roundType);
+        const randomCard = getRandomCardForAction('roundComplete');
         dispatch({ type: 'AWARD_CARD', playerId: player.id, cardType: randomCard });
         addEvent(`${player.name} otrzymuje kartę za awans do Rundy 3`);
       });

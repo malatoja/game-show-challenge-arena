@@ -13,7 +13,7 @@ import {
 import { AlertCircle, Zap, ChevronUp } from 'lucide-react';
 import { CARD_DETAILS } from '@/constants/gameConstants';
 import { motion, AnimatePresence } from 'framer-motion';
-import { playCardSound } from '@/lib/soundService';
+import { playSound } from '@/lib/soundService';
 
 interface PlayerFooterProps {
   player: Player;
@@ -35,7 +35,7 @@ const PlayerFooter: React.FC<PlayerFooterProps> = ({ player, onUseCard }) => {
     setIsOpen(false);
     
     // Play card sound
-    playCardSound(cardType);
+    playSound('card-use');
     
     // Show animation for 1.5 seconds before calling the actual handler
     setTimeout(() => {

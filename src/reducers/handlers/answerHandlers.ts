@@ -1,7 +1,6 @@
-
 import { GameState, PlayerId, CardType } from '../../types/gameTypes';
 import { toast } from 'sonner';
-import { loadCardRules, shouldAwardBonusCard } from '../../utils/gameUtils';
+import { loadCardRules, shouldAwardBonusCard } from '../../utils/card/cardUtils';
 import { createCard } from '../../constants/gameConstants';
 
 // This function handles the answer question logic separately
@@ -44,18 +43,11 @@ export const handleAnswerQuestion = (state: GameState, playerId: PlayerId, isCor
       consecutiveCorrect++;
       
       // Check if player should be awarded a card based on rules
-      const { award, cardType: awardedCardType } = shouldAwardBonusCard(
-        consecutiveCorrect,
-        50, // points threshold
-        activePlayer.points + pointsToAdd,
-        state.currentRound,
-        cardRules
-      );
+      const shouldAward = shouldAwardBonusCard(activePlayer, 'correctAnswer');
       
-      if (award) {
+      if (shouldAward) {
         awardCard = true;
-        cardType = awardedCardType;
-        consecutiveCorrect = 0; // Reset counter
+        cardType = 'turbo'; // Default card type
       }
       
       // Award turbo card if player reaches 50+ points in Round 1 if rule is enabled

@@ -1,6 +1,6 @@
 
 import { useEffect } from 'react';
-import { soundService } from '@/lib/soundService';
+import { playSound } from '@/lib/soundService';
 
 export const useDemoModeEffects = (
   demoMode: boolean,
@@ -41,14 +41,14 @@ export const useDemoModeEffects = (
       const randomDifficulty = difficulties[Math.floor(Math.random() * difficulties.length)];
       setSelectedCategory(randomCategory);
       setSelectedDifficulty(randomDifficulty);
-      soundService.play('wheel_spin');
+      playSound('wheel-spin');
     }, 5000);
     
     // Simulate showing question after 8 seconds
     const questionTimer = setTimeout(() => {
       setShowCategoryTable(false);
       setQuestion("Jaki streamer na polskim Twitchu pobił rekord widzów w 2023 roku?");
-      soundService.play('question_show');
+      playSound('countdown');
     }, 8000);
     
     // Simulate activating different players periodically
@@ -66,7 +66,7 @@ export const useDemoModeEffects = (
         
         // Play sound if active player changed
         if (!currentPlayers[randomIndex].isActive) {
-          soundService.play('buzzer');
+          playSound('buzzer');
         }
         
         return updatedPlayers;

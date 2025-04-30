@@ -12,7 +12,7 @@ import {
   RefreshCw,
   Upload
 } from 'lucide-react';
-import { soundService, SoundType } from '@/lib/soundService';
+import { playSound, soundService, SoundType } from '@/lib/soundService';
 
 type SoundItem = {
   id: SoundType;
@@ -25,16 +25,16 @@ export function SoundsTab() {
   const [isMuted, setIsMuted] = useState(soundService.isMuted());
   
   const soundItems: SoundItem[] = [
-    { id: 'timer', name: 'Timer', description: 'Dźwięk odliczania czasu' },
+    { id: 'countdown', name: 'Timer', description: 'Dźwięk odliczania czasu' },
     { id: 'correct', name: 'Poprawna odpowiedź', description: 'Dźwięk dla poprawnej odpowiedzi' },
-    { id: 'wrong', name: 'Błędna odpowiedź', description: 'Dźwięk dla błędnej odpowiedzi' },
-    { id: 'start_round', name: 'Początek rundy', description: 'Dźwięk rozpoczęcia rundy' },
-    { id: 'end_round', name: 'Koniec rundy', description: 'Dźwięk zakończenia rundy' },
-    { id: 'card_use', name: 'Użycie karty', description: 'Dźwięk użycia karty specjalnej' },
-    { id: 'wheel_spin', name: 'Koło fortuny', description: 'Dźwięk obracającego się koła fortuny' },
-    { id: 'buzzer', name: 'Buzzer', description: 'Dźwięk buzzera' },
-    { id: 'winner', name: 'Zwycięzca', description: 'Dźwięk ogłoszenia zwycięzcy' },
-    { id: 'question_show', name: 'Pytanie', description: 'Dźwięk wyświetlenia nowego pytania' },
+    { id: 'incorrect', name: 'Błędna odpowiedź', description: 'Dźwięk dla błędnej odpowiedzi' },
+    { id: 'round-start', name: 'Początek rundy', description: 'Dźwięk rozpoczęcia rundy' },
+    { id: 'round-end', name: 'Koniec rundy', description: 'Dźwięk zakończenia rundy' },
+    { id: 'card-use', name: 'Użycie karty', description: 'Dźwięk użycia karty specjalnej' },
+    { id: 'wheel-spin', name: 'Koło fortuny', description: 'Dźwięk obracającego się koła fortuny' },
+    { id: 'hint', name: 'Buzzer', description: 'Dźwięk buzzera' },
+    { id: 'game-over', name: 'Zwycięzca', description: 'Dźwięk ogłoszenia zwycięzcy' },
+    { id: 'hint-sound', name: 'Pytanie', description: 'Dźwięk wyświetlenia nowego pytania' },
   ];
 
   const handleVolumeChange = (newVolume: number[]) => {

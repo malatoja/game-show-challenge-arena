@@ -2,7 +2,7 @@
 import React, { useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CardType } from '@/types/gameTypes';
-import { playCardSound } from '@/lib/soundService';
+import { playSound } from '@/lib/soundService';
 import SpecialCard from '../cards/SpecialCard';
 import { CARD_DETAILS } from '@/constants/gameConstants';
 import { CARD_ANIMATIONS } from '@/constants/cardImages';
@@ -23,7 +23,7 @@ const CardActivationAnimation: React.FC<CardActivationAnimationProps> = ({
   // Play sound when animation starts
   useEffect(() => {
     if (show && cardType) {
-      playCardSound(cardType);
+      playSound('card-use');
       
       // Trigger onComplete callback after animation finishes
       const timer = setTimeout(() => {
