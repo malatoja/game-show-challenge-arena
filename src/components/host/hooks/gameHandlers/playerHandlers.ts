@@ -1,6 +1,6 @@
 
 import { useGame } from '@/context/GameContext';
-import { Player } from '@/types/gameTypes';
+import { Player, CardType } from '@/types/gameTypes';
 import { useEvents } from '../../EventsContext';
 import { useSocket } from '@/context/SocketContext';
 import { useState } from 'react';
@@ -42,7 +42,8 @@ export function usePlayerHandlers() {
 
   const handleAddTestCards = (playerId: string) => {
     // Add one of each card type for testing
-    const cardTypes = [
+    // Define card types with the correct CardType type
+    const cardTypes: CardType[] = [
       'dejavu', 'kontra', 'reanimacja', 'skip', 
       'turbo', 'refleks2', 'refleks3', 'lustro', 'oswiecenie'
     ];
