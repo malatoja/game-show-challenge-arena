@@ -29,13 +29,17 @@ export const SettingsLayout = ({
   );
 };
 
-export const SettingsTabs = ({ 
-  activeTab, 
-  setActiveTab 
-}: {
+interface SettingsTabsProps {
   activeTab: string;
   setActiveTab: (tab: string) => void;
-}) => {
+  children?: ReactNode; // Add children prop to the interface
+}
+
+export const SettingsTabs = ({ 
+  activeTab, 
+  setActiveTab,
+  children // Add children prop
+}: SettingsTabsProps) => {
   return (
     <Tabs value={activeTab} onValueChange={setActiveTab}>
       <TabsList className="mb-8 flex flex-wrap">
@@ -49,37 +53,7 @@ export const SettingsTabs = ({
         <TabsTrigger value="automation">Automatyzacja</TabsTrigger>
       </TabsList>
       <div className="bg-gameshow-card rounded-lg p-6 shadow-lg">
-        <TabsContent value="players">
-          {/* Moved to SettingsPage.tsx */}
-        </TabsContent>
-        
-        <TabsContent value="questions">
-          {/* Moved to SettingsPage.tsx */}
-        </TabsContent>
-        
-        <TabsContent value="cards">
-          {/* Moved to SettingsPage.tsx */}
-        </TabsContent>
-        
-        <TabsContent value="themes">
-          {/* Moved to SettingsPage.tsx */}
-        </TabsContent>
-        
-        <TabsContent value="sounds">
-          {/* Moved to SettingsPage.tsx */}
-        </TabsContent>
-        
-        <TabsContent value="roles">
-          {/* Moved to SettingsPage.tsx */}
-        </TabsContent>
-        
-        <TabsContent value="ranking">
-          {/* Moved to SettingsPage.tsx */}
-        </TabsContent>
-        
-        <TabsContent value="automation">
-          {/* Moved to SettingsPage.tsx */}
-        </TabsContent>
+        {children} {/* Render children here */}
       </div>
     </Tabs>
   );

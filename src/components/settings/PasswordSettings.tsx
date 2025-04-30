@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
-import { updateHostPassword, updateSettingsPassword, getAuthSettings } from '@/lib/authService';
+import { updateHostPassword, updateSettingsPassword, getAuthSettings, authenticateSettings } from '@/lib/authService';
 
 interface PasswordSettingsProps {
   hostPassword: string;
