@@ -1,6 +1,8 @@
+
 import { GameState, Player, Question, RoundType, PlayerId, CardType } from '../types/gameTypes';
 import { INITIAL_LIVES, SAMPLE_QUESTIONS, createCard } from '../constants/gameConstants';
 import { toast } from 'sonner';
+import { loadCardRules, shouldAwardBonusCard } from '../utils/gameUtils';
 
 // Actions
 export type GameAction = 

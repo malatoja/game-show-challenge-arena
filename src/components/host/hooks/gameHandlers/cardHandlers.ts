@@ -42,11 +42,12 @@ export function useCardHandlers() {
     const customAnimation = getCustomActionAnimation('card_use', cardType);
     
     // Emit the card:use event with animation data if available
+    // Use type assertion to include animationUrl in the event data
     emit('card:use', {
       playerId,
       cardType,
       animationUrl: customAnimation
-    });
+    } as { playerId: string; cardType: CardType; animationUrl?: string });
     
     // Play card activation sound
     playCardSound(cardType);

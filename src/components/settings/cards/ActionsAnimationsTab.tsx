@@ -194,7 +194,10 @@ export function ActionsAnimationsTab({ cardTypes }: ActionsAnimationsTabProps) {
               {actionTrigger === 'card_use' && (
                 <div>
                   <Label htmlFor="cardType">Typ karty</Label>
-                  <Select value={selectedCardType} onValueChange={setSelectedCardType}>
+                  <Select 
+                    value={selectedCardType} 
+                    onValueChange={(value) => setSelectedCardType(value as CardType)}
+                  >
                     <SelectTrigger id="cardType">
                       <SelectValue placeholder="Wybierz typ karty" />
                     </SelectTrigger>
