@@ -7,9 +7,10 @@ import { ROUND_NAMES } from '@/constants/gameConstants';
 import { useEvents } from './EventsContext';
 import { useTimer } from './TimerContext';
 import GameResults from './GameResults';
+import GameLayout, { GameLayoutProps } from './GameLayout';
 
 interface GameControllerProps {
-  children: React.ReactNode;
+  children?: React.ReactNode;
 }
 
 export function GameController({ children }: GameControllerProps) {
@@ -167,12 +168,8 @@ export function GameController({ children }: GameControllerProps) {
     handleAddTestCards
   };
 
-  // Clone children with context prop
-  if (React.isValidElement(children)) {
-    return React.cloneElement(children, { gameControl: gameControlContext });
-  }
-  
-  return <>{children}</>;
+  // Return GameLayout with gameControl prop
+  return <GameLayout gameControl={gameControlContext} />;
 }
 
 export default GameController;
