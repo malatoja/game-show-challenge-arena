@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useReducer, ReactNode } from 'react';
 import { GameState, Player, Question, RoundType, PlayerId, CardType } from '../types/gameTypes';
 import { INITIAL_LIVES, SAMPLE_QUESTIONS, createCard } from '../constants/gameConstants';
@@ -134,6 +133,8 @@ function gameReducer(state: GameState, action: GameAction): GameState {
       
       let pointsToAdd = action.isCorrect ? 10 : 0;
       let newLives = activePlayer.lives;
+      let awardCard = false;
+      let cardType: CardType = 'dejavu';
       
       // Check if player has used turbo card
       const turboCardUsed = activePlayer.cards.some(card => 
@@ -154,6 +155,30 @@ function gameReducer(state: GameState, action: GameAction): GameState {
         }
       }
       
+      // Track consecutive correct answers
+      let consecutiveCorrect = activePlayer.consecutiveCorrect || 0;
+      
+      if (action.isCorrect) {
+        consecutiveCorrect++;
+        
+        // Award card after 3 consecutive correct answers
+        if (consecutiveCorrect >= 3) {
+          awardCard = true;
+          cardType = 'dejavu';
+          consecutiveCorrect = 0; // Reset counter
+        }
+        
+        // Award turbo card if player reaches 50+ points in Round 1
+        if (state.currentRound === 'knowledge' && 
+            activePlayer.points + pointsToAdd >= 50 && 
+            !activePlayer.cards.some(c => c.type === 'turbo')) {
+          awardCard = true;
+          cardType = 'turbo';
+        }
+      } else {
+        consecutiveCorrect = 0; // Reset on wrong answer
+      }
+      
       // Toast notification
       if (action.isCorrect) {
         toast.success(`${activePlayer.name} odpowiedział poprawnie! +${pointsToAdd} punktów`);
@@ -165,28 +190,49 @@ function gameReducer(state: GameState, action: GameAction): GameState {
         }
       }
       
-      // We don't need to mark the current question as used here anymore,
-      // as it's already marked when selected via SET_CURRENT_QUESTION
+      // Prepare updated player state
+      let updatedPlayers = state.players.map(player => {
+        if (player.id === action.playerId) {
+          return {
+            ...player,
+            points: player.points + pointsToAdd,
+            lives: newLives,
+            eliminated: newLives <= 0,
+            consecutiveCorrect: consecutiveCorrect,
+            cards: player.cards.map(card => {
+              if ((card.type === 'turbo' || card.type === 'reanimacja') && !card.isUsed) {
+                return { ...card, isUsed: true };
+              }
+              return card;
+            })
+          };
+        }
+        return player;
+      });
+      
+      // Award card if conditions met
+      if (awardCard) {
+        const playerToAwardIndex = updatedPlayers.findIndex(p => p.id === action.playerId);
+        if (playerToAwardIndex !== -1) {
+          const playerCards = updatedPlayers[playerToAwardIndex].cards;
+          const unusedCards = playerCards.filter(c => !c.isUsed).length;
+          
+          // Only add if player doesn't have max cards (3)
+          if (unusedCards < 3) {
+            const newCard = createCard(cardType);
+            updatedPlayers[playerToAwardIndex] = {
+              ...updatedPlayers[playerToAwardIndex],
+              cards: [...playerCards, newCard]
+            };
+            
+            toast.success(`${activePlayer.name} otrzymuje kartę ${newCard.name}!`);
+          }
+        }
+      }
       
       return {
         ...state,
-        players: state.players.map(player => {
-          if (player.id === action.playerId) {
-            return {
-              ...player,
-              points: player.points + pointsToAdd,
-              lives: newLives,
-              eliminated: newLives <= 0,
-              cards: player.cards.map(card => {
-                if ((card.type === 'turbo' || card.type === 'reanimacja') && !card.isUsed) {
-                  return { ...card, isUsed: true };
-                }
-                return card;
-              })
-            };
-          }
-          return player;
-        })
+        players: updatedPlayers
       };
     }
     

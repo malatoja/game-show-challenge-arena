@@ -8,6 +8,7 @@ import { useEvents } from './EventsContext';
 import { useTimer } from './TimerContext';
 import GameResults from './GameResults';
 import GameLayout, { GameControlContext } from './GameLayout';
+import { playCardSound } from '@/lib/soundService';
 
 interface GameControllerProps {
   children?: React.ReactNode;
@@ -28,6 +29,8 @@ export function GameController({ children }: GameControllerProps) {
   const [showResults, setShowResults] = useState<boolean>(false);
   const [resultType, setResultType] = useState<'round' | 'final'>('round');
   const [activePlayerId, setActivePlayerId] = useState<string | null>(null);
+  const [lastAnswerWasIncorrect, setLastAnswerWasIncorrect] = useState<boolean>(false);
+  const [questionTransferTarget, setQuestionTransferTarget] = useState<string | null>(null);
   
   // Calculate round state for UI
   const isRoundActive = roundStarted && !roundEnded;
@@ -54,6 +57,32 @@ export function GameController({ children }: GameControllerProps) {
     dispatch({ type: 'START_ROUND', roundType });
     addEvent(`Rozpoczęto rundę: ${ROUND_NAMES[roundType]}`);
     toast.success(`Rozpoczęto rundę: ${ROUND_NAMES[roundType]}`);
+
+    // Auto-award cards based on points or position if starting a new round
+    if (roundType === 'speed') {
+      // Auto-award cards to top players after Round 1
+      const sortedPlayers = [...players].sort((a, b) => b.points - a.points);
+      
+      // Top player gets a card
+      if (sortedPlayers.length > 0) {
+        dispatch({ type: 'AWARD_CARD', playerId: sortedPlayers[0].id, cardType: 'turbo' });
+        addEvent(`${sortedPlayers[0].name} otrzymuje kartę Turbo za najlepszy wynik w Rundzie 1`);
+      }
+      
+      // Player with lowest points gets a "Na Ratunek" card
+      if (sortedPlayers.length > 1) {
+        dispatch({ type: 'AWARD_CARD', playerId: sortedPlayers[sortedPlayers.length - 1].id, cardType: 'reanimacja' });
+        addEvent(`${sortedPlayers[sortedPlayers.length - 1].name} otrzymuje kartę Reanimacja (Na Ratunek)`);
+      }
+    }
+    
+    if (roundType === 'wheel') {
+      // Award cards to players who advanced from Round 2
+      players.filter(p => !p.eliminated).forEach(player => {
+        dispatch({ type: 'AWARD_CARD', playerId: player.id, cardType: 'dejavu' });
+        addEvent(`${player.name} otrzymuje kartę Dejavu za awans do Rundy 3`);
+      });
+    }
   };
   
   const handleEndRound = () => {
@@ -103,8 +132,62 @@ export function GameController({ children }: GameControllerProps) {
     const player = players.find(p => p.id === playerId);
     if (!player) return;
     
+    // Process card effects based on card type
     dispatch({ type: 'USE_CARD', playerId, cardType });
-    addEvent(`${player.name} użył karty ${cardType}`);
+    
+    // Play card activation sound
+    playCardSound(cardType);
+    
+    // Special card effects handling
+    switch (cardType) {
+      case 'dejavu':
+        // Allow player to repeat the current question
+        addEvent(`${player.name} użył karty Dejavu - powtarza pytanie`);
+        toast.success(`${player.name} użył karty Dejavu - powtarza pytanie`);
+        
+        // Reset last answer state to allow another attempt
+        setLastAnswerWasIncorrect(false);
+        break;
+        
+      case 'kontra':
+        // Pass the question to another player
+        addEvent(`${player.name} użył karty Kontra - możliwość przekazania pytania`);
+        toast.success(`${player.name} użył karty Kontra - wybierz gracza do przejęcia pytania`);
+        
+        // Set up the UI to select a target player
+        setQuestionTransferTarget('pending');
+        break;
+        
+      case 'reanimacja':
+        // Prevent life loss in Round 2
+        // Logic is already in the reducer when answering question
+        addEvent(`${player.name} użył karty Reanimacja - zapobiega utracie życia`);
+        toast.success(`${player.name} użył karty Reanimacja - zapobiega utracie życia`);
+        break;
+        
+      case 'turbo':
+        // Double points for correct answer
+        // Logic already in the reducer
+        addEvent(`${player.name} użył karty Turbo - podwójne punkty za poprawną odpowiedź`);
+        toast.success(`${player.name} użył karty Turbo - podwójne punkty za poprawną odpowiedź`);
+        break;
+        
+      case 'refleks2':
+        // Double answer time
+        addEvent(`${player.name} użył karty Refleks x2 - podwójny czas na odpowiedź`);
+        toast.success(`${player.name} użył karty Refleks x2 - podwójny czas na odpowiedź`);
+        break;
+        
+      case 'refleks3':
+        // Triple answer time
+        addEvent(`${player.name} użył karty Refleks x3 - potrójny czas na odpowiedź`);
+        toast.success(`${player.name} użył karty Refleks x3 - potrójny czas na odpowiedź`);
+        break;
+        
+      default:
+        addEvent(`${player.name} użył karty ${cardType}`);
+        toast(`${player.name} użył karty ${cardType}`);
+    }
   };
 
   const handleAddPlayer = () => {

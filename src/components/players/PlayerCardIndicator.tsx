@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Card } from '@/types/gameTypes';
+import { Card, CardType } from '@/types/gameTypes';
 import { cn } from '@/lib/utils';
 import { 
   Tooltip,
@@ -8,13 +8,16 @@ import {
   TooltipProvider,
   TooltipTrigger 
 } from '@/components/ui/tooltip';
+import { motion } from 'framer-motion';
+import { CARD_DETAILS } from '@/constants/gameConstants';
 
 interface PlayerCardIndicatorProps {
   cards: Card[];
-  onUseCard?: (cardType: Card['type']) => void;
+  onUseCard?: (cardType: CardType) => void;
+  animateNew?: boolean;
 }
 
-export function PlayerCardIndicator({ cards, onUseCard }: PlayerCardIndicatorProps) {
+export function PlayerCardIndicator({ cards, onUseCard, animateNew = false }: PlayerCardIndicatorProps) {
   // Group cards by type
   const cardsByType: Record<string, { card: Card; count: number }> = {};
   
@@ -30,7 +33,7 @@ export function PlayerCardIndicator({ cards, onUseCard }: PlayerCardIndicatorPro
   });
   
   // Get card color by type
-  const getCardColor = (cardType: string): string => {
+  const getCardColor = (cardType: CardType): string => {
     switch (cardType) {
       case 'dejavu': return 'bg-blue-500';
       case 'kontra': return 'bg-red-500';
@@ -46,7 +49,7 @@ export function PlayerCardIndicator({ cards, onUseCard }: PlayerCardIndicatorPro
   };
   
   // Get card icon by type
-  const getCardIcon = (cardType: string): string => {
+  const getCardIcon = (cardType: CardType): string => {
     switch (cardType) {
       case 'dejavu': return 'D';
       case 'kontra': return 'K';
@@ -60,40 +63,75 @@ export function PlayerCardIndicator({ cards, onUseCard }: PlayerCardIndicatorPro
       default: return '?';
     }
   };
+
+  const cardItems = Object.values(cardsByType);
+  
+  if (cardItems.length === 0) {
+    return null;
+  }
   
   return (
-    <div className="flex flex-wrap gap-1">
-      {Object.values(cardsByType).map(({ card, count }) => (
+    <motion.div 
+      className="flex flex-wrap gap-1"
+      initial="hidden"
+      animate="visible"
+      variants={{
+        hidden: { opacity: 1 },
+        visible: {
+          opacity: 1,
+          transition: {
+            staggerChildren: 0.1
+          }
+        }
+      }}
+    >
+      {cardItems.map(({ card, count }) => (
         <TooltipProvider key={card.type}>
           <Tooltip>
             <TooltipTrigger asChild>
-              <div 
+              <motion.div 
                 className={cn(
                   "w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-bold cursor-pointer relative",
-                  getCardColor(card.type)
+                  getCardColor(card.type),
+                  "shadow-[0_0_8px_rgba(255,255,255,0.5)]",
+                  "hover:shadow-[0_0_12px_rgba(255,255,255,0.8)]"
                 )}
                 onClick={(e) => {
                   e.stopPropagation();
                   onUseCard && onUseCard(card.type);
                 }}
+                variants={animateNew ? {
+                  hidden: { scale: 0, rotate: -10 },
+                  visible: { 
+                    scale: 1, 
+                    rotate: 0,
+                    transition: { 
+                      type: 'spring', 
+                      stiffness: 260, 
+                      damping: 20 
+                    } 
+                  }
+                } : undefined}
+                whileHover={{ scale: 1.2 }}
+                whileTap={{ scale: 0.9 }}
               >
                 {getCardIcon(card.type)}
                 {count > 1 && (
-                  <div className="absolute -top-1 -right-1 w-3 h-3 bg-white rounded-full flex items-center justify-center">
+                  <div className="absolute -top-1 -right-1 w-3 h-3 bg-white rounded-full flex items-center justify-center shadow">
                     <span className="text-[8px] font-bold text-black">{count}</span>
                   </div>
                 )}
-              </div>
+              </motion.div>
             </TooltipTrigger>
-            <TooltipContent>
-              <p className="font-semibold">{card.name || card.type}</p>
-              <p className="text-xs">{card.description}</p>
-              <p className="text-xs mt-1 font-semibold">Kliknij aby użyć</p>
+            <TooltipContent side="top" className="bg-gameshow-background border-gameshow-primary p-3">
+              <p className="font-semibold text-gameshow-text">{CARD_DETAILS[card.type].name || card.type}</p>
+              <p className="text-xs text-gameshow-muted">{CARD_DETAILS[card.type].description}</p>
+              <p className="text-xs mt-1 font-semibold text-neon-pink">Kliknij aby użyć</p>
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>
       ))}
-    </div>
+    </motion.div>
   );
 }
 
