@@ -9,6 +9,7 @@ import GameTabContent from './panels/GameTabContent';
 import QuestionListPanel from './panels/QuestionListPanel';
 import { useSocket } from '@/context/SocketContext';
 import { toast } from 'sonner';
+import { motion } from 'framer-motion';
 
 // Define the context type for game controls
 export interface GameControlContext {
@@ -123,7 +124,12 @@ const GameLayout: React.FC<GameLayoutProps> = ({ gameControl }) => {
   };
 
   return (
-    <div className={`container mx-auto p-4 bg-gameshow-background min-h-screen ${getRoundLayoutClass()}`}>
+    <motion.div 
+      className={`container mx-auto p-4 bg-gameshow-background min-h-screen ${getRoundLayoutClass()}`}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.3 }}
+    >
       <div className="flex flex-col space-y-6">
         {/* Game Controls */}
         <GameControls
@@ -137,12 +143,14 @@ const GameLayout: React.FC<GameLayoutProps> = ({ gameControl }) => {
         />
         
         {/* Players Grid */}
-        <PlayerGrid
-          players={players}
-          onSelectPlayer={handleSelectPlayer}
-          onAddTestCards={handleAddTestCards}
-          onUseCard={handleUseCard}
-        />
+        <div className="bg-gameshow-card p-4 rounded-lg shadow-lg">
+          <PlayerGrid
+            players={players}
+            onSelectPlayer={handleSelectPlayer}
+            onAddTestCards={handleAddTestCards}
+            onUseCard={handleUseCard}
+          />
+        </div>
         
         {/* Main Game Interface */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -201,7 +209,7 @@ const GameLayout: React.FC<GameLayoutProps> = ({ gameControl }) => {
           />
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 };
 
