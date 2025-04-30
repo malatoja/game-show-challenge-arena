@@ -26,6 +26,14 @@ export interface GameControlContext {
   handleAddTestCards: (playerId: string) => void;
   handleSelectQuestion?: (question: any) => void;
   handleAnswerQuestion?: (isCorrect: boolean, answerIndex: number) => void;
+  gameState?: {
+    players: Player[];
+    currentRound: RoundType;
+    currentQuestion: any | null;
+    wheelSpinning: boolean;
+    selectedCategory: string | null;
+    remainingQuestions: any[];
+  };
 }
 
 // Define props for GameLayout component
@@ -51,17 +59,17 @@ const GameLayout: React.FC<GameLayoutProps> = ({ gameControl }) => {
     handleAddPlayer,
     handleAddTestCards,
     handleSelectQuestion,
-    handleAnswerQuestion
+    handleAnswerQuestion,
+    gameState
   } = gameControl;
 
-  // Get players from the game context via gameControl
-  const players = gameControl.gameControl?.state?.players || [];
-  // Get other state from the game context
-  const currentRound = gameControl.gameControl?.state?.currentRound || 'knowledge';
-  const currentQuestion = gameControl.gameControl?.state?.currentQuestion || null;
-  const wheelSpinning = gameControl.gameControl?.state?.wheelSpinning || false;
-  const selectedCategory = gameControl.gameControl?.state?.selectedCategory || '';
-  const remainingQuestions = gameControl.gameControl?.state?.remainingQuestions || [];
+  // Get players and other game state
+  const players = gameState?.players || [];
+  const currentRound = gameState?.currentRound || 'knowledge';
+  const currentQuestion = gameState?.currentQuestion || null;
+  const wheelSpinning = gameState?.wheelSpinning || false;
+  const selectedCategory = gameState?.selectedCategory || '';
+  const remainingQuestions = gameState?.remainingQuestions || [];
 
   const activePlayer = players.find(player => player.id === activePlayerId) || null;
 

@@ -54,7 +54,7 @@ export function GameController({ children }: GameControllerProps) {
     );
   }
   
-  // Context object with all the handler functions
+  // Context object with all the handler functions and game state
   const gameControlContext = {
     activePlayerId,
     canStartRound,
@@ -75,7 +75,8 @@ export function GameController({ children }: GameControllerProps) {
     handleUseCard,
     handleAddPlayer,
     handleAddTestCards,
-    gameControl: { state } // Pass the state via gameControl
+    // Pass the state directly as gameState property
+    gameState: state
   };
 
   // Return GameLayout with gameControl prop
