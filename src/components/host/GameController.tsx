@@ -14,6 +14,15 @@ interface GameControllerProps {
   children?: React.ReactNode;
 }
 
+// Extend GameResults component props
+interface GameResultsProps {
+  players: Player[];
+  currentRound: RoundType;
+  resultType: 'round' | 'final';
+  onResetGame: () => void;
+  onCloseResults: () => void;
+}
+
 export function GameController({ children }: GameControllerProps) {
   const { state, dispatch } = useGame();
   const { 
@@ -365,9 +374,9 @@ export function GameController({ children }: GameControllerProps) {
   // Context object with all the handler functions
   const gameControlContext: GameControlContext = {
     activePlayerId,
-    canStartRound,
-    canEndRound,
-    isRoundActive,
+    canStartRound: !roundStarted && !roundEnded,
+    canEndRound: roundStarted && !roundEnded,
+    isRoundActive: roundStarted && !roundEnded,
     handleSelectPlayer,
     handleStartRound,
     handleEndRound,
