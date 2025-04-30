@@ -1,106 +1,80 @@
 
 import React from 'react';
-import { Player, RoundType, Question } from '@/types/gameTypes';
+import { Player, Question, RoundType } from '@/types/gameTypes';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { AlertTriangle } from 'lucide-react';
 import QuestionDisplay from '../questions/QuestionDisplay';
 import FortuneWheel from '../wheel/FortuneWheel';
-import { ROUND_NAMES } from '@/constants/gameConstants';
-import { Card } from '@/components/ui/card';
-import PlayerCamera from '../players/PlayerCamera';
 
 interface PlayerRoundContentProps {
   player: Player;
   currentRound: RoundType;
-  currentQuestion?: Question;
+  currentQuestion: Question | null;
   wheelSpinning: boolean;
+  onAnswer?: (isCorrect: boolean, answerIndex: number) => void;
 }
 
 const PlayerRoundContent: React.FC<PlayerRoundContentProps> = ({
   player,
   currentRound,
   currentQuestion,
-  wheelSpinning
+  wheelSpinning,
+  onAnswer
 }) => {
-  return (
-    <main className="flex-grow container mx-auto p-4 flex flex-col">
-      {/* Round indicator */}
-      <div className="mb-4 inline-block px-3 py-1 bg-gameshow-primary/30 rounded-full">
-        <span className="text-sm text-gameshow-muted">
-          {ROUND_NAMES[currentRound]}
-        </span>
-      </div>
-      
-      <div className="flex-grow flex flex-col justify-center">
-        <Card className="bg-gameshow-card p-6 shadow-lg border-gameshow-primary/30">
-          {currentRound === 'wheel' && wheelSpinning ? (
-            <div className="flex flex-col items-center justify-center p-4">
-              <h2 className="text-xl font-semibold text-gameshow-text mb-6">Koło Fortuny</h2>
-              <div className="relative flex justify-center">
-                <FortuneWheel isSpinning={wheelSpinning} />
+  // Do not allow answering if player is not active
+  const handleAnswerQuestion = (isCorrect: boolean, answerIndex: number) => {
+    if (player.isActive && onAnswer) {
+      onAnswer(isCorrect, answerIndex);
+    }
+  };
+  
+  // Default content when no question is active
+  if (!currentQuestion) {
+    return (
+      <div className="flex-grow flex items-center justify-center p-4">
+        <Card className="max-w-lg w-full bg-gameshow-card">
+          <CardHeader className="text-center bg-gradient-to-r from-gameshow-primary/30 to-gameshow-secondary/30">
+            <CardTitle className="text-xl font-bold">Oczekiwanie na pytanie</CardTitle>
+          </CardHeader>
+          <CardContent className="p-6 text-center">
+            {currentRound === 'wheel' && wheelSpinning ? (
+              <div className="py-6 animate-pulse">
+                <FortuneWheel isSpinning={true} className="max-w-xs mx-auto" />
               </div>
-              <p className="mt-6 text-gameshow-muted text-center">
-                Koło się kręci...
+            ) : (
+              <p className="text-gameshow-muted">
+                Poczekaj, aż prowadzący wybierze pytanie...
               </p>
-            </div>
-          ) : (
-            <div className="flex flex-col gap-6">
-              {/* Different layouts based on round */}
-              {currentRound === 'knowledge' && (
-                <div className="flex flex-col lg:flex-row gap-6">
-                  <div className="lg:w-1/3">
-                    <h2 className="text-xl font-semibold text-gameshow-text mb-3">Runda Wiedzy</h2>
-                    <div className="text-gameshow-muted mb-4">
-                      Odpowiedz na pytanie, aby zdobyć punkty.
-                    </div>
-                    <div className="mb-4">
-                      <PlayerCamera player={player} size="md" />
-                    </div>
-                  </div>
-                  <div className="lg:w-2/3">
-                    <QuestionDisplay 
-                      question={currentQuestion} 
-                      timeLimit={30}
-                    />
-                  </div>
-                </div>
-              )}
-
-              {currentRound === 'speed' && (
-                <div className="flex flex-col items-center">
-                  <h2 className="text-xl font-semibold text-gameshow-text mb-3">Runda Szybkości</h2>
-                  <div className="text-gameshow-muted mb-4">
-                    Szybko odpowiadaj na pytania! Za błędne odpowiedzi tracisz życia.
-                  </div>
-                  <QuestionDisplay 
-                    question={currentQuestion} 
-                    timeLimit={5}
-                  />
-                </div>
-              )}
-
-              {currentRound === 'wheel' && !wheelSpinning && (
-                <div className="flex flex-col lg:flex-row gap-6">
-                  <div className="lg:w-1/3">
-                    <h2 className="text-xl font-semibold text-gameshow-text mb-3">Runda Koła Fortuny</h2>
-                    <div className="text-gameshow-muted mb-4">
-                      Kategoria została wybrana. Odpowiedz na pytanie.
-                    </div>
-                    <div className="mb-4">
-                      <PlayerCamera player={player} size="md" />
-                    </div>
-                  </div>
-                  <div className="lg:w-2/3">
-                    <QuestionDisplay 
-                      question={currentQuestion} 
-                      timeLimit={20}
-                    />
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
+            )}
+          </CardContent>
         </Card>
       </div>
-    </main>
+    );
+  }
+
+  return (
+    <div className="flex-grow flex items-center justify-center p-4">
+      <Card className="max-w-lg w-full bg-gameshow-card">
+        <CardHeader className="text-center bg-gradient-to-r from-gameshow-primary/30 to-gameshow-secondary/30">
+          <CardTitle className="text-xl font-bold">Pytanie</CardTitle>
+        </CardHeader>
+        <CardContent className="p-4">
+          <QuestionDisplay
+            question={currentQuestion}
+            timeLimit={currentRound === 'speed' ? 5 : 30}
+            onAnswer={handleAnswerQuestion}
+            disableAnswering={!player.isActive}
+          />
+          
+          {!player.isActive && (
+            <div className="mt-4 flex items-center justify-center text-gameshow-muted text-sm p-2 bg-gameshow-background/50 rounded-lg">
+              <AlertTriangle className="w-4 h-4 mr-2 text-yellow-500" />
+              <span>Możesz odpowiadać tylko gdy jesteś aktywnym graczem</span>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
   );
 };
 

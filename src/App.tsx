@@ -13,29 +13,32 @@ import GameRulesPage from "./pages/GameRulesPage";
 import SettingsPage from "./pages/SettingsPage";
 import OverlayPage from "./pages/OverlayPage";
 import { GameProvider } from "./context/GameContext";
+import { SocketProvider } from "./context/SocketContext";
 
 const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <GameProvider>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/host" element={<HostPage />} />
-            <Route path="/player" element={<PlayerPage />} />
-            <Route path="/players" element={<PlayersPage />} />
-            <Route path="/rules" element={<GameRulesPage />} />
-            <Route path="/settings" element={<SettingsPage />} />
-            <Route path="/overlay" element={<OverlayPage />} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
-      </TooltipProvider>
+      <SocketProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/host" element={<HostPage />} />
+              <Route path="/player" element={<PlayerPage />} />
+              <Route path="/players" element={<PlayersPage />} />
+              <Route path="/rules" element={<GameRulesPage />} />
+              <Route path="/settings" element={<SettingsPage />} />
+              <Route path="/overlay" element={<OverlayPage />} />
+              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </BrowserRouter>
+        </TooltipProvider>
+      </SocketProvider>
     </GameProvider>
   </QueryClientProvider>
 );

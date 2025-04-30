@@ -15,6 +15,7 @@ import { toast } from 'sonner';
 import PlayerHeader from './PlayerHeader';
 import PlayerRoundContent from './PlayerRoundContent';
 import PlayerFooter from './PlayerFooter';
+import { useSocket } from '@/context/SocketContext';
 
 export function PlayerView({ playerId }: { playerId: string }) {
   const { state } = useGame();
@@ -23,8 +24,26 @@ export function PlayerView({ playerId }: { playerId: string }) {
   const [showCardAnimation, setShowCardAnimation] = useState(false);
   const [showCardDesc, setShowCardDesc] = useState(false);
   
+  // Socket integration
+  const { emit, on } = useSocket();
+  
   // Find this player
   const player = players.find(p => p.id === playerId);
+  
+  // Listen for card awards
+  useEffect(() => {
+    const unsubCardResolve = on('card:resolve', (data) => {
+      if (data.playerId === playerId && data.success) {
+        toast.success(`Karta ${CARD_DETAILS[data.cardType].name} została aktywowana!`, {
+          duration: 3000,
+        });
+      }
+    });
+    
+    return () => {
+      unsubCardResolve();
+    };
+  }, [playerId, on]);
   
   // Show card animation if player has just received a new card
   useEffect(() => {
@@ -55,6 +74,12 @@ export function PlayerView({ playerId }: { playerId: string }) {
     const audio = new Audio('/sounds/card_use.mp3');
     audio.play().catch(err => console.error("Error playing sound:", err));
     
+    // Emit socket event
+    emit('card:use', {
+      playerId: player.id,
+      cardType: cardType
+    });
+    
     toast(`Używasz karty: ${CARD_DETAILS[cardType].name}`, {
       description: "Poinformuj prowadzącego o chęci użycia karty.",
       duration: 5000,
@@ -67,6 +92,19 @@ export function PlayerView({ playerId }: { playerId: string }) {
     setTimeout(() => {
       setShowCardDesc(false);
     }, 5000);
+  };
+  
+  // Handle answer function to emit socket event
+  const handleAnswer = (isCorrect: boolean, answerIndex: number) => {
+    if (!player) return;
+    
+    emit('question:answer', {
+      playerId: player.id,
+      correct: isCorrect,
+      answerIndex: answerIndex
+    });
+    
+    // Let the host handle the game state update
   };
   
   if (!player) {
@@ -138,6 +176,7 @@ export function PlayerView({ playerId }: { playerId: string }) {
         currentRound={currentRound}
         currentQuestion={currentQuestion}
         wheelSpinning={wheelSpinning}
+        onAnswer={handleAnswer}
       />
       
       {/* Bottom section - Actions */}

@@ -1,4 +1,6 @@
 
+import socketService, { SocketEvent, SocketPayloads } from './socketService';
+
 export type WebSocketMessageType = 
   | 'QUESTION_UPDATE' 
   | 'TIMER_UPDATE' 
@@ -11,8 +13,9 @@ export interface WebSocketMessage {
   data: any;
 }
 
+// This WebSocketService is now a wrapper around our new socketService 
+// to maintain backward compatibility
 class WebSocketService {
-  private socket: WebSocket | null = null;
   private listeners: Record<WebSocketMessageType, Function[]> = {
     'QUESTION_UPDATE': [],
     'TIMER_UPDATE': [],
@@ -21,52 +24,76 @@ class WebSocketService {
     'ROUND_UPDATE': []
   };
 
+  // Map old event types to new socket events
+  private eventMapping: Record<WebSocketMessageType, SocketEvent> = {
+    'QUESTION_UPDATE': 'question:show',
+    'TIMER_UPDATE': 'overlay:update',
+    'PLAYER_UPDATE': 'player:update',
+    'CATEGORY_SELECT': 'overlay:update',
+    'ROUND_UPDATE': 'round:start'
+  };
+
   connect(url: string): Promise<void> {
-    return new Promise((resolve, reject) => {
-      try {
-        this.socket = new WebSocket(url);
-        
-        this.socket.onopen = () => {
-          console.log('WebSocket connection established');
-          resolve();
-        };
-        
-        this.socket.onmessage = (event) => {
-          try {
-            const message: WebSocketMessage = JSON.parse(event.data);
-            this.handleMessage(message);
-          } catch (error) {
-            console.error('Error parsing WebSocket message:', error);
-          }
-        };
-        
-        this.socket.onerror = (error) => {
-          console.error('WebSocket error:', error);
-          reject(error);
-        };
-        
-        this.socket.onclose = () => {
-          console.log('WebSocket connection closed');
-          // Attempt to reconnect after a delay
-          setTimeout(() => {
-            if (this.socket?.readyState === WebSocket.CLOSED) {
-              this.connect(url);
-            }
-          }, 5000);
-        };
-        
-      } catch (error) {
-        console.error('Failed to create WebSocket connection:', error);
-        reject(error);
+    return new Promise((resolve) => {
+      // Initialize the new socketService
+      socketService.initialize(url);
+      
+      // Set up listeners for the new socketService to route to old listeners
+      this.setupSocketListeners();
+      
+      // Resolve immediately to maintain backward compatibility
+      resolve();
+    });
+  }
+
+  private setupSocketListeners(): void {
+    // Listen to question:show events and convert to QUESTION_UPDATE
+    socketService.on('question:show', (data) => {
+      this.handleMessage({
+        type: 'QUESTION_UPDATE',
+        data: data.question
+      });
+    });
+
+    // Listen to overlay:update events for timer updates
+    socketService.on('overlay:update', (data) => {
+      if (data.timeRemaining !== undefined) {
+        this.handleMessage({
+          type: 'TIMER_UPDATE',
+          data: { time: data.timeRemaining }
+        });
       }
+      
+      if (data.category !== undefined) {
+        this.handleMessage({
+          type: 'CATEGORY_SELECT',
+          data: {
+            category: data.category,
+            difficulty: data.difficulty || 10
+          }
+        });
+      }
+    });
+
+    // Listen to player:update events
+    socketService.on('player:update', (data) => {
+      this.handleMessage({
+        type: 'PLAYER_UPDATE',
+        data: data.player
+      });
+    });
+
+    // Listen to round:start events
+    socketService.on('round:start', (data) => {
+      this.handleMessage({
+        type: 'ROUND_UPDATE',
+        data: { title: data.roundName }
+      });
     });
   }
 
   disconnect(): void {
-    if (this.socket && this.socket.readyState === WebSocket.OPEN) {
-      this.socket.close();
-      this.socket = null;
-    }
+    socketService.disconnect();
   }
 
   addListener(type: WebSocketMessageType, callback: Function): void {
@@ -99,3 +126,6 @@ class WebSocketService {
 
 // Create a singleton instance
 export const websocketService = new WebSocketService();
+
+// For backward compatibility
+export default websocketService;

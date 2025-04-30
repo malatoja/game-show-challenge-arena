@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { GameOverlay } from '@/components/overlay/GameOverlay';
 import { Player } from '@/types/gameTypes';
-import { websocketService } from '@/lib/websocketService';
+import { useSocket } from '@/context/SocketContext';
 import { soundService, SoundType } from '@/lib/soundService';
 
 const OverlayPage = () => {
@@ -30,64 +30,134 @@ const OverlayPage = () => {
   const [selectedCategory, setSelectedCategory] = useState("");
   const [selectedDifficulty, setSelectedDifficulty] = useState(0);
 
+  // Socket connection status and mock mode
+  const { on, connected, mockMode } = useSocket();
+  
   // Demo mode for testing without WebSocket
-  const [demoMode, setDemoMode] = useState(true);
+  const [demoMode, setDemoMode] = useState(process.env.NODE_ENV === 'development');
   
   useEffect(() => {
-    // In a real application, connect to WebSocket server
+    // Use socket events when not in demo mode
     if (!demoMode) {
-      websocketService.connect('ws://localhost:8080')
-        .catch(error => console.error('Failed to connect to WebSocket server:', error));
-      
-      // Set up WebSocket listeners
-      websocketService.addListener('QUESTION_UPDATE', (data: any) => {
-        setQuestion(data.text);
-        setShowCategoryTable(false);
-        soundService.play('question_show');
+      // Listen for round updates
+      const unsubRound = on('round:start', (data) => {
+        setRoundTitle(data.roundName);
+        soundService.playSound('start_round');
       });
       
-      websocketService.addListener('TIMER_UPDATE', (data: any) => {
-        setCurrentTime(data.time);
-        setTimerPulsing(data.time <= 5);
+      // Listen for question updates
+      const unsubQuestion = on('question:show', (data) => {
+        setQuestion(data.question.text);
+        setShowCategoryTable(false);
+        soundService.playSound('question_show');
+      });
+      
+      // Listen for timer updates
+      const unsubTimer = on('overlay:update', (data) => {
+        if (data.timeRemaining !== undefined) {
+          setCurrentTime(data.timeRemaining);
+          setTimerPulsing(data.timeRemaining <= 5);
+          
+          if (data.timeRemaining <= 5 && data.timeRemaining > 0) {
+            soundService.playSound('timer');
+          }
+        }
         
-        if (data.time <= 5 && data.time > 0) {
-          soundService.play('timer');
+        if (data.question) {
+          setQuestion(data.question.text);
+          setShowCategoryTable(false);
+          soundService.playSound('question_show');
+        }
+        
+        if (data.category) {
+          setSelectedCategory(data.category);
+          if (data.difficulty) {
+            setSelectedDifficulty(data.difficulty);
+          }
         }
       });
       
-      websocketService.addListener('PLAYER_UPDATE', (data: any) => {
+      // Listen for player updates
+      const unsubPlayer = on('player:update', (data) => {
         setPlayers(prevState => {
           // First capture the current state for our later comparison
           const currentPlayers = prevState;
-          // Then update the players
-          const updatedPlayers = prevState.map(player => 
-            player.id === data.id ? { ...player, ...data } : player
-          );
+          
+          // Find the player to update
+          const playerIndex = currentPlayers.findIndex(p => p.id === data.player.id);
+          if (playerIndex === -1) return currentPlayers; // Player not found
+          
+          // Create a new array with the updated player
+          const updatedPlayers = [...currentPlayers];
+          updatedPlayers[playerIndex] = data.player;
+          
+          return updatedPlayers;
+        });
+      });
+      
+      // Listen for active player updates
+      const unsubActivePlayer = on('player:active', (data) => {
+        setPlayers(prevState => {
+          // First capture the current state for our later comparison
+          const currentPlayers = prevState;
+          
+          // Update the players
+          const updatedPlayers = currentPlayers.map(player => ({
+            ...player,
+            isActive: player.id === data.playerId
+          }));
           
           // Check if this player's 'isActive' status changed
-          if (data.isActive && 
-              currentPlayers.find((p: Player) => p.id === data.id) && 
-              !currentPlayers.find((p: Player) => p.id === data.id)?.isActive) {
-            soundService.play('buzzer');
+          const wasNotActive = !currentPlayers.find((p: Player) => p.id === data.playerId)?.isActive;
+          if (wasNotActive) {
+            soundService.playSound('buzzer');
           }
           
           return updatedPlayers;
         });
       });
       
-      websocketService.addListener('CATEGORY_SELECT', (data: any) => {
-        setSelectedCategory(data.category);
-        setSelectedDifficulty(data.difficulty);
-        soundService.play('wheel_spin');
+      // Listen for player elimination
+      const unsubEliminate = on('player:eliminate', (data) => {
+        setPlayers(prevState => {
+          return prevState.map(player => 
+            player.id === data.playerId 
+              ? { ...player, eliminated: true } 
+              : player
+          );
+        });
+        soundService.playSound('wrong');
       });
       
-      websocketService.addListener('ROUND_UPDATE', (data: any) => {
-        setRoundTitle(data.title);
-        soundService.play('start_round');
+      // Listen for confetti animation
+      const unsubConfetti = on('overlay:confetti', (data) => {
+        // Here you would trigger the confetti animation for the winner
+        soundService.playSound('winner');
+        // Mark winner in players array
+        setPlayers(prevState => {
+          return prevState.map(player => ({
+            ...player,
+            isActive: player.id === data.playerId
+          }));
+        });
+      });
+      
+      // Listen for card usage
+      const unsubCardUse = on('card:use', (data) => {
+        // Here you would trigger the card animation
+        soundService.playSound('card_use');
       });
       
       return () => {
-        websocketService.disconnect();
+        // Clean up all listeners when component unmounts
+        unsubRound();
+        unsubQuestion();
+        unsubTimer();
+        unsubPlayer();
+        unsubActivePlayer();
+        unsubEliminate();
+        unsubConfetti();
+        unsubCardUse();
       };
     } else {
       // Demo mode: Simulate WebSocket updates
@@ -114,14 +184,14 @@ const OverlayPage = () => {
         const randomDifficulty = difficulties[Math.floor(Math.random() * difficulties.length)];
         setSelectedCategory(randomCategory);
         setSelectedDifficulty(randomDifficulty);
-        soundService.play('wheel_spin');
+        soundService.playSound('wheel_spin');
       }, 5000);
       
       // Simulate showing question after 8 seconds
       const questionTimer = setTimeout(() => {
         setShowCategoryTable(false);
         setQuestion("Jaki streamer na polskim Twitchu pobił rekord widzów w 2023 roku?");
-        soundService.play('question_show');
+        soundService.playSound('question_show');
       }, 8000);
       
       // Simulate activating different players periodically
@@ -139,7 +209,7 @@ const OverlayPage = () => {
           
           // Play sound if active player changed
           if (!currentPlayers[randomIndex].isActive) {
-            soundService.play('buzzer');
+            soundService.playSound('buzzer');
           }
           
           return updatedPlayers;
@@ -153,7 +223,7 @@ const OverlayPage = () => {
         clearInterval(playerTimer);
       };
     }
-  }, [demoMode]);
+  }, [demoMode, on]);
   
   return (
     <div style={{ width: '100vw', height: '100vh', overflow: 'hidden' }}>
@@ -182,19 +252,28 @@ const OverlayPage = () => {
           borderRadius: '5px',
           zIndex: 1000
         }}>
-          <button 
-            onClick={() => setDemoMode(!demoMode)}
-            style={{ 
-              padding: '5px 10px', 
-              backgroundColor: demoMode ? '#FF3864' : '#39FF14', 
-              color: 'white', 
-              border: 'none', 
-              borderRadius: '3px', 
-              cursor: 'pointer' 
-            }}
-          >
-            {demoMode ? 'Demo Mode: ON' : 'Demo Mode: OFF'}
-          </button>
+          <div className="flex flex-col gap-2">
+            <button 
+              onClick={() => setDemoMode(!demoMode)}
+              style={{ 
+                padding: '5px 10px', 
+                backgroundColor: demoMode ? '#FF3864' : '#39FF14', 
+                color: 'white', 
+                border: 'none', 
+                borderRadius: '3px', 
+                cursor: 'pointer' 
+              }}
+            >
+              {demoMode ? 'Demo Mode: ON' : 'Demo Mode: OFF'}
+            </button>
+            
+            {!demoMode && (
+              <div className="text-white text-xs">
+                Socket: {connected ? 'Connected' : 'Disconnected'} 
+                {mockMode && ' (Mock)'}
+              </div>
+            )}
+          </div>
         </div>
       )}
     </div>

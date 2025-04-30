@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useGame } from '@/context/GameContext';
-import { Player, CardType, RoundType } from '@/types/gameTypes';
+import { Player, CardType, RoundType, Question } from '@/types/gameTypes';
 import { toast } from 'sonner';
 import { ROUND_NAMES } from '@/constants/gameConstants';
 import { useEvents } from './EventsContext';
@@ -8,6 +8,7 @@ import { useTimer } from './TimerContext';
 import GameResults from './GameResults';
 import GameLayout, { GameControlContext } from './GameLayout';
 import { playCardSound } from '@/lib/soundService';
+import { useSocket } from '@/context/SocketContext';
 
 interface GameControllerProps {
   children?: React.ReactNode;
@@ -19,11 +20,13 @@ export function GameController({ children }: GameControllerProps) {
     currentRound,
     players,
     roundStarted,
-    roundEnded 
+    roundEnded,
+    currentQuestion
   } = state;
   
   const { addEvent } = useEvents();
-  const { resetTimer, setTimerForRound } = useTimer();
+  const { resetTimer, setTimerForRound, currentTime } = useTimer();
+  const { emit } = useSocket();
   
   const [showResults, setShowResults] = useState<boolean>(false);
   const [resultType, setResultType] = useState<'round' | 'final'>('round');
@@ -40,6 +43,9 @@ export function GameController({ children }: GameControllerProps) {
     dispatch({ type: 'SET_ACTIVE_PLAYER', playerId: player.id });
     setActivePlayerId(player.id);
     addEvent(`Wybrano gracza: ${player.name}`);
+    
+    // Emit the player:active event
+    emit('player:active', { playerId: player.id });
   };
   
   const handleStartRound = (roundType: RoundType) => {
@@ -56,6 +62,12 @@ export function GameController({ children }: GameControllerProps) {
     dispatch({ type: 'START_ROUND', roundType });
     addEvent(`Rozpoczęto rundę: ${ROUND_NAMES[roundType]}`);
     toast.success(`Rozpoczęto rundę: ${ROUND_NAMES[roundType]}`);
+    
+    // Emit the round:start event
+    emit('round:start', { 
+      roundType, 
+      roundName: ROUND_NAMES[roundType]
+    });
 
     // Auto-award cards based on points or position if starting a new round
     if (roundType === 'speed') {
@@ -89,6 +101,9 @@ export function GameController({ children }: GameControllerProps) {
     setShowResults(true);
     setResultType('round');
     
+    // Emit the round:end event
+    emit('round:end', { roundType: currentRound });
+    
     // Auto advance top 5 players to next round logic would be here
     // For now, just display results
     addEvent("Runda zakończona. Wyświetlanie wyników...");
@@ -98,8 +113,85 @@ export function GameController({ children }: GameControllerProps) {
   const handleEndGame = () => {
     setShowResults(true);
     setResultType('final');
+    
+    // Find the winner
+    const winner = [...players].sort((a, b) => b.points - a.points)[0];
+    if (winner) {
+      // Emit the confetti animation for the winner
+      emit('overlay:confetti', { playerId: winner.id });
+    }
+    
     addEvent("Gra zakończona! Wyświetlanie końcowych wyników...");
     toast.success('Gra zakończona! Wyświetlanie końcowych wyników...');
+  };
+  
+  const handleSelectQuestion = (question: Question) => {
+    dispatch({ type: 'SET_CURRENT_QUESTION', question });
+    
+    // Emit the question:show event
+    emit('question:show', { question });
+    
+    addEvent(`Wybrano pytanie: ${question.text.substring(0, 30)}...`);
+  };
+  
+  const handleAnswerQuestion = (isCorrect: boolean, answerIndex: number) => {
+    if (activePlayerId) {
+      const activePlayer = state.players.find(p => p.id === activePlayerId);
+      if (activePlayer) {
+        dispatch({ type: 'ANSWER_QUESTION', playerId: activePlayer.id, isCorrect });
+        
+        // Update the last answer state
+        setLastAnswerWasIncorrect(!isCorrect);
+        
+        // If the answer was incorrect and this is round 2 or 3, player may lose a life
+        if (!isCorrect && (currentRound === 'speed' || currentRound === 'wheel')) {
+          // Check if player is eliminated
+          const updatedPlayer = state.players.find(p => p.id === activePlayerId);
+          if (updatedPlayer && updatedPlayer.lives <= 0) {
+            // Emit player elimination event
+            emit('player:eliminate', { playerId: activePlayerId });
+          }
+        }
+        
+        // Emit the player update event
+        const updatedPlayer = state.players.find(p => p.id === activePlayerId);
+        if (updatedPlayer) {
+          emit('player:update', { player: updatedPlayer });
+        }
+        
+        // Emit the answer event
+        emit('question:answer', {
+          playerId: activePlayerId,
+          correct: isCorrect,
+          answerIndex
+        });
+        
+        addEvent(`${activePlayer.name} odpowiedział ${isCorrect ? 'poprawnie' : 'niepoprawnie'}`);
+      }
+    }
+  };
+  
+  const handleSpinWheel = () => {
+    dispatch({ type: 'SPIN_WHEEL', spinning: true });
+    toast('Koło fortuny się kręci...');
+    addEvent("Koło fortuny się kręci...");
+  };
+  
+  const handleWheelSpinEnd = () => {
+    dispatch({ type: 'SPIN_WHEEL', spinning: false });
+  };
+  
+  const handleSelectCategory = (category: string) => {
+    dispatch({ type: 'SET_CATEGORY', category });
+    
+    // Emit the category selection
+    emit('overlay:update', { 
+      category,
+      difficulty: 10 // Default difficulty
+    });
+    
+    toast.success(`Wylosowano kategorię: ${category}`);
+    addEvent(`Wylosowano kategorię: ${category}`);
   };
   
   const handleSkipQuestion = () => {
@@ -122,6 +214,10 @@ export function GameController({ children }: GameControllerProps) {
       dispatch({ type: 'RESTART_GAME' });
       setShowResults(false);
       resetTimer();
+      
+      // Emit player reset event
+      emit('player:reset', {});
+      
       addEvent("Gra została zresetowana");
       toast.info('Gra została zresetowana');
     }
@@ -133,6 +229,12 @@ export function GameController({ children }: GameControllerProps) {
     
     // Process card effects based on card type
     dispatch({ type: 'USE_CARD', playerId, cardType });
+    
+    // Emit the card:use event
+    emit('card:use', {
+      playerId,
+      cardType
+    });
     
     // Play card activation sound
     playCardSound(cardType);
@@ -187,6 +289,15 @@ export function GameController({ children }: GameControllerProps) {
         addEvent(`${player.name} użył karty ${cardType}`);
         toast(`${player.name} użył karty ${cardType}`);
     }
+    
+    // Emit card:resolve after a delay to simulate server confirmation
+    setTimeout(() => {
+      emit('card:resolve', {
+        playerId,
+        cardType,
+        success: true
+      });
+    }, 500);
   };
 
   const handleAddPlayer = () => {
@@ -202,6 +313,10 @@ export function GameController({ children }: GameControllerProps) {
     };
     
     dispatch({ type: 'ADD_PLAYER', player: newPlayer });
+    
+    // Emit player update event
+    emit('player:update', { player: newPlayer });
+    
     addEvent(`Dodano gracza: ${newPlayer.name}`);
     toast.success(`Dodano gracza: ${newPlayer.name}`);
   };
@@ -217,8 +332,23 @@ export function GameController({ children }: GameControllerProps) {
       dispatch({ type: 'AWARD_CARD', playerId, cardType });
     });
     
+    // Update the player
+    const updatedPlayer = players.find(p => p.id === playerId);
+    if (updatedPlayer) {
+      emit('player:update', { player: updatedPlayer });
+    }
+    
     addEvent(`Dodano testowe karty dla gracza`);
   };
+
+  // Update timer on all clients
+  useEffect(() => {
+    if (currentTime !== undefined) {
+      emit('overlay:update', {
+        timeRemaining: currentTime
+      });
+    }
+  }, [currentTime, emit]);
 
   if (showResults) {
     return (
@@ -242,6 +372,11 @@ export function GameController({ children }: GameControllerProps) {
     handleStartRound,
     handleEndRound,
     handleEndGame,
+    handleSelectQuestion,
+    handleAnswerQuestion,
+    handleSpinWheel,
+    handleWheelSpinEnd,
+    handleSelectCategory,
     handleSkipQuestion,
     handlePause,
     handleResetGame,
