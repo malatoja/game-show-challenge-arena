@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Player, RoundType } from '@/types/gameTypes';
-import GameResults from '../GameLayout/GameResults';
+import GameResults from '../GameResults';
 
 interface GameResultsWrapperProps {
   players: Player[];

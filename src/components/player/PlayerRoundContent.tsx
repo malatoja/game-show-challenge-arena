@@ -25,7 +25,10 @@ const PlayerRoundContent: React.FC<PlayerRoundContentProps> = ({
     }
     
     if (currentRound === 'wheel' && wheelSpinning) {
-      return <FortuneWheel />;
+      return <FortuneWheel 
+        isSpinning={true}
+        onSpinEnd={() => {}}
+      />;
     }
     
     // Default waiting state
