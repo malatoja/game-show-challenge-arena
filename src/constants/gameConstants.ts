@@ -1,4 +1,3 @@
-
 import { Card, CardType, Question, RoundType } from '@/types/gameTypes';
 
 // Round names for display
@@ -77,6 +76,9 @@ export const createCard = (cardType: CardType): Card => {
     isUsed: false
   };
 };
+
+// Default questions that will be used when no questions are loaded from storage
+export const DEFAULT_QUESTIONS = SAMPLE_QUESTIONS;
 
 // Sample questions for testing
 export const SAMPLE_QUESTIONS: Question[] = [

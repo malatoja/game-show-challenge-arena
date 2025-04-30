@@ -1,5 +1,5 @@
 import { CardType, Question, RoundType } from '@/types/gameTypes';
-import { DEFAULT_QUESTIONS } from '@/constants/gameConstants';
+import { SAMPLE_QUESTIONS } from '@/constants/gameConstants';
 
 // Function to generate a unique ID for questions
 export const generateQuestionId = (): string => {
@@ -250,4 +250,54 @@ export const shouldAwardBonusCard = (
   
   // No card award
   return { award: false, cardType: 'dejavu' };
+};
+
+/**
+ * Returns a random card type appropriate for the given action and round
+ * @param action The action that triggered the card award
+ * @param roundType The current round type
+ * @returns A random card type suitable for the action and round
+ */
+export const getRandomCardForAction = (
+  action: 'top_score' | 'lowest_score' | 'round_win' | 'consecutive_correct' | 'high_points',
+  roundType: RoundType
+): CardType => {
+  // Get card rules from storage or use defaults
+  const cardRules = loadCardRules();
+  let possibleCards: CardType[] = [];
+  
+  // Select appropriate cards based on the action and round
+  switch (action) {
+    case 'top_score':
+      // For top score, give strategic cards like turbo or dejavu
+      possibleCards = ['turbo', 'dejavu', 'skip'];
+      break;
+    case 'lowest_score':
+      // For lowest score (help cards)
+      possibleCards = ['reanimacja', 'refleks2', 'oswiecenie'];
+      break;
+    case 'round_win':
+      // For advancing to next round
+      possibleCards = ['lustro', 'turbo', 'refleks3'];
+      break;
+    case 'consecutive_correct':
+      // For consecutive correct answers
+      possibleCards = cardRules.consecutiveCorrect?.cards || ['dejavu', 'refleks2'];
+      break;
+    case 'high_points':
+      // For reaching high points
+      possibleCards = cardRules.pointsThreshold?.cards || ['turbo'];
+      break;
+    default:
+      // Default cards based on current round
+      if (cardRules.roundSpecific && cardRules.roundSpecific[roundType]) {
+        possibleCards = cardRules.roundSpecific[roundType] as CardType[];
+      } else {
+        // Fallback cards if round specific not found
+        possibleCards = ['dejavu', 'skip', 'turbo'];
+      }
+  }
+  
+  // Return a random card from the possible options
+  return possibleCards[Math.floor(Math.random() * possibleCards.length)] as CardType;
 };
