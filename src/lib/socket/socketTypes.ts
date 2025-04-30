@@ -10,12 +10,15 @@ export type SocketEvent =
   // Card events
   | 'card:use'
   | 'card:resolve'
-  | 'card:activate'  // Dodane brakujące zdarzenie
+  | 'card:activate'
   // Player events
   | 'player:update'
   | 'player:active'
   | 'player:reset'
-  | 'players:update'  // Dodane brakujące zdarzenie
+  | 'players:update'
+  // Question events
+  | 'questions:filter'
+  | 'questions:update'
   // Overlay events
   | 'overlay:update'
   | 'overlay:confetti'
@@ -38,18 +41,26 @@ export interface SocketPayloads {
   'player:eliminate': { playerId: string };
   'card:use': { playerId: string, cardType: import('@/types/gameTypes').CardType };
   'card:resolve': { playerId: string, cardType: import('@/types/gameTypes').CardType, success: boolean };
-  'card:activate': { cardType: import('@/types/gameTypes').CardType, playerName: string };  // Dodany typ ładunku
+  'card:activate': { cardType: import('@/types/gameTypes').CardType, playerName: string };
   'player:update': { player: import('@/types/gameTypes').Player };
   'player:active': { playerId: string };
   'player:reset': {};
-  'players:update': { players: import('@/types/gameTypes').Player[] };  // Dodany typ ładunku
+  'players:update': { players: import('@/types/gameTypes').Player[] };
+  'questions:filter': {
+    round?: import('@/types/gameTypes').RoundType,
+    category?: string,
+    difficulty?: string
+  };
+  'questions:update': { 
+    questions: import('@/types/gameTypes').Question[] 
+  };
   'overlay:update': { 
     question?: import('@/types/gameTypes').Question, 
     activePlayerId?: string, 
     category?: string, 
     difficulty?: number,
     timeRemaining?: number,
-    showHint?: boolean  // Dodana obsługa wskazówek
+    showHint?: boolean
   };
   'overlay:confetti': { playerId: string };
   'connection:status': { connected: boolean };

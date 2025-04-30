@@ -18,9 +18,13 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 
-export function QuestionEditor() {
+interface QuestionEditorProps {
+  activeRoundFilter?: RoundType | 'all';
+}
+
+export function QuestionEditor({ activeRoundFilter = 'all' }: QuestionEditorProps) {
   const { state, dispatch } = useGame();
-  const [filteredRound, setFilteredRound] = useState<RoundType | 'all'>('all');
+  const [filteredRound, setFilteredRound] = useState<RoundType | 'all'>(activeRoundFilter);
   const [filteredCategory, setFilteredCategory] = useState<string | 'all'>('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [editingQuestion, setEditingQuestion] = useState<Question | null>(null);
@@ -33,6 +37,11 @@ export function QuestionEditor() {
   const [difficulty, setDifficulty] = useState<'easy' | 'medium' | 'hard'>('medium');
   const [answers, setAnswers] = useState<string[]>(['', '', '', '']);
   const [correctAnswerIndex, setCorrectAnswerIndex] = useState(0);
+  
+  // Update filtered round when activeRoundFilter changes
+  React.useEffect(() => {
+    setFilteredRound(activeRoundFilter);
+  }, [activeRoundFilter]);
   
   const filteredQuestions = state.questions
     .filter(q => filteredRound === 'all' || q.round === filteredRound)
@@ -59,10 +68,13 @@ export function QuestionEditor() {
   };
   
   const handleAddNewQuestion = () => {
+    // Set default round from active filter if it's not 'all'
+    const defaultRound = filteredRound !== 'all' ? filteredRound : 'standard';
+    
     setEditingQuestion(null);
     setQuestionText('');
     setCategory(WHEEL_CATEGORIES[0]);
-    setRound('standard');
+    setRound(defaultRound);
     setDifficulty('medium');
     setCorrectAnswerIndex(0);
     setAnswers(['', '', '', '']);
@@ -80,6 +92,30 @@ export function QuestionEditor() {
       isCorrect: i === correctAnswerIndex
     }));
     
+    // Calculate points based on difficulty
+    let points = 10;
+    switch (difficulty) {
+      case 'easy': points = 5; break;
+      case 'medium': points = 10; break;
+      case 'hard': points = 15; break;
+    }
+    
+    // Allow for custom point values for special cases (like 20)
+    if (round === 'knowledge') {
+      // Check if we have settings for Round 1
+      const roundSettings = localStorage.getItem('gameShowRoundSettings');
+      if (roundSettings) {
+        try {
+          const settings = JSON.parse(roundSettings);
+          if (settings.round1Difficulty) {
+            points = parseInt(settings.round1Difficulty);
+          }
+        } catch (e) {
+          console.error("Error parsing round settings", e);
+        }
+      }
+    }
+    
     const updatedQuestion: Question = {
       id: editingQuestion?.id || `q-${Date.now()}`,
       text: questionText,
@@ -90,7 +126,7 @@ export function QuestionEditor() {
       difficulty,
       used: editingQuestion?.used || false,
       favorite: editingQuestion?.favorite || false,
-      points: difficulty === 'easy' ? 5 : difficulty === 'medium' ? 10 : 15
+      points
     };
     
     if (editingQuestion) {
@@ -126,57 +162,57 @@ export function QuestionEditor() {
     );
   };
   
-  const handleExportQuestions = () => {
-    const jsonData = JSON.stringify(state.questions, null, 2);
-    const blob = new Blob([jsonData], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'pytania_game_show.json';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-    
-    toast.success("Pytania wyeksportowane do pliku JSON");
-  };
-  
-  const handleImportQuestions = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-    
-    const reader = new FileReader();
-    reader.onload = (e) => {
+  // Load appropriate category list based on the round
+  const getCategoriesForRound = (selectedRound: RoundType | 'all'): string[] => {
+    // If we have settings for specific rounds, use them
+    const roundSettings = localStorage.getItem('gameShowRoundSettings');
+    if (roundSettings) {
       try {
-        const questions = JSON.parse(e.target?.result as string);
-        
-        if (Array.isArray(questions)) {
-          // Clear existing questions if confirmed
-          if (confirm('Czy chcesz zastąpić istniejące pytania? Kliknij "Anuluj" aby dodać do istniejących.')) {
-            // Remove all current questions
-            state.questions.forEach(q => {
-              dispatch({ type: 'REMOVE_QUESTION', questionId: q.id });
-            });
-          }
-          
-          // Add imported questions
-          questions.forEach(q => {
-            dispatch({ type: 'ADD_QUESTION', question: q });
-          });
-          
-          toast.success(`Zaimportowano ${questions.length} pytań!`);
-        } else {
-          toast.error("Nieprawidłowy format pliku!");
+        const settings = JSON.parse(roundSettings);
+        if (selectedRound === 'knowledge' && settings.round1Category) {
+          return [settings.round1Category, ...WHEEL_CATEGORIES.filter(cat => cat !== settings.round1Category)];
+        } else if (selectedRound === 'wheel' && settings.round3Category) {
+          return [settings.round3Category, ...WHEEL_CATEGORIES.filter(cat => cat !== settings.round3Category)];
         }
-      } catch (error) {
-        toast.error("Błąd podczas parsowania pliku!");
-        console.error(error);
+      } catch (e) {
+        console.error("Error parsing round settings", e);
       }
-    };
+    }
+    return WHEEL_CATEGORIES;
+  };
+
+  // Get difficulty options based on the selected round
+  const getDifficultyOptions = (selectedRound: RoundType) => {
+    const standardOptions = [
+      { label: "Łatwe (5 pkt)", value: "easy" },
+      { label: "Średnie (10 pkt)", value: "medium" },
+      { label: "Trudne (15 pkt)", value: "hard" }
+    ];
     
-    reader.readAsText(file);
-    event.target.value = ''; // Reset input
+    // For round 1, check if we have a custom difficulty setting
+    if (selectedRound === 'knowledge') {
+      const roundSettings = localStorage.getItem('gameShowRoundSettings');
+      if (roundSettings) {
+        try {
+          const settings = JSON.parse(roundSettings);
+          if (settings.round1Difficulty) {
+            const points = parseInt(settings.round1Difficulty);
+            const difficultyLevel = points <= 5 ? "easy" : points <= 10 ? "medium" : "hard";
+            const difficultyLabel = `Runda 1: ${points} pkt`;
+            
+            // Add the custom difficulty at the top
+            return [
+              { label: difficultyLabel, value: difficultyLevel },
+              ...standardOptions
+            ];
+          }
+        } catch (e) {
+          console.error("Error parsing round settings", e);
+        }
+      }
+    }
+    
+    return standardOptions;
   };
   
   return (
@@ -233,33 +269,6 @@ export function QuestionEditor() {
           <Plus className="h-4 w-4 mr-2" />
           Dodaj pytanie
         </Button>
-        
-        <div className="flex gap-2">
-          <Button 
-            onClick={handleExportQuestions}
-            className="bg-neon-blue/20 hover:bg-neon-blue/30 border border-neon-blue text-neon-blue"
-          >
-            <FileDown className="h-4 w-4 mr-2" />
-            Eksportuj
-          </Button>
-          
-          <div className="relative">
-            <Button 
-              onClick={() => document.getElementById('importQuestions')?.click()}
-              className="bg-neon-purple/20 hover:bg-neon-purple/30 border border-neon-purple text-neon-purple"
-            >
-              <FileUp className="h-4 w-4 mr-2" />
-              Importuj
-            </Button>
-            <input 
-              type="file" 
-              id="importQuestions" 
-              accept=".json" 
-              onChange={handleImportQuestions}
-              className="hidden"
-            />
-          </div>
-        </div>
       </div>
       
       <div className="space-y-3 max-h-[500px] overflow-y-auto pr-2">
@@ -275,18 +284,24 @@ export function QuestionEditor() {
             >
               <div className="flex justify-between items-start">
                 <div className="flex-1">
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-wrap">
                     <div className={`text-xs px-2 py-1 rounded-full ${
                       question.difficulty === 'easy' ? 'bg-green-600/30 text-green-400' :
                       question.difficulty === 'medium' ? 'bg-yellow-600/30 text-yellow-400' :
                       'bg-red-600/30 text-red-400'
                     }`}>
                       {question.difficulty === 'easy' ? 'Łatwe' : 
-                       question.difficulty === 'medium' ? 'Średnie' : 'Trudne'}
+                       question.difficulty === 'medium' ? 'Średnie' : 'Trudne'} ({question.points} pkt)
                     </div>
                     
                     <div className="text-xs px-2 py-1 rounded-full bg-purple-600/30 text-purple-400">
                       {question.category}
+                    </div>
+                    
+                    <div className="text-xs px-2 py-1 rounded-full bg-blue-600/30 text-blue-400">
+                      {question.round === 'knowledge' ? 'Runda 1' : 
+                       question.round === 'speed' ? 'Runda 2' : 
+                       question.round === 'wheel' ? 'Runda 3' : 'Standard'}
                     </div>
                     
                     {question.used && (
@@ -384,7 +399,7 @@ export function QuestionEditor() {
                     <SelectValue placeholder="Wybierz kategorię" />
                   </SelectTrigger>
                   <SelectContent className="bg-gameshow-background border-gameshow-primary/30">
-                    {WHEEL_CATEGORIES.map((cat) => (
+                    {getCategoriesForRound(round).map((cat) => (
                       <SelectItem key={cat} value={cat}>{cat}</SelectItem>
                     ))}
                   </SelectContent>
@@ -395,7 +410,16 @@ export function QuestionEditor() {
                 <label className="text-sm font-medium mb-1 block">Runda</label>
                 <Select 
                   value={round} 
-                  onValueChange={(value) => setRound(value as RoundType)}
+                  onValueChange={(value: string) => {
+                    const newRound = value as RoundType;
+                    setRound(newRound);
+                    
+                    // Update category to match round settings if available
+                    const categories = getCategoriesForRound(newRound);
+                    if (categories.length > 0) {
+                      setCategory(categories[0]);
+                    }
+                  }}
                 >
                   <SelectTrigger className="bg-gameshow-background border-gameshow-primary/30">
                     <SelectValue placeholder="Wybierz rundę" />
@@ -419,9 +443,9 @@ export function QuestionEditor() {
                     <SelectValue placeholder="Wybierz trudność" />
                   </SelectTrigger>
                   <SelectContent className="bg-gameshow-background border-gameshow-primary/30">
-                    <SelectItem value="easy">Łatwe (5 pkt)</SelectItem>
-                    <SelectItem value="medium">Średnie (10 pkt)</SelectItem>
-                    <SelectItem value="hard">Trudne (15 pkt)</SelectItem>
+                    {getDifficultyOptions(round).map((option) => (
+                      <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
