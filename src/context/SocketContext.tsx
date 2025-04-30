@@ -20,8 +20,8 @@ export const SocketProvider: React.FC<{
   serverUrl?: string;
 }> = ({ 
   children, 
-  initialMockMode = process.env.NODE_ENV === 'development',
-  serverUrl = process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:3001'
+  initialMockMode = import.meta.env.DEV,
+  serverUrl = import.meta.env.VITE_SOCKET_URL || 'http://localhost:3001'
 }) => {
   const [connected, setConnected] = useState(socketService.connected);
   const [mockMode, setMockModeState] = useState(initialMockMode);

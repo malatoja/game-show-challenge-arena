@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { GameOverlay } from '@/components/overlay/GameOverlay';
 import { Player } from '@/types/gameTypes';
 import { useSocket } from '@/context/SocketContext';
-import { soundService, SoundType } from '@/lib/soundService';
+import { soundService } from '@/lib/soundService';
 
 const OverlayPage = () => {
   const [roundTitle, setRoundTitle] = useState("RUNDA 1 – ZRÓŻNICOWANA WIEDZA");
@@ -34,7 +34,7 @@ const OverlayPage = () => {
   const { on, connected, mockMode } = useSocket();
   
   // Demo mode for testing without WebSocket
-  const [demoMode, setDemoMode] = useState(process.env.NODE_ENV === 'development');
+  const [demoMode, setDemoMode] = useState(import.meta.env.DEV);
   
   useEffect(() => {
     // Use socket events when not in demo mode
@@ -42,14 +42,14 @@ const OverlayPage = () => {
       // Listen for round updates
       const unsubRound = on('round:start', (data) => {
         setRoundTitle(data.roundName);
-        soundService.playSound('start_round');
+        soundService.play('start_round');
       });
       
       // Listen for question updates
       const unsubQuestion = on('question:show', (data) => {
         setQuestion(data.question.text);
         setShowCategoryTable(false);
-        soundService.playSound('question_show');
+        soundService.play('question_show');
       });
       
       // Listen for timer updates
@@ -59,14 +59,14 @@ const OverlayPage = () => {
           setTimerPulsing(data.timeRemaining <= 5);
           
           if (data.timeRemaining <= 5 && data.timeRemaining > 0) {
-            soundService.playSound('timer');
+            soundService.play('timer');
           }
         }
         
         if (data.question) {
           setQuestion(data.question.text);
           setShowCategoryTable(false);
-          soundService.playSound('question_show');
+          soundService.play('question_show');
         }
         
         if (data.category) {
@@ -184,14 +184,14 @@ const OverlayPage = () => {
         const randomDifficulty = difficulties[Math.floor(Math.random() * difficulties.length)];
         setSelectedCategory(randomCategory);
         setSelectedDifficulty(randomDifficulty);
-        soundService.playSound('wheel_spin');
+        soundService.play('wheel_spin');
       }, 5000);
       
       // Simulate showing question after 8 seconds
       const questionTimer = setTimeout(() => {
         setShowCategoryTable(false);
         setQuestion("Jaki streamer na polskim Twitchu pobił rekord widzów w 2023 roku?");
-        soundService.playSound('question_show');
+        soundService.play('question_show');
       }, 8000);
       
       // Simulate activating different players periodically
@@ -209,7 +209,7 @@ const OverlayPage = () => {
           
           // Play sound if active player changed
           if (!currentPlayers[randomIndex].isActive) {
-            soundService.playSound('buzzer');
+            soundService.play('buzzer');
           }
           
           return updatedPlayers;
@@ -242,7 +242,7 @@ const OverlayPage = () => {
       />
       
       {/* Demo mode controls - visible only during development */}
-      {process.env.NODE_ENV === 'development' && (
+      {import.meta.env.DEV && (
         <div style={{ 
           position: 'fixed', 
           bottom: '10px', 

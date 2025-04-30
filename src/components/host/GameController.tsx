@@ -5,7 +5,7 @@ import { toast } from 'sonner';
 import { ROUND_NAMES } from '@/constants/gameConstants';
 import { useEvents } from './EventsContext';
 import { useTimer } from './TimerContext';
-import GameResults from './GameResults';
+import GameResults from './GameLayout/GameResults';
 import GameLayout, { GameControlContext } from './GameLayout';
 import { playCardSound } from '@/lib/soundService';
 import { useSocket } from '@/context/SocketContext';
@@ -25,7 +25,7 @@ export function GameController({ children }: GameControllerProps) {
   } = state;
   
   const { addEvent } = useEvents();
-  const { resetTimer, setTimerForRound, currentTime } = useTimer();
+  const { resetTimer, setTimerForRound, timerValue } = useTimer();
   const { emit } = useSocket();
   
   const [showResults, setShowResults] = useState<boolean>(false);
@@ -343,12 +343,12 @@ export function GameController({ children }: GameControllerProps) {
 
   // Update timer on all clients
   useEffect(() => {
-    if (currentTime !== undefined) {
+    if (timerValue !== undefined) {
       emit('overlay:update', {
-        timeRemaining: currentTime
+        timeRemaining: timerValue
       });
     }
-  }, [currentTime, emit]);
+  }, [timerValue, emit]);
 
   if (showResults) {
     return (
