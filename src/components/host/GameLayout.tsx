@@ -29,10 +29,10 @@ export interface GameControlContext {
   gameState?: {
     players: Player[];
     currentRound: RoundType;
-    currentQuestion: any | null;
-    wheelSpinning: boolean;
-    selectedCategory: string | null;
-    remainingQuestions: any[];
+    currentQuestion?: any | null;
+    wheelSpinning?: boolean;
+    selectedCategory?: string | null;
+    remainingQuestions?: any[];
   };
 }
 
