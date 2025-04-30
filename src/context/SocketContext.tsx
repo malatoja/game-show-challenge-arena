@@ -1,6 +1,7 @@
 
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import socketService, { SocketEvent, SocketPayloads } from '@/lib/socketService';
+import { toast } from 'sonner';
 
 interface SocketContextType {
   connected: boolean;
@@ -25,6 +26,7 @@ export const SocketProvider: React.FC<{
 }) => {
   const [connected, setConnected] = useState(socketService.connected);
   const [mockMode, setMockModeState] = useState(initialMockMode);
+  const [reconnecting, setReconnecting] = useState(false);
 
   // Set initial mock mode
   useEffect(() => {
@@ -35,9 +37,32 @@ export const SocketProvider: React.FC<{
   useEffect(() => {
     const unsubscribe = socketService.on('connection:status', (data) => {
       setConnected(data.connected);
+      
+      if (!data.connected && reconnecting) {
+        toast.info('Próba ponownego połączenia...');
+      } else if (data.connected && reconnecting) {
+        toast.success('Ponownie połączono z serwerem!');
+        setReconnecting(false);
+      }
     });
+    
     return unsubscribe;
-  }, []);
+  }, [reconnecting]);
+
+  // Handle connection errors
+  useEffect(() => {
+    const unsubscribe = socketService.on('connection:error', (data) => {
+      toast.error(`Błąd połączenia: ${data.message}`);
+      
+      // Auto-reconnect when not in mock mode
+      if (!mockMode && !reconnecting) {
+        setReconnecting(true);
+        setTimeout(() => connect(serverUrl), 3000);
+      }
+    });
+    
+    return unsubscribe;
+  }, [mockMode, serverUrl, reconnecting]);
 
   // Set mock mode function
   const setMockMode = (value: boolean) => {

@@ -30,13 +30,13 @@ interface TimerProviderProps {
 export const TimerProvider: React.FC<TimerProviderProps> = ({ children }) => {
   const [timerValue, setTimerValue] = useState<number | undefined>(undefined);
   const [isPaused, setIsPaused] = useState(true);
-  const [intervalId, setIntervalId] = useState<number | undefined>(undefined);
+  const [intervalId, setIntervalId] = useState<number | null>(null);
   const [isTimeWarning, setIsTimeWarning] = useState(false);
 
   const clearTimerInterval = useCallback(() => {
     if (intervalId) {
       clearInterval(intervalId);
-      setIntervalId(undefined);
+      setIntervalId(null);
     }
   }, [intervalId]);
 
@@ -66,7 +66,7 @@ export const TimerProvider: React.FC<TimerProviderProps> = ({ children }) => {
     if (isPaused) {
       setIsPaused(false);
       
-      const id = setInterval(() => {
+      const id = window.setInterval(() => {
         setTimerValue((prev) => {
           if (prev === undefined) return undefined;
           if (prev <= 0) {

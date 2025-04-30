@@ -1,9 +1,10 @@
 
 import React, { useEffect, useState } from 'react';
 import { GameOverlay } from '@/components/overlay/GameOverlay';
-import { Player } from '@/types/gameTypes';
+import { Player, CardType } from '@/types/gameTypes';
 import { useSocket } from '@/context/SocketContext';
 import { soundService } from '@/lib/soundService';
+import CardActivationAnimation from '@/components/animations/CardActivationAnimation';
 
 const OverlayPage = () => {
   const [roundTitle, setRoundTitle] = useState("RUNDA 1 – ZRÓŻNICOWANA WIEDZA");
@@ -23,6 +24,11 @@ const OverlayPage = () => {
     { id: "9", name: "Gracz 9", lives: 30, points: 0, cards: [], isActive: false, eliminated: false },
     { id: "10", name: "Gracz 10", lives: 10, points: 0, cards: [], isActive: false, eliminated: false },
   ]);
+  
+  // Animation states
+  const [showCardAnimation, setShowCardAnimation] = useState(false);
+  const [activeCardType, setActiveCardType] = useState<CardType | null>(null);
+  const [activePlayerName, setActivePlayerName] = useState<string | undefined>(undefined);
   
   // Categories and difficulties for the game
   const categories = ["MEMY", "TRENDY", "TWITCH", "INTERNET", "CIEKAWOSTKI"];
@@ -110,7 +116,7 @@ const OverlayPage = () => {
           // Check if this player's 'isActive' status changed
           const wasNotActive = !currentPlayers.find((p: Player) => p.id === data.playerId)?.isActive;
           if (wasNotActive) {
-            soundService.playSound('buzzer');
+            soundService.play('buzzer');
           }
           
           return updatedPlayers;
@@ -120,19 +126,27 @@ const OverlayPage = () => {
       // Listen for player elimination
       const unsubEliminate = on('player:eliminate', (data) => {
         setPlayers(prevState => {
-          return prevState.map(player => 
+          const updatedPlayers = prevState.map(player => 
             player.id === data.playerId 
               ? { ...player, eliminated: true } 
               : player
           );
+          
+          // Find player name for animation/sound effect
+          const eliminatedPlayer = prevState.find(p => p.id === data.playerId);
+          if (eliminatedPlayer) {
+            // Play elimination sound
+            soundService.play('wrong');
+          }
+          
+          return updatedPlayers;
         });
-        soundService.playSound('wrong');
       });
       
       // Listen for confetti animation
       const unsubConfetti = on('overlay:confetti', (data) => {
         // Here you would trigger the confetti animation for the winner
-        soundService.playSound('winner');
+        soundService.play('winner');
         // Mark winner in players array
         setPlayers(prevState => {
           return prevState.map(player => ({
@@ -144,8 +158,23 @@ const OverlayPage = () => {
       
       // Listen for card usage
       const unsubCardUse = on('card:use', (data) => {
-        // Here you would trigger the card animation
-        soundService.playSound('card_use');
+        // Find the player who used the card
+        const player = players.find(p => p.id === data.playerId);
+        
+        if (player) {
+          setActivePlayerName(player.name);
+          setActiveCardType(data.cardType);
+          setShowCardAnimation(true);
+          
+          // Auto-hide card animation after 3 seconds
+          setTimeout(() => {
+            setShowCardAnimation(false);
+            setActiveCardType(null);
+          }, 3000);
+        }
+        
+        // Play card use sound
+        soundService.play('card_use');
       });
       
       return () => {
@@ -223,10 +252,18 @@ const OverlayPage = () => {
         clearInterval(playerTimer);
       };
     }
-  }, [demoMode, on]);
+  }, [demoMode, on, players]);
   
   return (
     <div style={{ width: '100vw', height: '100vh', overflow: 'hidden' }}>
+      {/* Card Activation Animation */}
+      <CardActivationAnimation 
+        cardType={activeCardType} 
+        show={showCardAnimation} 
+        playerName={activePlayerName}
+        onComplete={() => setShowCardAnimation(false)}
+      />
+      
       <GameOverlay 
         roundTitle={roundTitle}
         currentTime={currentTime}
