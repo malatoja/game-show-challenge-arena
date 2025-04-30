@@ -1,7 +1,9 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import { RefreshCcw, Eye, EyeOff, Zap, Database } from 'lucide-react';
+import { RefreshCcw, Eye, EyeOff, Zap, Database, ZapOff } from 'lucide-react';
+import { useSocket } from '@/context/SocketContext';
+import { toast } from 'sonner';
 
 interface DebugControlsProps {
   demoMode: boolean;
@@ -16,46 +18,39 @@ export const DebugControls: React.FC<DebugControlsProps> = ({
   mockMode,
   onToggleDemoMode
 }) => {
+  const { setMockMode, connect } = useSocket();
+  
+  // Only show in development environment
   if (!import.meta.env.DEV) return null;
+  
+  const handleToggleDemoMode = () => {
+    // If turning demo mode off, also turn off mock mode and reconnect socket
+    if (demoMode) {
+      setMockMode(false);
+      connect();
+      toast.success('Przełączono na tryb live - łączenie z rzeczywistym serwerem');
+    } else {
+      setMockMode(true);
+      toast.info('Przełączono na tryb demo - używanie symulowanych danych');
+    }
+    
+    // Call the provided toggle function to update parent state
+    onToggleDemoMode();
+  };
   
   return (
     <motion.div 
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
-      style={{ 
-        position: 'fixed', 
-        bottom: '10px', 
-        right: '10px', 
-        backgroundColor: 'rgba(0,0,0,0.7)', 
-        padding: '15px', 
-        borderRadius: '8px',
-        zIndex: 1000,
-        border: '1px solid rgba(255,255,255,0.1)',
-        boxShadow: '0 4px 12px rgba(0,0,0,0.5)'
-      }}
+      className="fixed bottom-4 right-4 bg-black/80 backdrop-blur-sm p-4 rounded-lg border border-white/10 shadow-lg z-50"
     >
       <div className="flex flex-col gap-3">
         <div className="text-white text-xs mb-1 font-semibold">TRYB DEBUGOWANIA</div>
         
         <button 
-          onClick={onToggleDemoMode}
-          style={{ 
-            padding: '8px 12px', 
-            backgroundColor: demoMode ? 'rgba(255,56,100,0.8)' : 'rgba(57,255,20,0.8)', 
-            color: 'white', 
-            border: 'none', 
-            borderRadius: '4px', 
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '6px',
-            fontWeight: 'bold',
-            fontSize: '12px',
-            transition: 'all 0.2s ease'
-          }}
-          onMouseEnter={(e) => e.currentTarget.style.opacity = '0.8'}
-          onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
+          onClick={handleToggleDemoMode}
+          className={`px-3 py-2 ${demoMode ? 'bg-red-500/80' : 'bg-green-500/80'} text-white rounded flex items-center gap-2 text-xs font-semibold transition-colors hover:opacity-90`}
         >
           {demoMode ? (
             <>
@@ -71,8 +66,8 @@ export const DebugControls: React.FC<DebugControlsProps> = ({
         </button>
         
         {!demoMode && (
-          <div className="flex items-center gap-2 text-white text-xs bg-black/30 p-2 rounded">
-            <div className={`w-2 h-2 rounded-full ${connected ? 'bg-green-500' : 'bg-red-500'} animate-pulse`}></div>
+          <div className="flex items-center gap-2 text-white text-xs bg-black/60 p-2 rounded">
+            <div className={`w-2 h-2 rounded-full ${connected ? 'bg-green-500' : 'bg-red-500'} ${connected ? 'animate-pulse' : ''}`}></div>
             <span>
               Socket: {connected ? 'Connected' : 'Disconnected'} 
               {mockMode && (

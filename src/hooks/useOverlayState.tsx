@@ -8,6 +8,8 @@ export const useOverlayState = (demoMode: boolean) => {
   const [roundTitle, setRoundTitle] = useState("RUNDA 1 – ZRÓŻNICOWANA WIEDZA");
   const [currentTime, setCurrentTime] = useState(30);
   const [question, setQuestion] = useState("");
+  const [hint, setHint] = useState("");
+  const [showHint, setShowHint] = useState(false);
   const [showCategoryTable, setShowCategoryTable] = useState(true);
   const [timerPulsing, setTimerPulsing] = useState(false);
   const [players, setPlayers] = useState<Player[]>([
@@ -48,6 +50,8 @@ export const useOverlayState = (demoMode: boolean) => {
       // Listen for question updates
       const unsubQuestion = on('question:show', (data) => {
         setQuestion(data.question.text);
+        setHint(data.question.hint || "");
+        setShowHint(false); // Initially hide hint
         setShowCategoryTable(false);
         soundService.play('question_show');
       });
@@ -65,8 +69,14 @@ export const useOverlayState = (demoMode: boolean) => {
         
         if (data.question) {
           setQuestion(data.question.text);
+          setHint(data.question.hint || "");
           setShowCategoryTable(false);
           soundService.play('question_show');
+        }
+        
+        if (data.showHint) {
+          setShowHint(true);
+          soundService.play('hint');
         }
         
         if (data.category) {
@@ -160,6 +170,11 @@ export const useOverlayState = (demoMode: boolean) => {
           setActiveCardType(data.cardType);
           setShowCardAnimation(true);
           
+          // Handle specific card effects
+          if (data.cardType === 'oswiecenie') {
+            setShowHint(true);
+          }
+          
           // Auto-hide card animation after 3 seconds
           setTimeout(() => {
             setShowCardAnimation(false);
@@ -192,6 +207,8 @@ export const useOverlayState = (demoMode: boolean) => {
     roundTitle,
     currentTime,
     question,
+    hint,
+    showHint,
     showCategoryTable,
     timerPulsing,
     players,
@@ -210,6 +227,8 @@ export const useOverlayState = (demoMode: boolean) => {
     setActivePlayerName,
     setShowCategoryTable,
     setQuestion,
+    setHint,
+    setShowHint,
     setSelectedCategory,
     setSelectedDifficulty
   };

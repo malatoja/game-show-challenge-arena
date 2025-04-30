@@ -14,6 +14,8 @@ interface GameOverlayProps {
   maxTime?: number;
   players?: Player[];
   question?: string;
+  hint?: string;
+  showHint?: boolean;
   showCategoryTable?: boolean;
   categories?: string[];
   difficulties?: number[];
@@ -28,6 +30,8 @@ export const GameOverlay: React.FC<GameOverlayProps> = ({
   maxTime = 30,
   players = [],
   question = "",
+  hint = "",
+  showHint = false,
   showCategoryTable = true,
   categories = ["MEMY", "TRENDY", "TWITCH", "INTERNET", "CIEKAWOSTKI"],
   difficulties = [10, 20, 30],
@@ -83,7 +87,11 @@ export const GameOverlay: React.FC<GameOverlayProps> = ({
             selectedDifficulty={selectedDifficulty}
           />
         ) : (
-          <QuestionDisplay question={question} />
+          <QuestionDisplay 
+            question={question} 
+            hint={hint}
+            showHint={showHint}
+          />
         )}
       </div>
       
