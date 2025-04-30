@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Player, CardType, RoundType } from '@/types/gameTypes';
 import PlayerGrid from './PlayerGrid';
 import GameControls from './GameControls';
@@ -7,6 +7,8 @@ import RightColumn from './RightColumn';
 import ActivePlayerPanel from './panels/ActivePlayerPanel';
 import GameTabContent from './panels/GameTabContent';
 import QuestionListPanel from './panels/QuestionListPanel';
+import { useSocket } from '@/context/SocketContext';
+import { toast } from 'sonner';
 
 // Define the context type for game controls
 export interface GameControlContext {
@@ -26,6 +28,9 @@ export interface GameControlContext {
   handleAddTestCards: (playerId: string) => void;
   handleSelectQuestion?: (question: any) => void;
   handleAnswerQuestion?: (isCorrect: boolean, answerIndex: number) => void;
+  handleSpinWheel?: () => void;
+  handleWheelSpinEnd?: () => void; 
+  handleSelectCategory?: (category: string) => void;
   gameState?: {
     players: Player[];
     currentRound: RoundType;
@@ -43,6 +48,9 @@ export interface GameLayoutProps {
 }
 
 const GameLayout: React.FC<GameLayoutProps> = ({ gameControl }) => {
+  const { emit } = useSocket();
+  const [extensionFactor, setExtensionFactor] = useState(1);
+  
   const { 
     activePlayerId,
     canStartRound,
@@ -60,6 +68,9 @@ const GameLayout: React.FC<GameLayoutProps> = ({ gameControl }) => {
     handleAddTestCards,
     handleSelectQuestion,
     handleAnswerQuestion,
+    handleSpinWheel,
+    handleWheelSpinEnd,
+    handleSelectCategory,
     gameState
   } = gameControl;
 
@@ -73,8 +84,46 @@ const GameLayout: React.FC<GameLayoutProps> = ({ gameControl }) => {
 
   const activePlayer = players.find(player => player.id === activePlayerId) || null;
 
+  // Send update to overlay whenever a significant event happens
+  const syncWithOverlay = () => {
+    if (activePlayer && currentQuestion) {
+      emit('overlay:update', {
+        activePlayerId: activePlayer.id,
+        question: currentQuestion,
+        category: selectedCategory,
+        timeRemaining: currentRound === 'speed' ? 5 : 30
+      });
+    }
+  };
+
+  // Map round type to proper layout class
+  const getRoundLayoutClass = () => {
+    switch (currentRound) {
+      case 'knowledge':
+        return 'layout-round-1';
+      case 'speed':
+        return 'layout-round-2';
+      case 'wheel':
+        return 'layout-round-3';
+      default:
+        return 'layout-round-1';
+    }
+  };
+
+  // Handle using refleks card to extend time
+  const handleExtendTime = (factor: number) => {
+    setExtensionFactor(factor);
+    toast.success(`Czas wydłużony x${factor}!`);
+    
+    if (currentQuestion) {
+      emit('overlay:update', {
+        timeRemaining: (currentRound === 'speed' ? 5 : 30) * factor
+      });
+    }
+  };
+
   return (
-    <div className="container mx-auto p-4 bg-gameshow-background min-h-screen">
+    <div className={`container mx-auto p-4 bg-gameshow-background min-h-screen ${getRoundLayoutClass()}`}>
       <div className="flex flex-col space-y-6">
         {/* Game Controls */}
         <GameControls
@@ -98,7 +147,7 @@ const GameLayout: React.FC<GameLayoutProps> = ({ gameControl }) => {
         {/* Main Game Interface */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* Left column - Active player */}
-          <div className="bg-gameshow-card p-4 rounded-lg">
+          <div className="bg-gameshow-card p-4 rounded-lg shadow-neon-primary">
             <h2 className="text-xl font-semibold text-gameshow-text mb-3 flex items-center justify-between">
               <span>Aktywny gracz</span>
               {activePlayer && (
@@ -116,22 +165,22 @@ const GameLayout: React.FC<GameLayoutProps> = ({ gameControl }) => {
           </div>
           
           {/* Center column - Current question or wheel */}
-          <div className="bg-gameshow-card p-4 rounded-lg">
+          <div className="bg-gameshow-card p-4 rounded-lg shadow-neon-secondary">
             <GameTabContent 
               currentRound={currentRound}
               currentQuestion={currentQuestion}
               wheelSpinning={wheelSpinning}
               activePlayerId={activePlayerId}
-              extensionFactor={1}
-              onSpinWheel={() => {}}
-              onWheelSpinEnd={() => {}}
-              onSelectCategory={(category: string) => {}}
+              extensionFactor={extensionFactor}
+              onSpinWheel={handleSpinWheel || (() => {})}
+              onWheelSpinEnd={handleWheelSpinEnd || (() => {})}
+              onSelectCategory={handleSelectCategory || (() => {})}
               onAnswerQuestion={handleAnswerQuestion || (() => {})}
             />
           </div>
           
           {/* Right column - Question selection */}
-          <div className="bg-gameshow-card p-4 rounded-lg">
+          <div className="bg-gameshow-card p-4 rounded-lg shadow-neon-primary">
             <QuestionListPanel
               questions={remainingQuestions}
               selectedCategory={selectedCategory}
