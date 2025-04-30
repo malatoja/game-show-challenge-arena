@@ -1,8 +1,9 @@
+
 import React, { useState } from 'react';
 import { useGame } from '@/context/GameContext';
 import { Card, CardType } from '@/types/gameTypes';
 import { CARD_DETAILS, createCard } from '@/constants/gameConstants';
-import { CARD_IMAGES, DEFAULT_CARD_IMAGES_PATHS } from '@/constants/cardImages';
+import { CARD_IMAGES, DEFAULT_CARD_IMAGES_PATHS, CARD_ANIMATIONS, DEFAULT_CARD_ANIMATIONS_PATHS } from '@/constants/cardImages';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Switch } from '@/components/ui/switch';
@@ -74,6 +75,30 @@ export function CardsTab() {
     }
   };
 
+  const handleResetAllAnimations = () => {
+    if (confirm('Czy na pewno chcesz przywrócić domyślne animacje wszystkich kart?')) {
+      localStorage.removeItem('customCardAnimations');
+      toast.success('Przywrócono domyślne animacje kart');
+      setTimeout(() => window.location.reload(), 1000);
+    }
+  };
+
+  const handleResetCardAnimation = (cardType: CardType) => {
+    try {
+      const customCardAnimations = JSON.parse(localStorage.getItem('customCardAnimations') || '{}');
+      
+      if (customCardAnimations[cardType]) {
+        delete customCardAnimations[cardType];
+        localStorage.setItem('customCardAnimations', JSON.stringify(customCardAnimations));
+        toast.success(`Przywrócono domyślną animację karty ${CARD_DETAILS[cardType].name}`);
+        setTimeout(() => window.location.reload(), 1000);
+      }
+    } catch (error) {
+      console.error('Error resetting card animation:', error);
+      toast.error('Wystąpił błąd podczas resetowania animacji karty');
+    }
+  };
+
   return (
     <div className="space-y-6">
       <h2 className="text-2xl font-bold mb-6 text-gameshow-text">Karty Specjalne</h2>
@@ -84,6 +109,7 @@ export function CardsTab() {
           <TabsTrigger value="test">Test animacji</TabsTrigger>
           <TabsTrigger value="assign">Przydziel kartę</TabsTrigger>
           <TabsTrigger value="images">Obrazy kart</TabsTrigger>
+          <TabsTrigger value="animations">Animacje kart</TabsTrigger>
         </TabsList>
 
         <TabsContent value="rules" className="space-y-6 pt-4">
@@ -394,6 +420,119 @@ export function CardsTab() {
                         
                         <div className="mt-2 text-xs text-gameshow-muted">
                           {isCustomImage ? 'Niestandardowy obraz' : 'Domyślny obraz'}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="animations" className="pt-4">
+          <div className="bg-gameshow-card rounded-lg p-6 shadow-lg">
+            <h3 className="text-xl font-semibold mb-4">Zarządzanie animacjami kart</h3>
+            
+            <div className="mb-6">
+              <p className="text-sm text-gameshow-muted mb-2">
+                Tutaj możesz dostosować animacje używane dla poszczególnych kart. Wybierz kartę, aby zmienić jej animację.
+              </p>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={handleResetAllAnimations}
+                className="mt-2"
+              >
+                Przywróć wszystkie domyślne animacje
+              </Button>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {cardTypes.map(cardType => {
+                const isCustomAnimation = CARD_ANIMATIONS[cardType] !== DEFAULT_CARD_ANIMATIONS_PATHS[cardType];
+                
+                return (
+                  <div 
+                    key={cardType} 
+                    className={`p-4 rounded-lg border ${
+                      isCustomAnimation ? 'border-gameshow-primary' : 'border-gray-600'
+                    }`}
+                  >
+                    <div className="flex justify-between items-center mb-2">
+                      <h4 className="font-medium">{CARD_DETAILS[cardType].name}</h4>
+                      {isCustomAnimation && (
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          onClick={() => handleResetCardAnimation(cardType)}
+                          className="text-xs h-7 px-2"
+                        >
+                          Przywróć domyślną
+                        </Button>
+                      )}
+                    </div>
+                    
+                    <div className="flex items-center gap-3">
+                      <div className="h-16 w-16 rounded-md overflow-hidden bg-gray-700 border border-gray-600 flex items-center justify-center">
+                        {isCustomAnimation ? (
+                          <span className="text-xs text-center">Własna<br/>animacja</span>
+                        ) : (
+                          <span className="text-xs text-center">Domyślna<br/>animacja</span>
+                        )}
+                      </div>
+                      
+                      <div className="flex-1">
+                        <label className="cursor-pointer">
+                          <input 
+                            type="file" 
+                            accept="video/mp4,video/webm"
+                            className="hidden"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (!file) return;
+                              
+                              if (!file.type.startsWith('video/')) {
+                                toast.error('Plik musi być wideo (MP4, WEBM)');
+                                return;
+                              }
+                              
+                              if (file.size > 5 * 1024 * 1024) {
+                                toast.error('Animacja nie może być większa niż 5MB');
+                                return;
+                              }
+                              
+                              const reader = new FileReader();
+                              reader.onload = (e) => {
+                                const dataUrl = e.target?.result as string;
+                                
+                                try {
+                                  const customCardAnimations = JSON.parse(localStorage.getItem('customCardAnimations') || '{}');
+                                  customCardAnimations[cardType] = dataUrl;
+                                  localStorage.setItem('customCardAnimations', JSON.stringify(customCardAnimations));
+                                  
+                                  toast.success('Animacja karty zaktualizowana');
+                                  setTimeout(() => window.location.reload(), 1000);
+                                } catch (error) {
+                                  console.error('Error saving card animation:', error);
+                                  toast.error('Wystąpił błąd podczas zapisywania animacji');
+                                }
+                              };
+                              
+                              reader.readAsDataURL(file);
+                            }}
+                          />
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            className="w-full"
+                          >
+                            Zmień animację
+                          </Button>
+                        </label>
+                        
+                        <div className="mt-2 text-xs text-gameshow-muted">
+                          {isCustomAnimation ? 'Niestandardowa animacja' : 'Domyślna animacja'}
                         </div>
                       </div>
                     </div>

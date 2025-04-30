@@ -12,6 +12,17 @@ const getCustomCardImages = (): Partial<Record<CardType, string>> => {
   }
 };
 
+// Load custom card animations from localStorage if available
+const getCustomCardAnimations = (): Partial<Record<CardType, string>> => {
+  try {
+    const customAnimations = localStorage.getItem('customCardAnimations');
+    return customAnimations ? JSON.parse(customAnimations) : {};
+  } catch (error) {
+    console.error('Error loading custom card animations:', error);
+    return {};
+  }
+};
+
 // Default image paths for cards
 const DEFAULT_CARD_IMAGES: Record<CardType, string> = {
   'dejavu': '/images/cards/dejavu.png',
@@ -25,20 +36,8 @@ const DEFAULT_CARD_IMAGES: Record<CardType, string> = {
   'oswiecenie': '/images/cards/oswiecenie.png'
 };
 
-// Get custom images if available, fallback to defaults
-const customImages = typeof window !== 'undefined' ? getCustomCardImages() : {};
-
-// Map of card types to their image paths - override defaults with custom images
-export const CARD_IMAGES: Record<CardType, string> = {
-  ...DEFAULT_CARD_IMAGES,
-  ...customImages
-};
-
-// Export default images for reference
-export const DEFAULT_CARD_IMAGES_PATHS = DEFAULT_CARD_IMAGES;
-
-// Map of card types to their animation paths
-export const CARD_ANIMATIONS: Record<CardType, string> = {
+// Default animation paths for cards
+const DEFAULT_CARD_ANIMATIONS: Record<CardType, string> = {
   'dejavu': '/animations/cards/dejavu.webm',
   'kontra': '/animations/cards/kontra.webm',
   'reanimacja': '/animations/cards/reanimacja.webm',
@@ -49,3 +48,27 @@ export const CARD_ANIMATIONS: Record<CardType, string> = {
   'lustro': '/animations/cards/lustro.webm',
   'oswiecenie': '/animations/cards/oswiecenie.webm'
 };
+
+// Get custom images if available, fallback to defaults
+const customImages = typeof window !== 'undefined' ? getCustomCardImages() : {};
+
+// Get custom animations if available, fallback to defaults
+const customAnimations = typeof window !== 'undefined' ? getCustomCardAnimations() : {};
+
+// Map of card types to their image paths - override defaults with custom images
+export const CARD_IMAGES: Record<CardType, string> = {
+  ...DEFAULT_CARD_IMAGES,
+  ...customImages
+};
+
+// Export default images for reference
+export const DEFAULT_CARD_IMAGES_PATHS = DEFAULT_CARD_IMAGES;
+
+// Map of card types to their animation paths - override defaults with custom animations
+export const CARD_ANIMATIONS: Record<CardType, string> = {
+  ...DEFAULT_CARD_ANIMATIONS,
+  ...customAnimations
+};
+
+// Export default animations for reference
+export const DEFAULT_CARD_ANIMATIONS_PATHS = DEFAULT_CARD_ANIMATIONS;

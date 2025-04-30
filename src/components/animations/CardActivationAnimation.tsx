@@ -5,6 +5,7 @@ import { CardType } from '@/types/gameTypes';
 import { playCardSound } from '@/lib/soundService';
 import SpecialCard from '../cards/SpecialCard';
 import { CARD_DETAILS } from '@/constants/gameConstants';
+import { CARD_ANIMATIONS } from '@/constants/cardImages';
 
 interface CardActivationAnimationProps {
   cardType: CardType | null;
@@ -35,6 +36,10 @@ const CardActivationAnimation: React.FC<CardActivationAnimationProps> = ({
   
   if (!cardType) return null;
   
+  // Get animation source based on card type
+  const animationSource = CARD_ANIMATIONS[cardType];
+  const isDataUrl = animationSource?.startsWith('data:');
+  
   return (
     <AnimatePresence>
       {show && (
@@ -52,6 +57,24 @@ const CardActivationAnimation: React.FC<CardActivationAnimationProps> = ({
               transition={{ type: "spring", stiffness: 300, damping: 20 }}
               className="flex justify-center mb-2"
             >
+              {/* Show card animation if available */}
+              {animationSource && (
+                <div className="mb-4 relative w-72 h-40 flex items-center justify-center">
+                  <video
+                    autoPlay
+                    loop={false}
+                    muted
+                    className="w-full h-full object-contain"
+                    onEnded={() => {
+                      // Optional: Do something when video ends
+                    }}
+                  >
+                    <source src={animationSource} type={isDataUrl ? "video/mp4" : "video/webm"} />
+                    Your browser does not support the video tag.
+                  </video>
+                </div>
+              )}
+              
               <SpecialCard 
                 card={{ 
                   type: cardType, 
