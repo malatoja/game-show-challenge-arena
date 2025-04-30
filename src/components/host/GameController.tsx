@@ -65,7 +65,7 @@ export function GameController({ children }: GameControllerProps) {
     handleEndRound,
     handleEndGame,
     handleSkipQuestion,
-    handleSelectQuestion,  // Add this handler here
+    handleSelectQuestion,
     handleAnswerQuestion,
     handleSpinWheel,
     handleWheelSpinEnd,
@@ -74,7 +74,8 @@ export function GameController({ children }: GameControllerProps) {
     handleResetGame,
     handleUseCard,
     handleAddPlayer,
-    handleAddTestCards
+    handleAddTestCards,
+    gameControl: { state } // Pass the state via gameControl
   };
 
   // Return GameLayout with gameControl prop
