@@ -1,132 +1,93 @@
-// soundService.ts
+import { Howl } from 'howler';
 
-// Sound type definition
+// Define the sound types
 export type SoundType = 
-  | 'timer'
-  | 'correct_answer'
-  | 'wrong_answer'
-  | 'round_start'
-  | 'round_end'
-  | 'card_use'
-  | 'wheel_spin'
-  | 'player_join'
-  | 'player_leave'
-  | 'game_over';
+  | 'correct' | 'wrong' | 'buzzer' | 'start_round' | 'end_round' 
+  | 'card_use' | 'wheel_spin' | 'winner' | 'timer' | 'question_show';
 
-// Create a class to handle all sound functionality
-class SoundService {
-  private volume: number = 0.7;
-  private muted: boolean = false;
-  private customSounds: Map<string, string> = new Map();
-  
-  // Function to play a sound
-  public play(soundType: SoundType): void {
-    if (this.muted) return;
-    
-    // Check if we have a custom sound for this type
-    const customSoundUrl = this.customSounds.get(soundType);
-    
-    let soundPath = customSoundUrl ? 
-      customSoundUrl : 
-      `/sounds/${soundType}.mp3`;
-    
-    const sound = new Audio(soundPath);
-    sound.volume = this.volume;
-    
-    try {
-      sound.play().catch(err => {
-        console.log('Audio play error:', err);
-      });
-    } catch (error) {
-      console.error('Error playing sound:', error);
-    }
-  }
+// Map of sound types to their file paths
+const SOUND_FILES: Record<SoundType, string> = {
+  'correct': '/sounds/correct.mp3',
+  'wrong': '/sounds/wrong.mp3',
+  'buzzer': '/sounds/buzzer.mp3',
+  'start_round': '/sounds/start_round.mp3',
+  'end_round': '/sounds/end_round.mp3',
+  'card_use': '/sounds/card_use.mp3',
+  'wheel_spin': '/sounds/wheel_spin.mp3',
+  'winner': '/sounds/winner.mp3',
+  'timer': '/sounds/timer.mp3',
+  'question_show': '/sounds/question_show.mp3'
+};
 
-  // Function to play a card sound
-  public playCardSound(cardType: string): void {
-    if (this.muted) return;
-    
-    const soundMap: Record<string, string> = {
-      'dejavu': 'dejavu.mp3',
-      'kontra': 'kontra.mp3',
-      'reanimacja': 'reanimacja.mp3',
-      'skip': 'skip.mp3',
-      'turbo': 'turbo.mp3',
-      'refleks2': 'refleks2.mp3',
-      'refleks3': 'refleks3.mp3',
-      'lustro': 'lustro.mp3',
-      'oswiecenie': 'oswiecenie.mp3',
-    };
+// Sound instances cache
+const soundInstances: Partial<Record<SoundType, Howl>> = {};
 
-    const soundFile = soundMap[cardType] || 'card.mp3';
-    const sound = new Audio(`/sounds/cards/${soundFile}`);
-    sound.volume = this.volume;
-    
-    try {
-      sound.play().catch(err => {
-        console.log('Audio play error:', err);
-      });
-    } catch (error) {
-      console.error('Error playing card sound:', error);
-    }
-  }
-  
-  // Get current volume
-  public getVolume(): number {
-    return this.volume;
-  }
-  
-  // Set volume
-  public setVolume(value: number): void {
-    this.volume = Math.min(1, Math.max(0, value)); // Ensure volume is between 0 and 1
-    // Update active sounds if needed
-  }
-  
-  // Toggle mute
-  public toggleMute(): void {
-    this.muted = !this.muted;
-  }
-  
-  // Check if sound is muted
-  public isMuted(): boolean {
-    return this.muted;
-  }
-  
-  // Set custom sound
-  public async setCustomSound(type: SoundType, file: File): Promise<void> {
-    // Create an object URL for the file
-    const url = URL.createObjectURL(file);
-    this.customSounds.set(type, url);
-    // In a real app, you might want to persist this in localStorage or on a server
-    return Promise.resolve();
-  }
-  
-  // Reset sound to default
-  public resetSound(type: SoundType): void {
-    this.customSounds.delete(type);
-  }
-  
-  // Reset all sounds to default
-  public resetAllSounds(): void {
-    this.customSounds.clear();
-  }
-}
+// Volume settings
+let masterVolume = 0.7;
+let soundEnabled = true;
 
-// Export singleton instance
-export const soundService = new SoundService();
-
-// Keep the original functions for backward compatibility
-export const playSound = (soundFile: string) => {
-  const sound = new Audio(`/sounds/${soundFile}`);
-  try {
-    sound.play().catch(err => {
-      console.log('Audio play error:', err);
+// Initialize a sound
+const initSound = (type: SoundType): Howl => {
+  if (!soundInstances[type]) {
+    soundInstances[type] = new Howl({
+      src: [SOUND_FILES[type]],
+      volume: masterVolume,
+      preload: true,
     });
-  } catch (error) {
-    console.error('Error playing sound:', error);
+  }
+  return soundInstances[type]!;
+};
+
+// Play a sound
+export const playSound = (type: SoundType): void => {
+  if (!soundEnabled) return;
+  
+  const sound = initSound(type);
+  sound.play();
+};
+
+// Stop a sound
+export const stopSound = (type: SoundType): void => {
+  if (soundInstances[type]) {
+    soundInstances[type]!.stop();
   }
 };
 
-export const playCardSound = (cardType: string) => {
-  soundService.playCardSound(cardType);
+// Set master volume
+export const setVolume = (volume: number): void => {
+  masterVolume = Math.max(0, Math.min(1, volume));
+  
+  // Update volume for all existing sound instances
+  Object.values(soundInstances).forEach(sound => {
+    if (sound) {
+      sound.volume(masterVolume);
+    }
+  });
+};
+
+// Enable/disable all sounds
+export const setSoundEnabled = (enabled: boolean): void => {
+  soundEnabled = enabled;
+  
+  // If disabling, stop all currently playing sounds
+  if (!enabled) {
+    Object.values(soundInstances).forEach(sound => {
+      if (sound) {
+        sound.stop();
+      }
+    });
+  }
+};
+
+// Get current volume
+export const getVolume = (): number => masterVolume;
+
+// Check if sound is enabled
+export const isSoundEnabled = (): boolean => soundEnabled;
+
+// Preload all sounds
+export const preloadAllSounds = (): void => {
+  Object.keys(SOUND_FILES).forEach(type => {
+    initSound(type as SoundType);
+  });
 };

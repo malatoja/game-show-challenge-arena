@@ -1,5 +1,5 @@
 
-import { Card, CardType } from '@/types/gameTypes';
+import { Card, CardType, Question, RoundType } from '@/types/gameTypes';
 
 // Round names for display
 export const ROUND_NAMES: Record<string, string> = {
@@ -12,6 +12,20 @@ export const ROUND_NAMES: Record<string, string> = {
 
 // Initial lives for players
 export const INITIAL_LIVES = 3;
+
+// Wheel categories for Fortune Wheel
+export const WHEEL_CATEGORIES = [
+  'Memy',
+  'Technologia',
+  'Streaming',
+  'Gry',
+  'YouTube',
+  'Media społecznościowe',
+  'Discord',
+  'Twitch',
+  'Internet',
+  'E-sport'
+];
 
 // Card details
 export const CARD_DETAILS: Record<CardType, { name: string; description: string; }> = {
@@ -65,7 +79,7 @@ export const createCard = (cardType: CardType): Card => {
 };
 
 // Sample questions for testing
-export const SAMPLE_QUESTIONS = [
+export const SAMPLE_QUESTIONS: Question[] = [
   {
     id: '1',
     text: 'Co to jest HTML?',
@@ -77,7 +91,7 @@ export const SAMPLE_QUESTIONS = [
       { text: 'Protokół internetowy', isCorrect: false }
     ],
     correctAnswerIndex: 1,
-    round: 'knowledge',
+    round: 'knowledge' as RoundType,
     difficulty: 'easy',
     points: 5
   },
@@ -92,7 +106,7 @@ export const SAMPLE_QUESTIONS = [
       { text: 'Mark Zuckerberg', isCorrect: false }
     ],
     correctAnswerIndex: 2,
-    round: 'knowledge',
+    round: 'knowledge' as RoundType,
     difficulty: 'medium',
     points: 10
   },
@@ -107,7 +121,7 @@ export const SAMPLE_QUESTIONS = [
       { text: 'Niemcy', isCorrect: false }
     ],
     correctAnswerIndex: 0,
-    round: 'speed',
+    round: 'speed' as RoundType,
     difficulty: 'easy',
     points: 5
   },
@@ -122,7 +136,7 @@ export const SAMPLE_QUESTIONS = [
       { text: 'Personal Net Gallery', isCorrect: false }
     ],
     correctAnswerIndex: 1,
-    round: 'wheel',
+    round: 'wheel' as RoundType,
     difficulty: 'medium',
     points: 10
   },
@@ -137,7 +151,7 @@ export const SAMPLE_QUESTIONS = [
       { text: 'Facebook Gaming', isCorrect: false }
     ],
     correctAnswerIndex: 2,
-    round: 'knowledge',
+    round: 'knowledge' as RoundType,
     difficulty: 'easy',
     points: 5
   }
