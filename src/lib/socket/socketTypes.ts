@@ -21,7 +21,13 @@ export type SocketEvent =
   | 'overlay:confetti'
   // Connection events
   | 'connection:status'
-  | 'connection:error';
+  | 'connection:error'
+  // Discord Game Show specific events
+  | 'updatePlayer'
+  | 'questionUpdate'
+  | 'cardUsed'
+  | 'elimination'
+  | 'victory';
 
 // Define payload types for each event
 export interface SocketPayloads {
@@ -48,6 +54,12 @@ export interface SocketPayloads {
   'overlay:confetti': { playerId: string };
   'connection:status': { connected: boolean };
   'connection:error': { message: string };
+  // Discord Game Show specific payloads
+  'updatePlayer': { player: import('@/types/gameTypes').Player };
+  'questionUpdate': { question: import('@/types/gameTypes').Question };
+  'cardUsed': { playerId: string, cardType: import('@/types/gameTypes').CardType, success?: boolean };
+  'elimination': { playerId: string };
+  'victory': { playerId: string, points: number };
 }
 
 // Socket connection options type
@@ -56,4 +68,10 @@ export interface SocketOptions {
   reconnectionDelay: number;
   autoConnect: boolean;
   transports: string[];
+  cors?: {
+    origin: string | string[];
+    methods?: string[];
+    allowedHeaders?: string[];
+    credentials?: boolean;
+  };
 }

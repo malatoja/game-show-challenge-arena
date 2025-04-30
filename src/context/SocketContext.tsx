@@ -11,6 +11,8 @@ interface SocketContextType {
   disconnect: () => void;
   on: <E extends SocketEvent>(event: E, callback: (data: SocketPayloads[E]) => void) => () => void;
   emit: <E extends SocketEvent>(event: E, data: SocketPayloads[E]) => void;
+  reconnect: () => void; // Added reconnect function
+  lastError: string | null; // Track the last error
 }
 
 const SocketContext = createContext<SocketContextType | undefined>(undefined);
@@ -27,6 +29,9 @@ export const SocketProvider: React.FC<{
   const [connected, setConnected] = useState(socketService.connected);
   const [mockMode, setMockModeState] = useState(initialMockMode);
   const [reconnecting, setReconnecting] = useState(false);
+  const [lastError, setLastError] = useState<string | null>(null);
+  const [reconnectAttempts, setReconnectAttempts] = useState(0);
+  const maxReconnectAttempts = 5;
 
   // Set initial mock mode
   useEffect(() => {
@@ -43,6 +48,8 @@ export const SocketProvider: React.FC<{
       } else if (data.connected && reconnecting) {
         toast.success('Ponownie połączono z serwerem!');
         setReconnecting(false);
+        setReconnectAttempts(0);
+        setLastError(null);
       }
     });
     
@@ -53,16 +60,24 @@ export const SocketProvider: React.FC<{
   useEffect(() => {
     const unsubscribe = socketService.on('connection:error', (data) => {
       toast.error(`Błąd połączenia: ${data.message}`);
+      setLastError(data.message);
       
       // Auto-reconnect when not in mock mode
-      if (!mockMode && !reconnecting) {
+      if (!mockMode && !reconnecting && reconnectAttempts < maxReconnectAttempts) {
         setReconnecting(true);
-        setTimeout(() => connect(serverUrl), 3000);
+        setReconnectAttempts(prev => prev + 1);
+        const delay = Math.min(1000 * Math.pow(2, reconnectAttempts), 30000); // Exponential backoff
+        
+        console.log(`[Socket] Reconnecting in ${delay/1000}s (attempt ${reconnectAttempts + 1}/${maxReconnectAttempts})`);
+        setTimeout(() => connect(serverUrl), delay);
+      } else if (reconnectAttempts >= maxReconnectAttempts) {
+        toast.error(`Osiągnięto maksymalną liczbę prób połączenia (${maxReconnectAttempts}). Spróbuj ponownie później.`);
+        setReconnecting(false);
       }
     });
     
     return unsubscribe;
-  }, [mockMode, serverUrl, reconnecting]);
+  }, [mockMode, serverUrl, reconnecting, reconnectAttempts, maxReconnectAttempts]);
 
   // Set mock mode function
   const setMockMode = (value: boolean) => {
@@ -77,6 +92,15 @@ export const SocketProvider: React.FC<{
     } else {
       socketService.connect();
     }
+  };
+  
+  // Reconnect function - resets the connection
+  const reconnect = () => {
+    socketService.disconnect();
+    setReconnectAttempts(0);
+    setLastError(null);
+    setTimeout(() => connect(serverUrl), 500);
+    toast.info('Próba ponownego ustanowienia połączenia...');
   };
 
   // Auto-connect when we're not in mock mode
@@ -98,6 +122,8 @@ export const SocketProvider: React.FC<{
     disconnect: () => socketService.disconnect(),
     on: (event, callback) => socketService.on(event, callback),
     emit: (event, data) => socketService.emit(event, data),
+    reconnect,
+    lastError
   };
 
   return (

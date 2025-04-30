@@ -7,11 +7,15 @@ import { useOverlayState } from '@/hooks/useOverlayState';
 import { useDemoModeEffects } from '@/hooks/useDemoModeEffects';
 import { DebugControls } from '@/components/overlay/DebugControls';
 import { toast } from 'sonner';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { AlertCircle, RefreshCw } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 const OverlayPage = () => {
   // Demo mode for testing without WebSocket
   const [demoMode, setDemoMode] = useState(import.meta.env.DEV);
-  const { connected, mockMode, setMockMode, connect } = useSocket();
+  const { connected, mockMode, setMockMode, connect, reconnect, lastError } = useSocket();
+  const [showConnectionAlert, setShowConnectionAlert] = useState(false);
   
   // Use our custom hook to manage overlay state
   const {
@@ -72,8 +76,45 @@ const OverlayPage = () => {
     setDemoMode(prev => !prev);
   };
   
+  // Show connection alert when not in demo mode and not connected
+  useEffect(() => {
+    if (!demoMode && !connected) {
+      setShowConnectionAlert(true);
+    } else {
+      setShowConnectionAlert(false);
+    }
+  }, [demoMode, connected]);
+  
+  // Handle manual reconnection
+  const handleReconnect = () => {
+    toast.info('Próba ponownego połączenia...');
+    reconnect();
+  };
+  
   return (
-    <div style={{ width: '100vw', height: '100vh', overflow: 'hidden' }}>
+    <div style={{ width: '100vw', height: '100vh', overflow: 'hidden'}}>
+      {/* Connection error alert */}
+      {showConnectionAlert && (
+        <div className="absolute top-0 left-0 right-0 z-50 p-4">
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription className="flex items-center justify-between">
+              <span>
+                Problem z połączeniem WebSocket: {lastError || 'Nie można połączyć się z serwerem'}
+              </span>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={handleReconnect}
+                className="ml-2 flex items-center gap-1"
+              >
+                <RefreshCw className="h-3 w-3" /> Połącz ponownie
+              </Button>
+            </AlertDescription>
+          </Alert>
+        </div>
+      )}
+      
       {/* Card Activation Animation */}
       <CardEffectOverlay 
         cardType={activeCardType} 

@@ -13,7 +13,15 @@ class SocketCore {
     reconnectionAttempts: 5,
     reconnectionDelay: 1000,
     autoConnect: false,
-    transports: ['websocket']
+    transports: ['websocket'],
+    cors: {
+      origin: [
+        'http://localhost:3000', 
+        'https://discord-game-show.vercel.app'
+      ],
+      methods: ['GET', 'POST'],
+      credentials: true
+    }
   };
   
   // Connection status
@@ -55,6 +63,12 @@ class SocketCore {
         this._connected = true;
         this.notifyListeners('connection:status', { connected: true });
         toast.success('Połączono z serwerem');
+        
+        // Log connection information
+        console.log('[Socket] Connection established:', {
+          id: this.socket?.id,
+          transport: this.socket?.io?.engine?.transport?.name
+        });
       });
       
       this.socket.on('disconnect', () => {
@@ -69,13 +83,40 @@ class SocketCore {
         this._connected = false;
         this.notifyListeners('connection:error', { message: error.message });
         toast.error(`Błąd połączenia: ${error.message}`);
+        
+        // Write to error log
+        this.logError('connection_error', error);
       });
+      
+      // Set up Discord Game Show specific event handlers
+      this.registerDiscordGameShowEvents();
       
       this.socket.connect();
     } catch (error) {
       console.error('[Socket] Failed to initialize:', error);
       toast.error('Nie można nawiązać połączenia z serwerem');
+      this.logError('initialization_error', error as Error);
     }
+  }
+  
+  // Register Discord Game Show specific events
+  private registerDiscordGameShowEvents(): void {
+    if (!this.socket) return;
+    
+    const discordEvents: SocketEvent[] = [
+      'updatePlayer',
+      'questionUpdate',
+      'cardUsed',
+      'elimination',
+      'victory'
+    ];
+    
+    discordEvents.forEach(event => {
+      this.socket?.on(event, (data: any) => {
+        console.log(`[Socket] Received Discord event: ${event}`, data);
+        this.notifyListeners(event, data);
+      });
+    });
   }
   
   // Connect to the server
@@ -163,9 +204,31 @@ class SocketCore {
           callback(data);
         } catch (error) {
           console.error(`[Socket] Error in listener for event ${event}:`, error);
+          this.logError(`listener_error_${event}`, error as Error);
         }
       });
     }
+  }
+
+  // Log error to console and file if possible
+  private logError(type: string, error: Error): void {
+    const errorMessage = `[${new Date().toISOString()}][${type}] ${error.message}\n${error.stack || ''}`;
+    
+    // Log to console
+    console.error(errorMessage);
+    
+    // In a real application, we would also log to a file
+    // For now we just create a structured error object that could be sent to a logging service
+    const errorLog = {
+      timestamp: new Date().toISOString(),
+      type,
+      message: error.message,
+      stack: error.stack,
+      socketId: this.socket?.id
+    };
+    
+    // We could send this to a logging endpoint or service
+    console.debug('[Socket] Error logged:', errorLog);
   }
 
   // Debug methods

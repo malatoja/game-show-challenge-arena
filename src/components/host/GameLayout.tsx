@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Player, CardType, RoundType } from '@/types/gameTypes';
 import PlayerGrid from './PlayerGrid';
 import GameControls from './GameControls';
@@ -10,6 +10,9 @@ import QuestionListPanel from './panels/QuestionListPanel';
 import { useSocket } from '@/context/SocketContext';
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { AlertCircle, RefreshCw } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 // Define the context type for game controls
 export interface GameControlContext {
@@ -49,8 +52,9 @@ export interface GameLayoutProps {
 }
 
 const GameLayout: React.FC<GameLayoutProps> = ({ gameControl }) => {
-  const { emit } = useSocket();
+  const { emit, connected, mockMode, reconnect } = useSocket();
   const [extensionFactor, setExtensionFactor] = useState(1);
+  const [showConnectionError, setShowConnectionError] = useState(false);
   
   const { 
     activePlayerId,
@@ -84,6 +88,15 @@ const GameLayout: React.FC<GameLayoutProps> = ({ gameControl }) => {
   const remainingQuestions = gameState?.remainingQuestions || [];
 
   const activePlayer = players.find(player => player.id === activePlayerId) || null;
+
+  // Check connection status
+  useEffect(() => {
+    if (!mockMode && !connected) {
+      setShowConnectionError(true);
+    } else {
+      setShowConnectionError(false);
+    }
+  }, [connected, mockMode]);
 
   // Send update to overlay whenever a significant event happens
   const syncWithOverlay = () => {
@@ -130,6 +143,23 @@ const GameLayout: React.FC<GameLayoutProps> = ({ gameControl }) => {
       animate={{ opacity: 1 }}
       transition={{ duration: 0.3 }}
     >
+      {showConnectionError && !mockMode && (
+        <Alert variant="destructive" className="mb-4">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription className="flex items-center justify-between">
+            <span>Problem z połączeniem WebSocket. Nakładka może nie działać poprawnie.</span>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={reconnect}
+              className="ml-2 flex items-center gap-1"
+            >
+              <RefreshCw className="h-3 w-3" /> Połącz ponownie
+            </Button>
+          </AlertDescription>
+        </Alert>
+      )}
+      
       <div className="flex flex-col space-y-6">
         {/* Game Controls */}
         <GameControls
