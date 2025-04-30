@@ -13,9 +13,9 @@ interface AssignCardTabProps {
     id: string;
     name: string;
     cards: Array<{
-      id: string;
+      id?: string; // Changed from required to optional to match Card type
       type: CardType;
-      name: string;
+      name?: string;
       description: string;
       isUsed: boolean;
     }>;
@@ -92,7 +92,7 @@ export function AssignCardTab({
               {players
                 .find(p => p.id === selectedPlayer)
                 ?.cards.map(card => (
-                  <div key={card.id} className="flex items-center gap-1">
+                  <div key={card.id || `${card.type}-${Math.random()}`} className="flex items-center gap-1">
                     <PlayerCardIndicator card={card} />
                   </div>
                 ))}
