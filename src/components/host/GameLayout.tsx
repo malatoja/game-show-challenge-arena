@@ -13,46 +13,13 @@ import { motion } from 'framer-motion';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AlertCircle, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useGame } from '@/context/GameContext';
+import { useGameControl } from './context/GameControlContext';
 
-// Define the context type for game controls
-export interface GameControlContext {
-  activePlayerId: string | null;
-  canStartRound: boolean;
-  canEndRound: boolean;
-  isRoundActive: boolean;
-  handleSelectPlayer: (player: Player) => void;
-  handleStartRound: (roundType: RoundType) => void;
-  handleEndRound: () => void;
-  handleEndGame: () => void;
-  handleSkipQuestion: () => void;
-  handlePause: () => void;
-  handleResetGame: () => void;
-  handleUseCard: (playerId: string, cardType: CardType) => void;
-  handleAddPlayer: () => void;
-  handleAddTestCards: (playerId: string) => void;
-  handleSelectQuestion?: (question: any) => void;
-  handleAnswerQuestion?: (isCorrect: boolean, answerIndex: number) => void;
-  handleSpinWheel?: () => void;
-  handleWheelSpinEnd?: () => void; 
-  handleSelectCategory?: (category: string) => void;
-  gameState?: {
-    players: Player[];
-    currentRound: RoundType;
-    currentQuestion?: any | null;
-    wheelSpinning?: boolean;
-    selectedCategory?: string | null;
-    remainingQuestions?: any[];
-  };
-}
-
-// Define props for GameLayout component
-export interface GameLayoutProps {
-  gameControl: GameControlContext;
-  children?: React.ReactNode;
-}
-
-const GameLayout: React.FC<GameLayoutProps> = ({ gameControl }) => {
-  const { emit, connected, mockMode, reconnect } = useSocket();
+const GameLayout: React.FC = () => {
+  const { connected, mockMode, reconnect } = useSocket();
+  const { state } = useGame();
+  const gameControl = useGameControl();
   const [extensionFactor, setExtensionFactor] = useState(1);
   const [showConnectionError, setShowConnectionError] = useState(false);
   
@@ -76,16 +43,15 @@ const GameLayout: React.FC<GameLayoutProps> = ({ gameControl }) => {
     handleSpinWheel,
     handleWheelSpinEnd,
     handleSelectCategory,
-    gameState
   } = gameControl;
 
   // Get players and other game state
-  const players = gameState?.players || [];
-  const currentRound = gameState?.currentRound || 'knowledge';
-  const currentQuestion = gameState?.currentQuestion || null;
-  const wheelSpinning = gameState?.wheelSpinning || false;
-  const selectedCategory = gameState?.selectedCategory || '';
-  const remainingQuestions = gameState?.remainingQuestions || [];
+  const players = state.players || [];
+  const currentRound = state.currentRound || 'knowledge';
+  const currentQuestion = state.currentQuestion || null;
+  const wheelSpinning = state.wheelSpinning || false;
+  const selectedCategory = state.selectedCategory || '';
+  const remainingQuestions = state.remainingQuestions || [];
 
   const activePlayer = players.find(player => player.id === activePlayerId) || null;
 
@@ -98,18 +64,6 @@ const GameLayout: React.FC<GameLayoutProps> = ({ gameControl }) => {
     }
   }, [connected, mockMode]);
 
-  // Send update to overlay whenever a significant event happens
-  const syncWithOverlay = () => {
-    if (activePlayer && currentQuestion) {
-      emit('overlay:update', {
-        activePlayerId: activePlayer.id,
-        question: currentQuestion,
-        category: selectedCategory,
-        timeRemaining: currentRound === 'speed' ? 5 : 30
-      });
-    }
-  };
-
   // Map round type to proper layout class
   const getRoundLayoutClass = () => {
     switch (currentRound) {
@@ -121,18 +75,6 @@ const GameLayout: React.FC<GameLayoutProps> = ({ gameControl }) => {
         return 'layout-round-3';
       default:
         return 'layout-round-1';
-    }
-  };
-
-  // Handle using refleks card to extend time
-  const handleExtendTime = (factor: number) => {
-    setExtensionFactor(factor);
-    toast.success(`Czas wydłużony x${factor}!`);
-    
-    if (currentQuestion) {
-      emit('overlay:update', {
-        timeRemaining: (currentRound === 'speed' ? 5 : 30) * factor
-      });
     }
   };
 
@@ -210,10 +152,10 @@ const GameLayout: React.FC<GameLayoutProps> = ({ gameControl }) => {
               wheelSpinning={wheelSpinning}
               activePlayerId={activePlayerId}
               extensionFactor={extensionFactor}
-              onSpinWheel={handleSpinWheel || (() => {})}
-              onWheelSpinEnd={handleWheelSpinEnd || (() => {})}
-              onSelectCategory={handleSelectCategory || (() => {})}
-              onAnswerQuestion={handleAnswerQuestion || (() => {})}
+              onSpinWheel={handleSpinWheel}
+              onWheelSpinEnd={handleWheelSpinEnd}
+              onSelectCategory={handleSelectCategory}
+              onAnswerQuestion={handleAnswerQuestion}
             />
           </div>
           
@@ -222,7 +164,7 @@ const GameLayout: React.FC<GameLayoutProps> = ({ gameControl }) => {
             <QuestionListPanel
               questions={remainingQuestions}
               selectedCategory={selectedCategory}
-              onSelectQuestion={handleSelectQuestion || (() => {})}
+              onSelectQuestion={handleSelectQuestion}
             />
           </div>
         </div>

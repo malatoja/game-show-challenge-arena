@@ -5,8 +5,8 @@ import { useEvents } from './EventsContext';
 import { useTimer } from './TimerContext';
 import GameLayout from './GameLayout';
 import GameResultsWrapper from './components/GameResultsWrapper';
-import { useGameHandlers } from './hooks/useGameHandlers';
-import { useSocket } from '@/context/SocketContext';
+import { useGameControlProvider } from './hooks/useGameControlProvider';
+import { GameControlProvider } from './context/GameControlContext';
 
 interface GameControllerProps {
   children?: React.ReactNode;
@@ -14,34 +14,10 @@ interface GameControllerProps {
 
 export function GameController({ children }: GameControllerProps) {
   const { state } = useGame();
-  const { addEvent } = useEvents();
-  const { emit } = useSocket();
+  const gameControl = useGameControlProvider();
+  const { showResults, resultType, handleResetGame, setShowResults } = gameControl;
   
-  const {
-    activePlayerId,
-    showResults,
-    resultType,
-    canStartRound,
-    canEndRound,
-    isRoundActive,
-    handleSelectPlayer,
-    handleStartRound,
-    handleEndRound,
-    handleEndGame,
-    handleSelectQuestion,
-    handleAnswerQuestion,
-    handleSpinWheel,
-    handleWheelSpinEnd,
-    handleSelectCategory,
-    handleSkipQuestion,
-    handlePause,
-    handleResetGame,
-    handleUseCard,
-    handleAddPlayer,
-    handleAddTestCards,
-    setShowResults
-  } = useGameHandlers();
-
+  // Show results screen if needed
   if (showResults) {
     return (
       <GameResultsWrapper
@@ -54,33 +30,12 @@ export function GameController({ children }: GameControllerProps) {
     );
   }
   
-  // Context object with all the handler functions and game state
-  const gameControlContext = {
-    activePlayerId,
-    canStartRound,
-    canEndRound,
-    isRoundActive,
-    handleSelectPlayer,
-    handleStartRound,
-    handleEndRound,
-    handleEndGame,
-    handleSkipQuestion,
-    handleSelectQuestion,
-    handleAnswerQuestion,
-    handleSpinWheel,
-    handleWheelSpinEnd,
-    handleSelectCategory,
-    handlePause,
-    handleResetGame,
-    handleUseCard,
-    handleAddPlayer,
-    handleAddTestCards,
-    // Pass the state directly as gameState property
-    gameState: state
-  };
-
-  // Return GameLayout with gameControl prop
-  return <GameLayout gameControl={gameControlContext} />;
+  // Provide game control context to all components below
+  return (
+    <GameControlProvider value={gameControl}>
+      <GameLayout />
+    </GameControlProvider>
+  );
 }
 
 export default GameController;
