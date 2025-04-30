@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
-import { QuestionEditor } from './QuestionEditor';
 import { toast } from 'sonner';
+import { QuestionEditor } from './QuestionEditor';
 import { Question, RoundType } from '@/types/gameTypes';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useForm } from "react-hook-form";
@@ -10,18 +10,13 @@ import { zodResolver } from "@hookform/resolvers/zod";
 // Import refactored components
 import { roundSettingsSchema, RoundSettingsFormValues } from './question-editor/RoundSettingsForm';
 import { QuestionStats } from './question-editor/QuestionStats';
-import { QuestionActions } from './question-editor/QuestionActions';
-import { AllQuestionsTab } from './question-editor/tabs/AllQuestionsTab';
-import { KnowledgeRoundTab } from './question-editor/tabs/KnowledgeRoundTab';
-import { SpeedRoundTab } from './question-editor/tabs/SpeedRoundTab';
-import { WheelRoundTab } from './question-editor/tabs/WheelRoundTab';
-import { StandardQuestionsTab } from './question-editor/tabs/StandardQuestionsTab';
 import { CategoryManager } from './question-editor/CategoryManager';
+import { RoundSettingsPanel } from './question-editor/tabs/RoundSettingsPanel';
+import { QuestionImportExport } from './question-editor/QuestionImportExport';
 import { getAllCategories } from '@/utils/gameUtils';
 
 export function QuestionsTab() {
   const [questions, setQuestions] = useState<Question[]>([]);
-  const [isImporting, setIsImporting] = useState(false);
   const [activeTab, setActiveTab] = useState<string>("all");
   const [importFormat, setImportFormat] = useState<"json" | "csv">("json");
   const [categories, setCategories] = useState<string[]>([]);
@@ -74,112 +69,6 @@ export function QuestionsTab() {
     }
   };
 
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      try {
-        const content = e.target?.result as string;
-        
-        let importedQuestions: Question[];
-        
-        // Handle different import formats
-        if (importFormat === "json") {
-          importedQuestions = JSON.parse(content) as Question[];
-        } else if (importFormat === "csv") {
-          // Simple CSV parser for format: text,category,answer1,answer2,answer3,answer4,correctIndex,difficulty,round
-          importedQuestions = content
-            .split('\n')
-            .filter(line => line.trim().length > 0)
-            .map((line, idx) => {
-              const [text, category, a1, a2, a3, a4, correctIdx, difficulty, round] = line.split(',').map(item => item.trim());
-              const correctIndex = parseInt(correctIdx);
-              
-              return {
-                id: `imported-${idx}-${Date.now()}`,
-                text,
-                category,
-                answers: [
-                  { text: a1, isCorrect: correctIndex === 0 },
-                  { text: a2, isCorrect: correctIndex === 1 },
-                  { text: a3, isCorrect: correctIndex === 2 },
-                  { text: a4, isCorrect: correctIndex === 3 }
-                ],
-                correctAnswerIndex: correctIndex,
-                round: round as RoundType || "standard",
-                difficulty: (difficulty === "5" ? "easy" : difficulty === "10" ? "medium" : "hard"),
-                used: false,
-                favorite: false,
-                points: parseInt(difficulty) || 10
-              };
-            });
-        } else {
-          throw new Error("Nieobsługiwany format pliku");
-        }
-        
-        if (Array.isArray(importedQuestions)) {
-          // Filter based on round if needed
-          if (activeTab !== "all") {
-            importedQuestions = importedQuestions.filter(q => q.round === activeTab);
-          }
-          
-          // Save to localStorage
-          localStorage.setItem('gameShowQuestions', JSON.stringify([...questions, ...importedQuestions]));
-          setQuestions([...questions, ...importedQuestions]);
-          toast.success(`Zaimportowano ${importedQuestions.length} pytań`);
-        } else {
-          toast.error('Nieprawidłowy format pliku');
-        }
-      } catch (error) {
-        console.error('Error importing questions:', error);
-        toast.error('Wystąpił błąd podczas importowania pliku');
-      }
-    };
-    
-    reader.onerror = () => {
-      toast.error('Wystąpił błąd podczas odczytu pliku');
-    };
-    
-    reader.readAsText(file);
-  };
-
-  const handleExportQuestions = () => {
-    // Filter questions based on selected round tab
-    const exportQuestions = activeTab !== "all" 
-      ? questions.filter(q => q.round === activeTab)
-      : questions;
-      
-    const questionsJson = JSON.stringify(exportQuestions, null, 2);
-    const blob = new Blob([questionsJson], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `game_show_questions_${activeTab !== "all" ? activeTab : "all"}.json`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    
-    toast.success(`Wyeksportowano ${exportQuestions.length} pytań`);
-  };
-
-  const handleClearQuestions = () => {
-    if (confirm(`Czy na pewno chcesz usunąć ${activeTab === "all" ? "wszystkie pytania" : `pytania w rundzie ${activeTab}`}? Ta operacja jest nieodwracalna.`)) {
-      if (activeTab === "all") {
-        localStorage.removeItem('gameShowQuestions');
-        setQuestions([]);
-      } else {
-        // Remove only questions for the selected round
-        const filteredQuestions = questions.filter(q => q.round !== activeTab);
-        localStorage.setItem('gameShowQuestions', JSON.stringify(filteredQuestions));
-        setQuestions(filteredQuestions);
-      }
-      toast.success(`Pytania ${activeTab === "all" ? "" : `dla rundy ${activeTab} `}zostały usunięte`);
-    }
-  };
-
   // Handle categories update
   const handleCategoriesChange = (updatedCategories: string[]) => {
     setCategories(updatedCategories);
@@ -195,11 +84,6 @@ export function QuestionsTab() {
     used: questions.filter(q => q.used).length,
     favorite: questions.filter(q => q.favorite).length
   };
-
-  // Check if there are questions for the current round
-  const hasQuestionsForRound = activeTab !== "all" 
-    ? questions.some(q => q.round === activeTab)
-    : true;
 
   return (
     <div>
@@ -228,40 +112,21 @@ export function QuestionsTab() {
             <TabsTrigger value="standard">Standardowe</TabsTrigger>
           </TabsList>
           
-          <TabsContent value="all">
-            <AllQuestionsTab />
-          </TabsContent>
-          
-          <TabsContent value="knowledge">
-            <KnowledgeRoundTab form={form} onSubmit={onSubmit} />
-          </TabsContent>
-          
-          <TabsContent value="speed">
-            <SpeedRoundTab 
-              importFormat={importFormat}
-              setImportFormat={setImportFormat}
-            />
-          </TabsContent>
-          
-          <TabsContent value="wheel">
-            <WheelRoundTab form={form} onSubmit={onSubmit} />
-          </TabsContent>
-          
-          <TabsContent value="standard">
-            <StandardQuestionsTab />
-          </TabsContent>
+          <RoundSettingsPanel 
+            activeTab={activeTab}
+            form={form}
+            onSubmit={onSubmit}
+            importFormat={importFormat}
+            setImportFormat={setImportFormat}
+          />
         </Tabs>
 
-        <QuestionActions
+        <QuestionImportExport 
           activeTab={activeTab}
-          isImporting={isImporting}
-          setIsImporting={setIsImporting}
-          handleExportQuestions={handleExportQuestions}
-          handleClearQuestions={handleClearQuestions}
-          handleFileUpload={handleFileUpload}
+          questions={questions}
+          setQuestions={setQuestions}
           importFormat={importFormat}
-          hasQuestions={questions.length > 0}
-          hasQuestionsForRound={hasQuestionsForRound}
+          setImportFormat={setImportFormat}
         />
         
         <QuestionStats stats={roundStats} />
@@ -271,3 +136,4 @@ export function QuestionsTab() {
     </div>
   );
 }
+
