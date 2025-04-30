@@ -1,7 +1,8 @@
 
 import React, { createContext, useContext, useReducer, ReactNode } from 'react';
-import { GameState, Player, Question, RoundType, PlayerId, CardType } from '../types/gameTypes';
-import { gameReducer, GameAction, initialStateWithSavedQuestions } from '../reducers/gameReducer';
+import { GameState } from '../types/gameTypes';
+import { gameReducer, initialStateWithSavedQuestions } from '../reducers/gameReducer';
+import { GameAction } from '../reducers/actions';
 import { toast } from 'sonner';
 
 // Context
