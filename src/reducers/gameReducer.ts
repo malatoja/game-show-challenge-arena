@@ -1,4 +1,3 @@
-
 import { GameState, Player, Question, RoundType, PlayerId, CardType } from '../types/gameTypes';
 import { INITIAL_LIVES, SAMPLE_QUESTIONS, createCard } from '../constants/gameConstants';
 import { toast } from 'sonner';
@@ -302,6 +301,9 @@ const handleAnswerQuestion = (state: GameState, playerId: PlayerId, isCorrect: b
     let awardCard = false;
     let cardType: CardType = 'dejavu';
     
+    // Load card rules
+    const cardRules = loadCardRules();
+    
     // Check if player has used turbo card
     const turboCardUsed = activePlayer.cards.some(card => 
       card.type === 'turbo' && !card.isUsed);
@@ -327,15 +329,24 @@ const handleAnswerQuestion = (state: GameState, playerId: PlayerId, isCorrect: b
     if (isCorrect) {
       consecutiveCorrect++;
       
-      // Award card after 3 consecutive correct answers
-      if (consecutiveCorrect >= 3) {
+      // Check if player should be awarded a card based on rules
+      const { award, cardType: awardedCardType } = shouldAwardBonusCard(
+        consecutiveCorrect,
+        50, // points threshold
+        activePlayer.points + pointsToAdd,
+        state.currentRound,
+        cardRules
+      );
+      
+      if (award) {
         awardCard = true;
-        cardType = 'dejavu';
+        cardType = awardedCardType;
         consecutiveCorrect = 0; // Reset counter
       }
       
-      // Award turbo card if player reaches 50+ points in Round 1
-      if (state.currentRound === 'knowledge' && 
+      // Award turbo card if player reaches 50+ points in Round 1 if rule is enabled
+      if (cardRules.pointsThreshold !== false && 
+          state.currentRound === 'knowledge' && 
           activePlayer.points + pointsToAdd >= 50 && 
           !activePlayer.cards.some(c => c.type === 'turbo')) {
         awardCard = true;
@@ -376,19 +387,19 @@ const handleAnswerQuestion = (state: GameState, playerId: PlayerId, isCorrect: b
       return player;
     });
     
-    // Award card if conditions met
+    // Award card if conditions met and player doesn't have max cards
     if (awardCard) {
       const playerToAwardIndex = updatedPlayers.findIndex(p => p.id === playerId);
       if (playerToAwardIndex !== -1) {
-        const playerCards = updatedPlayers[playerToAwardIndex].cards;
-        const unusedCards = playerCards.filter(c => !c.isUsed).length;
+        const player = updatedPlayers[playerToAwardIndex];
+        const unusedCards = player.cards.filter(c => !c.isUsed).length;
         
         // Only add if player doesn't have max cards (3)
         if (unusedCards < 3) {
           const newCard = createCard(cardType);
           updatedPlayers[playerToAwardIndex] = {
             ...updatedPlayers[playerToAwardIndex],
-            cards: [...playerCards, newCard]
+            cards: [...player.cards, newCard]
           };
           
           toast.success(`${activePlayer.name} otrzymuje kartę ${newCard.name}!`);

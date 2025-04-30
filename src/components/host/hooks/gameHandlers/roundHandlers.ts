@@ -7,6 +7,7 @@ import { useTimer } from '../../TimerContext';
 import { useSocket } from '@/context/SocketContext';
 import { toast } from 'sonner';
 import { ROUND_NAMES } from '@/constants/gameConstants';
+import { getRandomCardForAction, loadCardRules } from '@/utils/gameUtils';
 
 export function useRoundHandlers() {
   const { state, dispatch } = useGame();
@@ -23,6 +24,9 @@ export function useRoundHandlers() {
   const canEndRound = state.roundStarted && !state.roundEnded;
   
   const handleStartRound = (roundType: RoundType) => {
+    // Load card rules
+    const cardRules = loadCardRules();
+    
     // Reset all players' active state before starting a new round
     state.players.forEach(player => {
       if (player.isActive) {
@@ -44,28 +48,31 @@ export function useRoundHandlers() {
     });
 
     // Auto-award cards based on points or position if starting a new round
-    if (roundType === 'speed') {
+    if (roundType === 'speed' && cardRules.topPoints !== false) {
       // Auto-award cards to top players after Round 1
       const sortedPlayers = [...state.players].sort((a, b) => b.points - a.points);
       
-      // Top player gets a card
+      // Top player gets a card if the rule is enabled
       if (sortedPlayers.length > 0) {
-        dispatch({ type: 'AWARD_CARD', playerId: sortedPlayers[0].id, cardType: 'turbo' });
-        addEvent(`${sortedPlayers[0].name} otrzymuje kartę Turbo za najlepszy wynik w Rundzie 1`);
+        const randomCard = getRandomCardForAction('top_score', roundType);
+        dispatch({ type: 'AWARD_CARD', playerId: sortedPlayers[0].id, cardType: randomCard });
+        addEvent(`${sortedPlayers[0].name} otrzymuje kartę za najlepszy wynik w Rundzie 1`);
       }
       
-      // Player with lowest points gets a "Na Ratunek" card
-      if (sortedPlayers.length > 1) {
-        dispatch({ type: 'AWARD_CARD', playerId: sortedPlayers[sortedPlayers.length - 1].id, cardType: 'reanimacja' });
-        addEvent(`${sortedPlayers[sortedPlayers.length - 1].name} otrzymuje kartę Reanimacja (Na Ratunek)`);
+      // Player with lowest points gets a "Na Ratunek" card if the rule is enabled
+      if (sortedPlayers.length > 1 && cardRules.lowestPoints !== false) {
+        const rescueCard = getRandomCardForAction('lowest_score', roundType);
+        dispatch({ type: 'AWARD_CARD', playerId: sortedPlayers[sortedPlayers.length - 1].id, cardType: rescueCard });
+        addEvent(`${sortedPlayers[sortedPlayers.length - 1].name} otrzymuje kartę pomocy`);
       }
     }
     
-    if (roundType === 'wheel') {
+    if (roundType === 'wheel' && cardRules.advanceRound !== false) {
       // Award cards to players who advanced from Round 2
       state.players.filter(p => !p.eliminated).forEach(player => {
-        dispatch({ type: 'AWARD_CARD', playerId: player.id, cardType: 'dejavu' });
-        addEvent(`${player.name} otrzymuje kartę Dejavu za awans do Rundy 3`);
+        const randomCard = getRandomCardForAction('round_win', roundType);
+        dispatch({ type: 'AWARD_CARD', playerId: player.id, cardType: randomCard });
+        addEvent(`${player.name} otrzymuje kartę za awans do Rundy 3`);
       });
     }
   };

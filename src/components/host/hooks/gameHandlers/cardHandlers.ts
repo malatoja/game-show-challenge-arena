@@ -11,6 +11,26 @@ export function useCardHandlers() {
   const { addEvent } = useEvents();
   const { emit } = useSocket();
 
+  // Helper function to get custom action animation if available
+  const getCustomActionAnimation = (actionType: string, cardType?: CardType): string | undefined => {
+    try {
+      // In a real implementation, this would check localStorage or another source for custom animations
+      const storedActions = localStorage.getItem('gameActionAnimations');
+      if (storedActions) {
+        const actions = JSON.parse(storedActions);
+        const action = actions.find((a: any) => 
+          a.triggerType === actionType && 
+          (actionType !== 'card_use' || a.cardType === cardType)
+        );
+        
+        return action?.animationUrl;
+      }
+    } catch (error) {
+      console.error('Error getting custom action animation:', error);
+    }
+    return undefined;
+  };
+
   const handleUseCard = (playerId: string, cardType: CardType) => {
     const player = state.players.find(p => p.id === playerId);
     if (!player) return;
@@ -18,10 +38,14 @@ export function useCardHandlers() {
     // Process card effects based on card type
     dispatch({ type: 'USE_CARD', playerId, cardType });
     
-    // Emit the card:use event
+    // Check if there's a custom animation for this card
+    const customAnimation = getCustomActionAnimation('card_use', cardType);
+    
+    // Emit the card:use event with animation data if available
     emit('card:use', {
       playerId,
-      cardType
+      cardType,
+      animationUrl: customAnimation
     });
     
     // Play card activation sound

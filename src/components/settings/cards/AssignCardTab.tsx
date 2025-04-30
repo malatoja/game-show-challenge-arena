@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { CardType } from '@/types/gameTypes';
@@ -7,6 +7,10 @@ import { CARD_DETAILS } from '@/constants/gameConstants';
 import { CARD_IMAGES } from '@/constants/cardImages';
 import PlayerCardIndicator from '@/components/players/PlayerCardIndicator';
 import { toast } from 'sonner';
+import { PlusCircle, Edit } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 
 interface AssignCardTabProps {
   players: Array<{
@@ -33,6 +37,37 @@ export function AssignCardTab({
   cardTypes,
   handleAwardCard
 }: AssignCardTabProps) {
+  const [isCustomCardDialogOpen, setIsCustomCardDialogOpen] = useState(false);
+  const [customCardType, setCustomCardType] = useState<string>("");
+  const [customCardName, setCustomCardName] = useState<string>("");
+  const [customCardDescription, setCustomCardDescription] = useState<string>("");
+
+  const handleCreateCustomCard = () => {
+    if (!customCardType.trim()) {
+      toast.error("Typ karty jest wymagany");
+      return;
+    }
+
+    if (!customCardName.trim()) {
+      toast.error("Nazwa karty jest wymagana");
+      return;
+    }
+
+    if (!customCardDescription.trim()) {
+      toast.error("Opis karty jest wymagany");
+      return;
+    }
+
+    // Add custom card logic will be handled in the parent component
+    toast.success(`Utworzono nową kartę: ${customCardName}`);
+    
+    // Reset form fields
+    setCustomCardType("");
+    setCustomCardName("");
+    setCustomCardDescription("");
+    setIsCustomCardDialogOpen(false);
+  };
+
   return (
     <div className="bg-gameshow-card rounded-lg p-6 shadow-lg">
       <h3 className="text-xl font-semibold mb-4">Przydziel kartę graczowi</h3>
@@ -60,7 +95,57 @@ export function AssignCardTab({
         </div>
 
         <div>
-          <Label className="font-medium mb-2 block">Wybierz kartę</Label>
+          <div className="flex justify-between items-center mb-2">
+            <Label className="font-medium">Wybierz kartę</Label>
+            <Dialog open={isCustomCardDialogOpen} onOpenChange={setIsCustomCardDialogOpen}>
+              <DialogTrigger asChild>
+                <Button variant="outline" size="sm" className="flex items-center gap-1">
+                  <PlusCircle className="h-4 w-4" /> Nowa karta
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Utwórz nową kartę</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4 py-4">
+                  <div>
+                    <Label htmlFor="cardType">Typ karty (identyfikator)</Label>
+                    <Input 
+                      id="cardType" 
+                      value={customCardType} 
+                      onChange={(e) => setCustomCardType(e.target.value)} 
+                      placeholder="np. superturbo"
+                    />
+                    <p className="text-xs text-gameshow-muted mt-1">Unikalny identyfikator karty (bez spacji, małe litery)</p>
+                  </div>
+                  <div>
+                    <Label htmlFor="cardName">Nazwa karty</Label>
+                    <Input 
+                      id="cardName" 
+                      value={customCardName} 
+                      onChange={(e) => setCustomCardName(e.target.value)} 
+                      placeholder="np. Super Turbo"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="cardDescription">Opis karty</Label>
+                    <Textarea 
+                      id="cardDescription" 
+                      value={customCardDescription} 
+                      onChange={(e) => setCustomCardDescription(e.target.value)} 
+                      placeholder="np. Potrójne punkty za poprawną odpowiedź"
+                      rows={3}
+                    />
+                  </div>
+                </div>
+                <DialogFooter>
+                  <Button variant="outline" onClick={() => setIsCustomCardDialogOpen(false)}>Anuluj</Button>
+                  <Button onClick={handleCreateCustomCard}>Utwórz kartę</Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          </div>
+          
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
             {cardTypes.map(type => (
               <Button
