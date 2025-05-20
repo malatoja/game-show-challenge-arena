@@ -2,18 +2,6 @@
 import React, { useState } from 'react';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { SettingsHeader } from './SettingsHeader';
-import { QuestionsTab } from './QuestionsTab';
-import { RolesTab } from './RolesTab';
-import { PlayersTab } from './PlayersTab';
-import { RankingTab } from './RankingTab';
-import { ThemesTab } from './ThemesTab';
-import { SoundsTab } from './SoundsTab';
-import { CardsTab } from './CardsTab';
-import { AutomationTab } from './AutomationTab';
-import { PasswordSettings } from './PasswordSettings';
-import { CameraConfigTab } from './CameraConfigTab';
-import { LuckyLoserTab } from './LuckyLoserTab';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
@@ -38,55 +26,36 @@ export function SettingsLayout({ activeTab, setActiveTab, children }: SettingsLa
             Powrót do strony głównej
           </Link>
         </Button>
-
-        <SettingsHeader 
-          showPasswordSettings={false}
-          setShowPasswordSettings={() => {}}
-          handleLogout={() => {}}
-        />
         
         <Separator className="my-6" />
 
         <Tabs defaultValue={activeTab} onValueChange={handleTabChange} value={activeTab}>
-          <TabsList className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2">
+          <TabsList className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2 mb-4">
+            <TabsTrigger value="players">Gracze</TabsTrigger>
             <TabsTrigger value="questions">Pytania</TabsTrigger>
             <TabsTrigger value="cards">Karty</TabsTrigger>
-            <TabsTrigger value="players">Gracze</TabsTrigger>
-            <TabsTrigger value="ranking">Ranking</TabsTrigger>
-            <TabsTrigger value="lucky-loser">Lucky Loser</TabsTrigger>
-            <TabsTrigger value="cameras">Kamery</TabsTrigger>
             <TabsTrigger value="themes">Motywy</TabsTrigger>
             <TabsTrigger value="sounds">Dźwięki</TabsTrigger>
+          </TabsList>
+          
+          <TabsList className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2">
+            <TabsTrigger value="lucky-loser">Lucky Loser</TabsTrigger>
+            <TabsTrigger value="info-bar">Pasek info</TabsTrigger>
+            <TabsTrigger value="cameras">Kamery</TabsTrigger>
+            <TabsTrigger value="backup">Kopia zapasowa</TabsTrigger>
             <TabsTrigger value="automation">Automatyzacja</TabsTrigger>
+          </TabsList>
+
+          <TabsList className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2 mt-2">
             <TabsTrigger value="roles">Role</TabsTrigger>
+            <TabsTrigger value="ranking">Ranking</TabsTrigger>
+            <TabsTrigger value="advanced">Zaawansowane</TabsTrigger>
+            <TabsTrigger value="tests">Testy</TabsTrigger>
             <TabsTrigger value="password">Hasło</TabsTrigger>
           </TabsList>
 
           <div className="mt-6">
             {children}
-            
-            {!children && (
-              <>
-                {activeTab === 'questions' && <QuestionsTab />}
-                {activeTab === 'cards' && <CardsTab />}
-                {activeTab === 'players' && <PlayersTab />}
-                {activeTab === 'ranking' && <RankingTab />}
-                {activeTab === 'lucky-loser' && <LuckyLoserTab />}
-                {activeTab === 'cameras' && <CameraConfigTab />}
-                {activeTab === 'themes' && <ThemesTab />}
-                {activeTab === 'sounds' && <SoundsTab />}
-                {activeTab === 'automation' && <AutomationTab />}
-                {activeTab === 'roles' && <RolesTab />}
-                {activeTab === 'password' && (
-                  <PasswordSettings 
-                    hostPassword="" 
-                    settingsPassword=""
-                    setHostPassword={() => {}} 
-                    setSettingsPassword={() => {}}
-                  />
-                )}
-              </>
-            )}
           </div>
         </Tabs>
       </div>

@@ -21,11 +21,13 @@ import { RankingTab } from '@/components/settings/RankingTab';
 import { AutomationTab } from '@/components/settings/AutomationTab';
 import { LuckyLoserTab } from '@/components/settings/LuckyLoserTab';
 import { CameraConfigTab } from '@/components/settings/CameraConfigTab';
-
-import { TabsContent } from '@/components/ui/tabs';
+import { InfoBarTab } from '@/components/settings/InfoBarTab';
+import { BackupTab } from '@/components/settings/BackupTab';
+import { AdvancedTab } from '@/components/settings/AdvancedTab';
+import { TestsTab } from '@/components/settings/TestsTab';
 
 const SettingsPage = () => {
-  const [activeTab, setActiveTab] = useState('players');
+  const [activeTab, setActiveTab] = useState('questions');
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   
   // Password management
@@ -88,6 +90,10 @@ const SettingsPage = () => {
         {activeTab === 'automation' && <AutomationTab />}
         {activeTab === 'lucky-loser' && <LuckyLoserTab />}
         {activeTab === 'cameras' && <CameraConfigTab />}
+        {activeTab === 'info-bar' && <InfoBarTab />}
+        {activeTab === 'backup' && <BackupTab />}
+        {activeTab === 'advanced' && <AdvancedTab />}
+        {activeTab === 'tests' && <TestsTab />}
         {activeTab === 'password' && (
           <PasswordSettings
             hostPassword={hostPassword}
