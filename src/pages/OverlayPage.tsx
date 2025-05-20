@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { GameOverlay } from '@/components/overlay/GameOverlay';
 import { useSocket } from '@/context/SocketContext';
@@ -15,6 +16,7 @@ const OverlayPage = () => {
   const [demoMode, setDemoMode] = useState(import.meta.env.DEV);
   const { connected, mockMode, setMockMode, connect, reconnect, lastError } = useSocket();
   const [showConnectionAlert, setShowConnectionAlert] = useState(false);
+  const [alertDismissed, setAlertDismissed] = useState(false);
   
   // Use our custom hook to manage overlay state
   const {
@@ -78,19 +80,30 @@ const OverlayPage = () => {
     setDemoMode(prev => !prev);
   };
   
-  // Show connection alert when not in demo mode and not connected
+  // Show connection alert when not in demo mode, not connected, and alert not dismissed
   useEffect(() => {
-    if (!demoMode && !connected) {
+    if (!demoMode && !connected && !alertDismissed) {
       setShowConnectionAlert(true);
     } else {
       setShowConnectionAlert(false);
     }
-  }, [demoMode, connected]);
+    
+    // If we reconnect successfully, reset the dismissed state
+    if (connected) {
+      setAlertDismissed(false);
+    }
+  }, [demoMode, connected, alertDismissed]);
   
   // Handle manual reconnection
   const handleReconnect = () => {
     toast.info('Próba ponownego połączenia...');
     reconnect();
+  };
+  
+  // Handle dismissing alert
+  const handleDismissAlert = () => {
+    setAlertDismissed(true);
+    setShowConnectionAlert(false);
   };
   
   return (
@@ -104,14 +117,23 @@ const OverlayPage = () => {
               <span>
                 Problem z połączeniem WebSocket: {lastError || 'Nie można połączyć się z serwerem'}
               </span>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={handleReconnect}
-                className="ml-2 flex items-center gap-1"
-              >
-                <RefreshCw className="h-3 w-3" /> Połącz ponownie
-              </Button>
+              <div className="flex space-x-2">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={handleReconnect}
+                  className="flex items-center gap-1"
+                >
+                  <RefreshCw className="h-3 w-3" /> Połącz ponownie
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleDismissAlert}
+                >
+                  Zamknij
+                </Button>
+              </div>
             </AlertDescription>
           </Alert>
         </div>

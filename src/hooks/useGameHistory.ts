@@ -7,7 +7,7 @@ import { Player, CardType } from '@/types/gameTypes';
 
 const MAX_HISTORY_ACTIONS = 20;
 
-export function useGameHistory() {
+export function useGameHistoryImplementation() {
   const { state, dispatch } = useGame();
   const [actionHistory, setActionHistory] = useState<GameAction[]>([]);
 
@@ -135,4 +135,9 @@ export function useGameHistory() {
     clearHistory,
     hasActions: actionHistory.length > 0
   };
+}
+
+// For backward compatibility
+export function useGameHistory() {
+  return useGameHistoryImplementation();
 }

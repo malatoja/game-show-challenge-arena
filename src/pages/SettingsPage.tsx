@@ -6,7 +6,7 @@ import {
   getAuthSettings
 } from '@/lib/authService';
 
-import { SettingsLayout, SettingsTabs } from '@/components/settings/SettingsLayout';
+import { SettingsLayout } from '@/components/settings/SettingsLayout';
 import { SettingsHeader } from '@/components/settings/SettingsHeader';
 import { PasswordSettings } from '@/components/settings/PasswordSettings';
 import { SettingsAuth } from '@/components/settings/SettingsAuth';
@@ -19,6 +19,8 @@ import { SoundsTab } from '@/components/settings/SoundsTab';
 import { RolesTab } from '@/components/settings/RolesTab';
 import { RankingTab } from '@/components/settings/RankingTab';
 import { AutomationTab } from '@/components/settings/AutomationTab';
+import { LuckyLoserTab } from '@/components/settings/LuckyLoserTab';
+import { CameraConfigTab } from '@/components/settings/CameraConfigTab';
 
 import { TabsContent } from '@/components/ui/tabs';
 
@@ -75,39 +77,26 @@ const SettingsPage = () => {
         />
       )}
 
-      <SettingsTabs activeTab={activeTab} setActiveTab={setActiveTab}>
-        <TabsContent value="players">
-          <PlayersTab />
-        </TabsContent>
-        
-        <TabsContent value="questions">
-          <QuestionsTab />
-        </TabsContent>
-        
-        <TabsContent value="cards">
-          <CardsTab />
-        </TabsContent>
-        
-        <TabsContent value="themes">
-          <ThemesTab />
-        </TabsContent>
-        
-        <TabsContent value="sounds">
-          <SoundsTab />
-        </TabsContent>
-        
-        <TabsContent value="roles">
-          <RolesTab />
-        </TabsContent>
-        
-        <TabsContent value="ranking">
-          <RankingTab />
-        </TabsContent>
-        
-        <TabsContent value="automation">
-          <AutomationTab />
-        </TabsContent>
-      </SettingsTabs>
+      <div className="mt-6">
+        {activeTab === 'players' && <PlayersTab />}
+        {activeTab === 'questions' && <QuestionsTab />}
+        {activeTab === 'cards' && <CardsTab />}
+        {activeTab === 'themes' && <ThemesTab />}
+        {activeTab === 'sounds' && <SoundsTab />}
+        {activeTab === 'roles' && <RolesTab />}
+        {activeTab === 'ranking' && <RankingTab />}
+        {activeTab === 'automation' && <AutomationTab />}
+        {activeTab === 'lucky-loser' && <LuckyLoserTab />}
+        {activeTab === 'cameras' && <CameraConfigTab />}
+        {activeTab === 'password' && (
+          <PasswordSettings
+            hostPassword={hostPassword}
+            settingsPassword={settingsPassword}
+            setHostPassword={setHostPassword}
+            setSettingsPassword={setSettingsPassword}
+          />
+        )}
+      </div>
     </SettingsLayout>
   );
 };

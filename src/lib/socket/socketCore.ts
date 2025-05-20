@@ -13,7 +13,8 @@ class SocketCore {
     reconnectionAttempts: 5,
     reconnectionDelay: 1000,
     autoConnect: false,
-    transports: ['websocket'],
+    transports: ['websocket', 'polling'], // Added polling as fallback
+    timeout: 10000, // 10 seconds timeout
     cors: {
       origin: [
         'http://localhost:3000', 
@@ -53,16 +54,28 @@ class SocketCore {
       return;
     }
     
+    // Disconnect any existing socket
+    if (this.socket && this.socket.connected) {
+      console.log('[Socket] Disconnecting existing socket before initialization');
+      this.socket.disconnect();
+      this.socket = null;
+    }
+    
     this.url = url;
     
     try {
+      console.log(`[Socket] Initializing connection to ${url}`);
       this.socket = io(url, this.socketOptions);
+      
+      // Important: Clear any existing listeners to prevent duplicates
+      if (this.socket) {
+        this.socket.removeAllListeners();
+      }
       
       this.socket.on('connect', () => {
         console.log('[Socket] Connected to server');
         this._connected = true;
         this.notifyListeners('connection:status', { connected: true });
-        toast.success('Połączono z serwerem');
         
         // Log connection information
         console.log('[Socket] Connection established:', {
@@ -71,30 +84,55 @@ class SocketCore {
         });
       });
       
-      this.socket.on('disconnect', () => {
-        console.log('[Socket] Disconnected from server');
+      this.socket.on('disconnect', (reason) => {
+        console.log(`[Socket] Disconnected from server: ${reason}`);
         this._connected = false;
         this.notifyListeners('connection:status', { connected: false });
-        toast.error('Utracono połączenie z serwerem');
+        
+        // Only show toast if it wasn't an intentional disconnect
+        if (reason !== 'io client disconnect') {
+          this.notifyListeners('connection:error', { message: `Rozłączono: ${reason}` });
+        }
       });
       
       this.socket.on('connect_error', (error: Error) => {
         console.error('[Socket] Connection error:', error);
         this._connected = false;
         this.notifyListeners('connection:error', { message: error.message });
-        toast.error(`Błąd połączenia: ${error.message}`);
         
         // Write to error log
         this.logError('connection_error', error);
       });
       
+      this.socket.on('error', (error: Error) => {
+        console.error('[Socket] Socket error:', error);
+        this.notifyListeners('connection:error', { message: error.message });
+        this.logError('socket_error', error);
+      });
+      
+      this.socket.io.on('reconnect_attempt', (attempt) => {
+        console.log(`[Socket] Reconnection attempt ${attempt}`);
+      });
+      
+      this.socket.io.on('reconnect_failed', () => {
+        console.log('[Socket] Failed to reconnect');
+        this.notifyListeners('connection:error', { message: 'Nie udało się ponownie połączyć' });
+      });
+      
+      this.socket.io.on('reconnect', (attempt) => {
+        console.log(`[Socket] Reconnected after ${attempt} attempts`);
+        this._connected = true;
+        this.notifyListeners('connection:status', { connected: true });
+      });
+      
       // Set up Discord Game Show specific event handlers
       this.registerDiscordGameShowEvents();
       
+      console.log('[Socket] Attempting to connect...');
       this.socket.connect();
     } catch (error) {
       console.error('[Socket] Failed to initialize:', error);
-      toast.error('Nie można nawiązać połączenia z serwerem');
+      this.notifyListeners('connection:error', { message: error instanceof Error ? error.message : 'Unknown error' });
       this.logError('initialization_error', error as Error);
     }
   }
@@ -131,6 +169,7 @@ class SocketCore {
     if (!this.socket) {
       if (!this.url) {
         console.error('[Socket] No URL provided for connection');
+        this.notifyListeners('connection:error', { message: 'No URL provided for connection' });
         return;
       }
       this.initialize(this.url);
@@ -138,14 +177,19 @@ class SocketCore {
     }
     
     if (!this.socket.connected) {
+      console.log('[Socket] Attempting to connect to server');
       this.socket.connect();
+    } else {
+      console.log('[Socket] Already connected');
     }
   }
   
   // Disconnect from the server
   public disconnect(): void {
-    if (this.socket && this.socket.connected) {
+    if (this.socket) {
+      console.log('[Socket] Disconnecting from server');
       this.socket.disconnect();
+      this._connected = false;
     }
   }
   
@@ -192,6 +236,7 @@ class SocketCore {
       this.socket.emit(event, data);
     } else {
       console.warn(`[Socket] Cannot emit event ${event}: Socket not connected`);
+      // For specific events, we might want to buffer them and send later when connected
     }
   }
   
@@ -229,6 +274,26 @@ class SocketCore {
     
     // We could send this to a logging endpoint or service
     console.debug('[Socket] Error logged:', errorLog);
+  }
+
+  // Check if socket can connect to a server
+  public checkConnectivity(url: string = this.url): Promise<boolean> {
+    return new Promise((resolve) => {
+      // Use fetch to check if the server is reachable
+      fetch(`${url}/health-check`, { 
+        method: 'GET',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'application/json' },
+      })
+        .then(() => {
+          console.log('[Socket] Server is reachable');
+          resolve(true);
+        })
+        .catch((error) => {
+          console.error('[Socket] Server is not reachable:', error);
+          resolve(false);
+        });
+    });
   }
 
   // Debug methods

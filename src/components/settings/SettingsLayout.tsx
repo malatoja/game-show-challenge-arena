@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { Separator } from '@/components/ui/separator';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { SettingsHeader } from './SettingsHeader';
 import { QuestionsTab } from './QuestionsTab';
 import { RolesTab } from './RolesTab';
@@ -18,9 +18,13 @@ import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 
-export function SettingsLayout() {
-  const [activeTab, setActiveTab] = useState('questions');
+interface SettingsLayoutProps {
+  activeTab: string;
+  setActiveTab: (tab: string) => void;
+  children?: React.ReactNode;
+}
 
+export function SettingsLayout({ activeTab, setActiveTab, children }: SettingsLayoutProps) {
   const handleTabChange = (value: string) => {
     setActiveTab(value);
   };
@@ -35,10 +39,15 @@ export function SettingsLayout() {
           </Link>
         </Button>
 
-        <SettingsHeader />
+        <SettingsHeader 
+          showPasswordSettings={false}
+          setShowPasswordSettings={() => {}}
+          handleLogout={() => {}}
+        />
+        
         <Separator className="my-6" />
 
-        <Tabs defaultValue="questions" onValueChange={handleTabChange} value={activeTab}>
+        <Tabs defaultValue={activeTab} onValueChange={handleTabChange} value={activeTab}>
           <TabsList className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2">
             <TabsTrigger value="questions">Pytania</TabsTrigger>
             <TabsTrigger value="cards">Karty</TabsTrigger>
@@ -54,20 +63,57 @@ export function SettingsLayout() {
           </TabsList>
 
           <div className="mt-6">
-            {activeTab === 'questions' && <QuestionsTab />}
-            {activeTab === 'cards' && <CardsTab />}
-            {activeTab === 'players' && <PlayersTab />}
-            {activeTab === 'ranking' && <RankingTab />}
-            {activeTab === 'lucky-loser' && <LuckyLoserTab />}
-            {activeTab === 'cameras' && <CameraConfigTab />}
-            {activeTab === 'themes' && <ThemesTab />}
-            {activeTab === 'sounds' && <SoundsTab />}
-            {activeTab === 'automation' && <AutomationTab />}
-            {activeTab === 'roles' && <RolesTab />}
-            {activeTab === 'password' && <PasswordSettings />}
+            {children}
+            
+            {!children && (
+              <>
+                {activeTab === 'questions' && <QuestionsTab />}
+                {activeTab === 'cards' && <CardsTab />}
+                {activeTab === 'players' && <PlayersTab />}
+                {activeTab === 'ranking' && <RankingTab />}
+                {activeTab === 'lucky-loser' && <LuckyLoserTab />}
+                {activeTab === 'cameras' && <CameraConfigTab />}
+                {activeTab === 'themes' && <ThemesTab />}
+                {activeTab === 'sounds' && <SoundsTab />}
+                {activeTab === 'automation' && <AutomationTab />}
+                {activeTab === 'roles' && <RolesTab />}
+                {activeTab === 'password' && (
+                  <PasswordSettings 
+                    hostPassword="" 
+                    settingsPassword=""
+                    setHostPassword={() => {}} 
+                    setSettingsPassword={() => {}}
+                  />
+                )}
+              </>
+            )}
           </div>
         </Tabs>
       </div>
     </div>
   );
 }
+
+export const SettingsTabs = ({ children, activeTab, setActiveTab }: {
+  children: React.ReactNode;
+  activeTab: string;
+  setActiveTab: (tab: string) => void;
+}) => {
+  return (
+    <Tabs defaultValue={activeTab} onValueChange={setActiveTab} value={activeTab}>
+      <TabsList className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2">
+        <TabsTrigger value="players">Gracze</TabsTrigger>
+        <TabsTrigger value="questions">Pytania</TabsTrigger>
+        <TabsTrigger value="cards">Karty</TabsTrigger>
+        <TabsTrigger value="themes">Motywy</TabsTrigger>
+        <TabsTrigger value="sounds">Dźwięki</TabsTrigger>
+        <TabsTrigger value="roles">Role</TabsTrigger>
+        <TabsTrigger value="ranking">Ranking</TabsTrigger>
+        <TabsTrigger value="automation">Automatyzacja</TabsTrigger>
+      </TabsList>
+      <div className="mt-6">
+        {children}
+      </div>
+    </Tabs>
+  );
+};

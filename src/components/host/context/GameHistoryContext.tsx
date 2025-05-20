@@ -1,6 +1,6 @@
 
 import React, { createContext, useContext, ReactNode } from 'react';
-import { useGameHistory } from '@/hooks/useGameHistory';
+import { useGameHistoryImplementation } from '@/hooks/useGameHistory';
 import { GameAction, ActionType } from '@/types/historyTypes';
 
 interface GameHistoryContextValue {
@@ -20,7 +20,7 @@ interface GameHistoryContextValue {
 const GameHistoryContext = createContext<GameHistoryContextValue | undefined>(undefined);
 
 export function GameHistoryProvider({ children }: { children: ReactNode }) {
-  const gameHistory = useGameHistory();
+  const gameHistory = useGameHistoryImplementation();
   
   return (
     <GameHistoryContext.Provider value={gameHistory}>

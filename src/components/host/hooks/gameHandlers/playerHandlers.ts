@@ -1,79 +1,131 @@
+import { useCallback } from 'react';
 import { useGame } from '@/context/GameContext';
-import { Player, CardType } from '@/types/gameTypes';
-import { useEvents } from '../../EventsContext';
+import { useGameHistory } from '@/components/host/context/GameHistoryContext';
+import { Player } from '@/types/gameTypes';
+import { toast } from 'sonner';
 import { useSocket } from '@/context/SocketContext';
-import { useState } from 'react';
-import { useGameHistory } from '../../context/GameHistoryContext';
 
-export function usePlayerHandlers() {
+export const usePlayerHandlers = () => {
   const { state, dispatch } = useGame();
-  const { addEvent } = useEvents();
-  const { emit } = useSocket();
   const { addAction } = useGameHistory();
-  const [activePlayerId, setActivePlayerId] = useState<string | null>(null);
+  const { emit } = useSocket();
 
-  const handleSelectPlayer = (player: Player) => {
-    dispatch({ type: 'SET_ACTIVE_PLAYER', playerId: player.id });
-    setActivePlayerId(player.id);
-    addEvent(`Wybrano gracza: ${player.name}`);
+  const handleUpdatePoints = useCallback((playerId: string, points: number) => {
+    const player = state.players.find(p => p.id === playerId);
+    if (!player) return;
+
+    const previousState = { ...player };
+    const updatedPlayer = { ...player, points };
+
+    dispatch({ type: 'UPDATE_PLAYER', player: updatedPlayer });
     
-    // Add to action history
     addAction(
-      'UPDATE_PLAYER',
-      `Wybrano gracza: ${player.name}`,
-      [player.id]
+      'UPDATE_POINTS',
+      `Zmieniono punkty gracza ${player.name} z ${player.points} na ${points}`,
+      [playerId],
+      { oldPoints: player.points, newPoints: points },
+      previousState
     );
-    
-    // Emit the player:active event
-    emit('player:active', { playerId: player.id });
-  };
-  
-  const handleAddPlayer = () => {
-    const playerNumber = state.players.length + 1;
-    const newPlayer: Player = {
-      id: `player-${Date.now()}`,
-      name: `Gracz ${playerNumber}`,
-      lives: 3,
-      points: 0,
-      cards: [],
-      isActive: state.players.length === 0,
-      eliminated: false
-    };
-    
-    dispatch({ type: 'ADD_PLAYER', player: newPlayer });
-    
-    // Emit player update event
-    emit('player:update', { player: newPlayer });
-    
-    addEvent(`Dodano gracza: ${newPlayer.name}`);
-  };
 
-  const handleAddTestCards = (playerId: string) => {
-    // Add one of each card type for testing
-    // Define card types with the correct CardType type
-    const cardTypes: CardType[] = [
-      'dejavu', 'kontra', 'reanimacja', 'skip', 
-      'turbo', 'refleks2', 'refleks3', 'lustro', 'oswiecenie'
-    ];
+    // Emit player update to socket
+    emit('player:update', { player: updatedPlayer });
+  }, [state.players, dispatch, addAction, emit]);
+
+  const handleUpdateLives = useCallback((playerId: string, lives: number) => {
+    const player = state.players.find(p => p.id === playerId);
+    if (!player) return;
+
+    const previousState = { ...player };
+    const updatedPlayer = { ...player, lives };
+
+    dispatch({ type: 'UPDATE_PLAYER', player: updatedPlayer });
     
-    cardTypes.forEach(cardType => {
-      dispatch({ type: 'AWARD_CARD', playerId, cardType });
-    });
+    addAction(
+      'UPDATE_LIVES',
+      `Zmieniono życia gracza ${player.name} z ${player.lives} na ${lives}`,
+      [playerId],
+      { oldLives: player.lives, newLives: lives },
+      previousState
+    );
+
+    // Emit player update to socket
+    emit('player:update', { player: updatedPlayer });
+  }, [state.players, dispatch, addAction, emit]);
+
+  const handleEliminatePlayer = useCallback((playerId: string) => {
+    const player = state.players.find(p => p.id === playerId);
+    if (!player) return;
+
+    const previousState = { ...player };
+    const updatedPlayer = { ...player, isEliminated: true };
+
+    dispatch({ type: 'UPDATE_PLAYER', player: updatedPlayer });
     
-    // Update the player
-    const updatedPlayer = state.players.find(p => p.id === playerId);
-    if (updatedPlayer) {
-      emit('player:update', { player: updatedPlayer });
+    addAction(
+      'ELIMINATE_PLAYER',
+      `Wyeliminowano gracza ${player.name}`,
+      [playerId],
+      { eliminated: true },
+      previousState
+    );
+
+    toast.error(`${player.name} został wyeliminowany!`);
+
+    // Emit player update to socket
+    emit('player:update', { player: updatedPlayer });
+    emit('player:eliminate', { playerId });
+  }, [state.players, dispatch, addAction, emit]);
+
+  const handleRestorePlayer = useCallback((playerId: string) => {
+    const player = state.players.find(p => p.id === playerId);
+    if (!player) return;
+
+    const previousState = { ...player };
+    const updatedPlayer = { ...player, isEliminated: false };
+
+    dispatch({ type: 'UPDATE_PLAYER', player: updatedPlayer });
+    
+    addAction(
+      'RESTORE_PLAYER',
+      `Przywrócono gracza ${player.name} do gry`,
+      [playerId],
+      { eliminated: false },
+      previousState
+    );
+
+    toast.success(`${player.name} został przywrócony do gry!`);
+
+    // Emit player update to socket
+    emit('player:update', { player: updatedPlayer });
+  }, [state.players, dispatch, addAction, emit]);
+
+  const handleSetActivePlayer = useCallback((playerId: string) => {
+    dispatch({ type: 'SET_ACTIVE_PLAYER', playerId });
+    
+    const player = state.players.find(p => p.id === playerId);
+    if (player) {
+      toast.info(`Aktywny gracz: ${player.name}`);
     }
+
+    // Emit active player to socket
+    emit('player:active', { playerId });
+    emit('overlay:update', { activePlayerId: playerId });
+  }, [state.players, dispatch, emit]);
+
+  const handleResetPlayers = useCallback(() => {
+    dispatch({ type: 'RESET_PLAYERS' });
+    toast.success('Zresetowano stan graczy');
     
-    addEvent(`Dodano testowe karty dla gracza`);
-  };
+    // Emit player reset to socket
+    emit('player:reset', {});
+  }, [dispatch, emit]);
 
   return {
-    activePlayerId,
-    setActivePlayerId,
-    handleSelectPlayer,
-    handleAddPlayer,
-    handleAddTestCards
+    handleUpdatePoints,
+    handleUpdateLives,
+    handleEliminatePlayer,
+    handleRestorePlayer,
+    handleSetActivePlayer,
+    handleResetPlayers
   };
-}
+};
