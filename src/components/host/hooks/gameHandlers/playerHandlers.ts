@@ -1,20 +1,28 @@
-
 import { useGame } from '@/context/GameContext';
 import { Player, CardType } from '@/types/gameTypes';
 import { useEvents } from '../../EventsContext';
 import { useSocket } from '@/context/SocketContext';
 import { useState } from 'react';
+import { useGameHistory } from '../../context/GameHistoryContext';
 
 export function usePlayerHandlers() {
   const { state, dispatch } = useGame();
   const { addEvent } = useEvents();
   const { emit } = useSocket();
+  const { addAction } = useGameHistory();
   const [activePlayerId, setActivePlayerId] = useState<string | null>(null);
 
   const handleSelectPlayer = (player: Player) => {
     dispatch({ type: 'SET_ACTIVE_PLAYER', playerId: player.id });
     setActivePlayerId(player.id);
     addEvent(`Wybrano gracza: ${player.name}`);
+    
+    // Add to action history
+    addAction(
+      'UPDATE_PLAYER',
+      `Wybrano gracza: ${player.name}`,
+      [player.id]
+    );
     
     // Emit the player:active event
     emit('player:active', { playerId: player.id });

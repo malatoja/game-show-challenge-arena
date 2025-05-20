@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { GameOverlay } from '@/components/overlay/GameOverlay';
 import { useSocket } from '@/context/SocketContext';
@@ -34,6 +33,8 @@ const OverlayPage = () => {
     difficulties,
     selectedCategory,
     selectedDifficulty,
+    hostCameraUrl,
+    showHostCamera,
     setCurrentTime,
     setTimerPulsing,
     setPlayers,
@@ -42,7 +43,8 @@ const OverlayPage = () => {
     setShowCategoryTable,
     setQuestion,
     setSelectedCategory,
-    setSelectedDifficulty
+    setSelectedDifficulty,
+    setShowHostCamera
   } = useOverlayState(demoMode);
   
   // Initialize socket connection based on demo mode
@@ -137,6 +139,8 @@ const OverlayPage = () => {
         selectedCategory={selectedCategory}
         selectedDifficulty={selectedDifficulty}
         timerPulsing={timerPulsing}
+        hostCameraUrl={hostCameraUrl}
+        showHostCamera={showHostCamera}
       />
       
       {/* Debug controls - only visible during development */}

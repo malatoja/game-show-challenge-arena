@@ -7,6 +7,7 @@ import GameLayout from './GameLayout';
 import GameResultsWrapper from './components/GameResultsWrapper';
 import { useGameControlProvider } from './hooks/useGameControlProvider';
 import { GameControlProvider } from './context/GameControlContext';
+import { GameHistoryProvider } from './context/GameHistoryContext';
 
 interface GameControllerProps {
   children?: React.ReactNode;
@@ -33,7 +34,9 @@ export function GameController({ children }: GameControllerProps) {
   // Provide game control context to all components below
   return (
     <GameControlProvider value={gameControl}>
-      <GameLayout />
+      <GameHistoryProvider>
+        <GameLayout />
+      </GameHistoryProvider>
     </GameControlProvider>
   );
 }

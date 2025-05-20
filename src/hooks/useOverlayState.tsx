@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Player, CardType } from '@/types/gameTypes';
 import { useSocket } from '@/context/SocketContext';
@@ -53,6 +52,9 @@ export const useOverlayState = (demoMode: boolean) => {
   const [selectedCategory, setSelectedCategory] = useState("");
   const [selectedDifficulty, setSelectedDifficulty] = useState(0);
   
+  const [hostCameraUrl, setHostCameraUrl] = useState(localStorage.getItem('hostCameraUrl') || '');
+  const [showHostCamera, setShowHostCamera] = useState(localStorage.getItem('hostCameraActive') === 'true');
+  
   const { on } = useSocket();
   
   useEffect(() => {
@@ -95,6 +97,14 @@ export const useOverlayState = (demoMode: boolean) => {
         setShowHint(true);
         playSound('hint' as SoundType);
         toast.info("Wskazówka dostępna!");
+      }
+      
+      // Update camera settings if provided
+      if (data.hostCamera !== undefined) {
+        setShowHostCamera(data.hostCamera.active);
+        if (data.hostCamera.url) {
+          setHostCameraUrl(data.hostCamera.url);
+        }
       }
     });
 
@@ -151,6 +161,10 @@ export const useOverlayState = (demoMode: boolean) => {
     setHint,
     setShowHint,
     setSelectedCategory,
-    setSelectedDifficulty
+    setSelectedDifficulty,
+    hostCameraUrl,
+    showHostCamera,
+    setHostCameraUrl,
+    setShowHostCamera
   };
 };

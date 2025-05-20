@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { Player } from '@/types/gameTypes';
 import { Timer } from './Timer';
@@ -22,6 +21,8 @@ interface GameOverlayProps {
   selectedCategory?: string;
   selectedDifficulty?: number;
   timerPulsing?: boolean;
+  hostCameraUrl?: string;
+  showHostCamera?: boolean;
 }
 
 export const GameOverlay: React.FC<GameOverlayProps> = ({
@@ -38,6 +39,8 @@ export const GameOverlay: React.FC<GameOverlayProps> = ({
   selectedCategory = "",
   selectedDifficulty = 0,
   timerPulsing = false,
+  hostCameraUrl = "",
+  showHostCamera = false,
 }) => {
   const [time, setTime] = useState(currentTime);
   
@@ -48,6 +51,32 @@ export const GameOverlay: React.FC<GameOverlayProps> = ({
   useEffect(() => {
     setTime(currentTime);
   }, [currentTime]);
+
+  // Check for host camera settings from localStorage
+  useEffect(() => {
+    const storedHostCamera = localStorage.getItem('hostCameraUrl');
+    const storedHostCameraActive = localStorage.getItem('hostCameraActive');
+    
+    if (storedHostCamera && storedHostCameraActive === 'true') {
+      // Set host camera URL and activate it in the overlay
+      // (This would be implemented in the actual render components)
+    }
+  }, []);
+
+  // Check for player camera settings from localStorage
+  useEffect(() => {
+    const storedPlayerCameras = localStorage.getItem('playerCameras');
+    
+    if (storedPlayerCameras) {
+      try {
+        const camerasConfig = JSON.parse(storedPlayerCameras);
+        // Here you would update the player camera sources
+        // This would integrate with the PlayerCamera component
+      } catch (error) {
+        console.error('Error parsing player cameras:', error);
+      }
+    }
+  }, []);
 
   return (
     <div className="game-overlay">
@@ -65,6 +94,18 @@ export const GameOverlay: React.FC<GameOverlayProps> = ({
         maxTime={maxTime} 
         isPulsing={timerPulsing}
       />
+      
+      {/* Host Camera (if active) */}
+      {showHostCamera && hostCameraUrl && (
+        <div className="host-camera">
+          <iframe 
+            src={hostCameraUrl}
+            title="Host Camera"
+            className="host-camera-frame"
+            allow="camera; microphone; fullscreen; display-capture; autoplay"
+          />
+        </div>
+      )}
       
       {/* Top Row Players */}
       <div className="player-row top-row">

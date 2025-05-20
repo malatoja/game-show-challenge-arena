@@ -1,15 +1,16 @@
-
 import { useState } from 'react';
 import { useGame } from '@/context/GameContext';
 import { Question } from '@/types/gameTypes';
 import { useEvents } from '../../EventsContext';
 import { useSocket } from '@/context/SocketContext';
 import { toast } from 'sonner';
+import { useGameHistory } from '../../context/GameHistoryContext';
 
 export function useQuestionHandlers() {
   const { state, dispatch } = useGame();
   const { addEvent } = useEvents();
   const { emit } = useSocket();
+  const { addAction } = useGameHistory();
   
   const [lastAnswerWasIncorrect, setLastAnswerWasIncorrect] = useState<boolean>(false);
   const [questionTransferTarget, setQuestionTransferTarget] = useState<string | null>(null);
@@ -29,7 +30,19 @@ export function useQuestionHandlers() {
     if (activePlayerId) {
       const activePlayer = state.players.find(p => p.id === activePlayerId);
       if (activePlayer) {
+        // Save previous player state for undo
+        const previousPlayerState = {...activePlayer};
+        
         dispatch({ type: 'ANSWER_QUESTION', playerId: activePlayer.id, isCorrect });
+        
+        // Add to action history
+        addAction(
+          'ANSWER_QUESTION',
+          `${activePlayer.name} odpowiedział ${isCorrect ? 'poprawnie' : 'niepoprawnie'}`,
+          [activePlayer.id],
+          { isCorrect, answerIndex },
+          previousPlayerState
+        );
         
         // Update the last answer state
         setLastAnswerWasIncorrect(!isCorrect);
