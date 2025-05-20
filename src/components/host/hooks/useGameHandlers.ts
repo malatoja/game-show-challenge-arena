@@ -40,6 +40,10 @@ export function useGameHandlers() {
     handleSelectPlayer: playerHandlers.handleSelectPlayer,
     handleAddPlayer: playerHandlers.handleAddPlayer,
     handleAddTestCards: playerHandlers.handleAddTestCards,
+    handleUpdatePoints: playerHandlers.handleUpdatePoints,
+    handleUpdateLives: playerHandlers.handleUpdateLives,
+    handleEliminatePlayer: playerHandlers.handleEliminatePlayer,
+    handleRestorePlayer: playerHandlers.handleRestorePlayer,
     
     // Round handlers
     showResults: roundHandlers.showResults,

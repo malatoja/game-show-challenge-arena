@@ -1,4 +1,5 @@
-import { useCallback } from 'react';
+
+import { useCallback, useState } from 'react';
 import { useGame } from '@/context/GameContext';
 import { useGameHistory } from '@/components/host/context/GameHistoryContext';
 import { Player } from '@/types/gameTypes';
@@ -9,6 +10,7 @@ export const usePlayerHandlers = () => {
   const { state, dispatch } = useGame();
   const { addAction } = useGameHistory();
   const { emit } = useSocket();
+  const [activePlayerId, setActivePlayerId] = useState<string | null>(null);
 
   const handleUpdatePoints = useCallback((playerId: string, points: number) => {
     const player = state.players.find(p => p.id === playerId);
@@ -51,6 +53,11 @@ export const usePlayerHandlers = () => {
     // Emit player update to socket
     emit('player:update', { player: updatedPlayer });
   }, [state.players, dispatch, addAction, emit]);
+
+  const handleSelectPlayer = useCallback((playerId: string) => {
+    setActivePlayerId(playerId);
+    handleSetActivePlayer(playerId);
+  }, []);
 
   const handleEliminatePlayer = useCallback((playerId: string) => {
     const player = state.players.find(p => p.id === playerId);
@@ -113,19 +120,49 @@ export const usePlayerHandlers = () => {
   }, [state.players, dispatch, emit]);
 
   const handleResetPlayers = useCallback(() => {
-    dispatch({ type: 'RESET_PLAYERS' });
+    dispatch({ type: 'RESTART_GAME' });
+    
+    addAction(
+      'RESET_PLAYERS',
+      'Zresetowano stan graczy',
+      [],
+      {},
+      { players: [...state.players] }
+    );
+    
     toast.success('Zresetowano stan graczy');
     
     // Emit player reset to socket
     emit('player:reset', {});
+  }, [dispatch, addAction, state.players, emit]);
+
+  const handleAddPlayer = useCallback((player: Player) => {
+    dispatch({ type: 'ADD_PLAYER', player });
+    toast.success(`Dodano gracza: ${player.name}`);
+    
+    // Emit player update to socket
+    emit('player:update', { player });
   }, [dispatch, emit]);
 
+  const handleAddTestCards = useCallback((playerId: string) => {
+    const player = state.players.find(p => p.id === playerId);
+    if (!player) return;
+
+    // This is a mock function that would add test cards to a player
+    // Implement the actual logic based on your requirements
+    toast.info(`Dodano testowe karty dla gracza ${player.name}`);
+  }, [state.players]);
+
   return {
+    activePlayerId,
+    handleSelectPlayer,
     handleUpdatePoints,
     handleUpdateLives,
     handleEliminatePlayer,
     handleRestorePlayer,
     handleSetActivePlayer,
-    handleResetPlayers
+    handleResetPlayers,
+    handleAddPlayer,
+    handleAddTestCards
   };
 };

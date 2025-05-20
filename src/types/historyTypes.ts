@@ -8,7 +8,8 @@ export type ActionType =
   | 'ELIMINATE_PLAYER'
   | 'RESTORE_PLAYER'
   | 'UPDATE_POINTS'
-  | 'UPDATE_LIVES';
+  | 'UPDATE_LIVES'
+  | 'RESET_PLAYERS';
 
 export interface GameAction {
   id: string;
