@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -18,12 +17,26 @@ import {
   Tv,
   Settings
 } from 'lucide-react';
+import { SoundType } from '@/lib/soundService';
+import { Question } from '@/types/gameTypes';
 
 interface CameraConfig {
   url: string;
   active: boolean;
   playerName?: string;
   playerId?: string;
+}
+
+interface OverlayData {
+  question?: Question;
+  activePlayerId?: string;
+  category?: string;
+  difficulty?: number;
+  timeRemaining?: number;
+  showHint?: boolean;
+  hostCamera?: CameraConfig;
+  playerCameras?: CameraConfig[];
+  animateTimer?: boolean;
 }
 
 export default function CameraOverlayTab() {
@@ -77,7 +90,7 @@ export default function CameraOverlayTab() {
     localStorage.setItem('hostCameraActive', hostCamera.active.toString());
     
     // Send to overlay via socket
-    emit('overlay:update', { hostCamera });
+    emit('overlay:update', { hostCamera } as OverlayData);
     
     toast.success("Zaktualizowano kamerę hosta");
   };
@@ -91,7 +104,7 @@ export default function CameraOverlayTab() {
     localStorage.setItem('playerCameras', JSON.stringify(newCameras));
     
     // Send to overlay via socket
-    emit('overlay:update', { playerCameras: newCameras });
+    emit('overlay:update', { playerCameras: newCameras } as OverlayData);
   };
   
   // Connect to OBS
@@ -112,6 +125,21 @@ export default function CameraOverlayTab() {
     toast.info("Rozłączono z OBS WebSocket");
     
     // In a real implementation, this would close the WebSocket connection to OBS
+  };
+
+  // Fix confetti emit call
+  const handleTestConfetti = () => {
+    emit('overlay:confetti', { playerId: 'test' });  // Add required playerId
+  };
+
+  // Fix timer animation emit call
+  const handleTestTimerAnimation = () => {
+    emit('overlay:update', { animateTimer: true } as OverlayData);
+  };
+
+  // Fix sound emit call
+  const handleTestSound = () => {
+    emit('overlay:sound', { type: 'correct' as SoundType });
   };
 
   return (
@@ -391,13 +419,13 @@ export default function CameraOverlayTab() {
           
           <div className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <Button onClick={() => emit('overlay:confetti', {})}>
+              <Button onClick={handleTestConfetti}>
                 Test konfetti
               </Button>
-              <Button onClick={() => emit('overlay:update', { animateTimer: true })}>
+              <Button onClick={handleTestTimerAnimation}>
                 Test animacji timera
               </Button>
-              <Button onClick={() => emit('overlay:sound', { type: 'correct' })}>
+              <Button onClick={handleTestSound}>
                 Test dźwięku poprawnej odpowiedzi
               </Button>
             </div>

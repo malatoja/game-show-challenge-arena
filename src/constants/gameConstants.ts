@@ -93,3 +93,54 @@ export const ROUND_OPTIONS = [
   { value: 'standard', label: 'Standardowa (poza rundami)' },
   { value: 'all', label: 'Wszystkie rundy' }
 ];
+
+// Initial lives for players
+export const INITIAL_LIVES = 3;
+
+// Categories for the wheel round
+export const WHEEL_CATEGORIES = [
+  'Historia',
+  'Geografia',
+  'Sport',
+  'Film',
+  'Muzyka',
+  'Literatura',
+  'Nauka',
+  'Technologia',
+  'Popkultura',
+  'Motoryzacja',
+  'Gry i zabawy',
+  'Jedzenie i napoje'
+];
+
+// Sample questions for testing
+export const SAMPLE_QUESTIONS = [
+  {
+    id: '1',
+    text: 'Jaki kraj ma największą powierzchnię na świecie?',
+    category: 'Geografia',
+    answers: [
+      { text: 'Rosja', isCorrect: true },
+      { text: 'Kanada', isCorrect: false },
+      { text: 'Chiny', isCorrect: false },
+      { text: 'USA', isCorrect: false }
+    ],
+    correctAnswerIndex: 0,
+    round: 'all',
+    hint: 'To kraj znajdujący się na dwóch kontynentach.'
+  },
+  {
+    id: '2',
+    text: 'Kto jest autorem "Pana Tadeusza"?',
+    category: 'Literatura',
+    answers: [
+      { text: 'Juliusz Słowacki', isCorrect: false },
+      { text: 'Adam Mickiewicz', isCorrect: true },
+      { text: 'Henryk Sienkiewicz', isCorrect: false },
+      { text: 'Bolesław Prus', isCorrect: false }
+    ],
+    correctAnswerIndex: 1,
+    round: 'all',
+    hint: 'To poeta epoki romantyzmu.'
+  }
+];

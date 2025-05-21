@@ -30,7 +30,7 @@ export default function QuickResponseTab() {
   // Set quick response timer to 5 seconds
   const startQuickTimer = () => {
     resetTimer();
-    startTimer(5);
+    startTimer(5);  // Pass the argument 5 seconds
     toast.info("Rozpoczęto odliczanie 5 sekund!");
   };
   

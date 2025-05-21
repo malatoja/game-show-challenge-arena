@@ -1,88 +1,43 @@
-
-// Define socket event types
+// Define event types for the socket
 export type SocketEvent = 
-  // Game state events
-  | 'round:start'
-  | 'round:end' 
-  | 'question:show'
-  | 'question:answer'
-  | 'player:eliminate'
-  // Card events
-  | 'card:use'
-  | 'card:resolve'
-  | 'card:activate'
-  // Player events
-  | 'player:update'
-  | 'player:active'
-  | 'player:reset'
-  | 'players:update'
-  // Question events
-  | 'questions:filter'
-  | 'questions:update'
-  // Overlay events
-  | 'overlay:update'
+  | 'player:connected'
+  | 'player:disconnected'
+  | 'player:ready'
+  | 'player:answer'
+  | 'player:card'
+  | 'admin:start'
+  | 'admin:question'
+  | 'admin:round'
+  | 'admin:correct'
+  | 'admin:incorrect'
+  | 'admin:reset'
+  | 'admin:points'
+  | 'admin:timer'
   | 'overlay:confetti'
-  // Connection events
-  | 'connection:status'
-  | 'connection:error'
-  // Discord Game Show specific events
-  | 'updatePlayer'
-  | 'questionUpdate'
-  | 'cardUsed'
-  | 'elimination'
-  | 'victory';
+  | 'overlay:update'
+  | 'overlay:sound'  // Add the overlay:sound event
+  | 'game:state';
 
 // Define payload types for each event
 export interface SocketPayloads {
-  'round:start': { roundType: import('@/types/gameTypes').RoundType, roundName: string };
-  'round:end': { roundType: import('@/types/gameTypes').RoundType };
-  'question:show': { question: import('@/types/gameTypes').Question };
-  'question:answer': { playerId: string, correct: boolean, answerIndex: number };
-  'player:eliminate': { playerId: string };
-  'card:use': { playerId: string, cardType: import('@/types/gameTypes').CardType };
-  'card:resolve': { playerId: string, cardType: import('@/types/gameTypes').CardType, success: boolean };
-  'card:activate': { cardType: import('@/types/gameTypes').CardType, playerName: string };
-  'player:update': { player: import('@/types/gameTypes').Player };
-  'player:active': { playerId: string };
-  'player:reset': {};
-  'players:update': { players: import('@/types/gameTypes').Player[] };
-  'questions:filter': {
-    round?: import('@/types/gameTypes').RoundType,
-    category?: string,
-    difficulty?: string
-  };
-  'questions:update': { 
-    questions: import('@/types/gameTypes').Question[] 
-  };
-  'overlay:update': { 
-    question?: import('@/types/gameTypes').Question, 
-    activePlayerId?: string, 
-    category?: string, 
-    difficulty?: number,
-    timeRemaining?: number,
-    showHint?: boolean
-  };
+  'player:connected': { playerId: string; name: string };
+  'player:disconnected': { playerId: string };
+  'player:ready': { playerId: string };
+  'player:answer': { playerId: string; answerId: number };
+  'player:card': { playerId: string; cardType: string };
+  'admin:start': { roundType: string };
+  'admin:question': { questionId: string };
+  'admin:round': { roundType: string };
+  'admin:correct': { playerId: string };
+  'admin:incorrect': { playerId: string };
+  'admin:reset': {};
+  'admin:points': { playerId: string; points: number };
+  'admin:timer': { seconds: number };
   'overlay:confetti': { playerId: string };
-  'connection:status': { connected: boolean };
-  'connection:error': { message: string };
-  // Discord Game Show specific payloads
-  'updatePlayer': { player: import('@/types/gameTypes').Player };
-  'questionUpdate': { question: import('@/types/gameTypes').Question };
-  'cardUsed': { playerId: string, cardType: import('@/types/gameTypes').CardType, success?: boolean };
-  'elimination': { playerId: string };
-  'victory': { playerId: string, points: number };
+  'overlay:update': Record<string, any>;
+  'overlay:sound': { type: string };
+  'game:state': Record<string, any>;
 }
 
-// Socket connection options type
-export interface SocketOptions {
-  reconnectionAttempts: number;
-  reconnectionDelay: number;
-  autoConnect: boolean;
-  transports: string[];
-  cors?: {
-    origin: string | string[];
-    methods?: string[];
-    allowedHeaders?: string[];
-    credentials?: boolean;
-  };
-}
+// Helper type to extract payload type for a specific event
+export type PayloadFor<E extends SocketEvent> = SocketPayloads[E];

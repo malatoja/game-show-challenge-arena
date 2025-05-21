@@ -1,6 +1,18 @@
 
 // Sound file paths
-type SoundType = 'card-use' | 'correct-answer' | 'wrong-answer' | 'hint' | 'timeout' | 'round-end' | 'reward';
+export type SoundType = 
+  | 'card-use' 
+  | 'correct-answer' 
+  | 'wrong-answer' 
+  | 'hint' 
+  | 'timeout' 
+  | 'round-end' 
+  | 'reward'
+  | 'round-start'
+  | 'wheel-spin'
+  | 'countdown'
+  | 'buzzer'
+  | 'correct';
 
 // Sound configuration
 const SOUND_PATHS: Record<SoundType, string> = {
@@ -10,7 +22,12 @@ const SOUND_PATHS: Record<SoundType, string> = {
   'hint': '/sounds/hint.mp3',
   'timeout': '/sounds/timeout.mp3',
   'round-end': '/sounds/round-end.mp3',
-  'reward': '/sounds/reward.mp3'
+  'reward': '/sounds/reward.mp3',
+  'round-start': '/sounds/round-start.mp3',
+  'wheel-spin': '/sounds/wheel-spin.mp3',
+  'countdown': '/sounds/countdown.mp3',
+  'buzzer': '/sounds/buzzer.mp3',
+  'correct': '/sounds/correct.mp3'  // Alias for correct-answer
 };
 
 // Volume settings
@@ -21,7 +38,12 @@ const VOLUME_SETTINGS: Record<SoundType, number> = {
   'hint': 0.4,
   'timeout': 0.5,
   'round-end': 0.6,
-  'reward': 0.7
+  'reward': 0.7,
+  'round-start': 0.6,
+  'wheel-spin': 0.5,
+  'countdown': 0.5,
+  'buzzer': 0.4,
+  'correct': 0.5  // Alias for correct-answer
 };
 
 // Current sound settings
@@ -136,4 +158,15 @@ export const cleanupSounds = (): void => {
   Object.keys(audioCache).forEach(key => {
     delete audioCache[key as SoundType];
   });
+};
+
+// Export the sound service object for components that need full service access
+export const soundService = {
+  play: playSound,
+  setEnabled: setSoundEnabled,
+  isEnabled: isSoundEnabled,
+  setVolume: setMasterVolume,
+  getVolume: getMasterVolume,
+  preload: preloadSounds,
+  cleanup: cleanupSounds
 };

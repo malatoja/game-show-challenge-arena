@@ -1,135 +1,80 @@
 
-import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
-import { RoundType } from '@/types/gameTypes';
+import React, { createContext, useContext, useState } from 'react';
 
-interface TimerContextType {
-  timerValue: number | undefined;
-  isPaused: boolean;
-  setTimerForRound: (roundType: RoundType) => void;
-  startTimer: () => void;
-  pauseTimer: () => void;
+// Update the TimerContextType interface to include missing properties
+export interface TimerContextType {
+  timerValue: number;
+  startTimer: (seconds?: number) => void;
   resetTimer: () => void;
-  extendTimer: (seconds: number) => void;
-  isTimeWarning: boolean;
+  stopTimer: () => void;
+  isTimerRunning: boolean;
 }
 
-const TimerContext = createContext<TimerContextType | undefined>(undefined);
+const TimerContext = createContext<TimerContextType>({
+  timerValue: 0,
+  startTimer: () => {},
+  resetTimer: () => {},
+  stopTimer: () => {},
+  isTimerRunning: false
+});
 
-export const useTimer = (): TimerContextType => {
-  const context = useContext(TimerContext);
-  if (context === undefined) {
-    throw new Error('useTimer must be used within a TimerProvider');
-  }
-  return context;
-};
+export function TimerProvider({ children }: { children: React.ReactNode }) {
+  const [timerValue, setTimerValue] = useState(30);
+  const [intervalId, setIntervalId] = useState<NodeJS.Timeout | null>(null);
+  const [isTimerRunning, setIsTimerRunning] = useState(false);
 
-interface TimerProviderProps {
-  children: ReactNode;
-}
+  const startTimer = (seconds = 30) => {
+    // Clear existing timer if any
+    if (intervalId) {
+      clearInterval(intervalId);
+    }
 
-export const TimerProvider: React.FC<TimerProviderProps> = ({ children }) => {
-  const [timerValue, setTimerValue] = useState<number | undefined>(undefined);
-  const [isPaused, setIsPaused] = useState(true);
-  const [intervalId, setIntervalId] = useState<number | null>(null);
-  const [isTimeWarning, setIsTimeWarning] = useState(false);
+    setTimerValue(seconds);
+    setIsTimerRunning(true);
 
-  const clearTimerInterval = useCallback(() => {
+    const id = setInterval(() => {
+      setTimerValue((prev) => {
+        if (prev <= 1) {
+          clearInterval(id);
+          setIntervalId(null);
+          setIsTimerRunning(false);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    setIntervalId(id);
+  };
+
+  const stopTimer = () => {
     if (intervalId) {
       clearInterval(intervalId);
       setIntervalId(null);
     }
-  }, [intervalId]);
-
-  // Set up timer based on round type
-  const setTimerForRound = useCallback((roundType: RoundType) => {
-    clearTimerInterval();
-    
-    switch (roundType) {
-      case 'standard':
-        setTimerValue(30); // 30 seconds for regular questions
-        break;
-      case 'speed':
-        setTimerValue(5); // 5 seconds for speed round
-        break;
-      case 'wheel':
-        setTimerValue(30); // 30 seconds for wheel round
-        break;
-      default:
-        setTimerValue(30);
-    }
-    
-    setIsPaused(true);
-  }, [clearTimerInterval]);
-
-  // Start the timer
-  const startTimer = useCallback(() => {
-    if (isPaused) {
-      setIsPaused(false);
-      
-      const id = window.setInterval(() => {
-        setTimerValue((prev) => {
-          if (prev === undefined) return undefined;
-          if (prev <= 0) {
-            clearTimerInterval();
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
-      
-      setIntervalId(id);
-    }
-  }, [isPaused, clearTimerInterval]);
-
-  // Pause the timer
-  const pauseTimer = useCallback(() => {
-    setIsPaused(true);
-    clearTimerInterval();
-  }, [clearTimerInterval]);
-
-  // Reset the timer
-  const resetTimer = useCallback(() => {
-    setIsPaused(true);
-    clearTimerInterval();
-    setTimerValue(undefined);
-  }, [clearTimerInterval]);
-
-  // Extend the timer (useful for card effects)
-  const extendTimer = useCallback((seconds: number) => {
-    setTimerValue((prev) => {
-      if (prev === undefined) return undefined;
-      return prev + seconds;
-    });
-  }, []);
-
-  // Cleanup interval on unmount
-  useEffect(() => {
-    return () => {
-      if (intervalId) {
-        clearInterval(intervalId);
-      }
-    };
-  }, [intervalId]);
-
-  // Set warning state when timer < 5 seconds
-  useEffect(() => {
-    if (timerValue !== undefined && timerValue <= 5 && timerValue > 0) {
-      setIsTimeWarning(true);
-    } else {
-      setIsTimeWarning(false);
-    }
-  }, [timerValue]);
-
-  const value: TimerContextType = {
-    timerValue,
-    isPaused,
-    setTimerForRound,
-    startTimer,
-    pauseTimer,
-    resetTimer,
-    extendTimer,
-    isTimeWarning
+    setIsTimerRunning(false);
   };
 
-  return <TimerContext.Provider value={value}>{children}</TimerContext.Provider>;
-};
+  const resetTimer = () => {
+    stopTimer();
+    setTimerValue(30);
+  };
+
+  return (
+    <TimerContext.Provider
+      value={{
+        timerValue,
+        startTimer,
+        resetTimer,
+        stopTimer,
+        isTimerRunning
+      }}
+    >
+      {children}
+    </TimerContext.Provider>
+  );
+}
+
+export function useTimer() {
+  return useContext(TimerContext);
+}
