@@ -1,180 +1,167 @@
 
-import { GameState, PlayerId } from '../../types/gameTypes';
+import { GameState, Player } from '@/types/gameTypes';
 import { toast } from 'sonner';
-import { checkForReward } from '../../lib/cardRewardsManager';
-import { createCard } from '../../constants/gameConstants';
-import { playSound } from '../../lib/soundService';
+import { checkForReward, RewardCondition } from '@/lib/cardRewardsManager';
 
+// Handle answering a question
 export const handleAnswerQuestion = (
   state: GameState,
-  playerId: PlayerId,
+  playerId: string,
   isCorrect: boolean
 ): GameState => {
-  const playerIndex = state.players.findIndex((p) => p.id === playerId);
-  if (playerIndex === -1) return state;
-
-  try {
-    // Create a copy of the players array
-    const updatedPlayers = [...state.players];
-    const updatedPlayer = { ...updatedPlayers[playerIndex] };
-
-    // Calculate points based on the current round
-    let pointsToAdd = 0;
-    let livesToDeduct = 0;
-
-    // Check for card effects that might modify points or lives
-    const hasReanimationCard = updatedPlayer.cards.some(
-      (card) => card.type === 'reanimacja' && !card.isUsed
-    );
-    const hasTurboCard = updatedPlayer.cards.some(
-      (card) => card.type === 'turbo' && !card.isUsed
-    );
-
-    if (isCorrect) {
-      // For correct answers - add points
-      switch (state.currentRound) {
-        case 'knowledge':
-          pointsToAdd = 10;
-          break;
-        case 'speed':
-          pointsToAdd = 20;
-          break;
-        case 'wheel':
-          pointsToAdd = 30;
-          break;
-        default:
-          pointsToAdd = 10;
-      }
-
-      // Apply turbo card effect for double points
-      if (hasTurboCard) {
-        pointsToAdd *= 2;
-      }
-
-      // Update consecutive correct answers count
-      updatedPlayer.consecutiveCorrect = (updatedPlayer.consecutiveCorrect || 0) + 1;
-
-      // Check for reward eligibility
-      const reward = checkForReward(updatedPlayer, 'consecutiveCorrect');
-      if (reward) {
-        const newCard = createCard(reward.cardType);
-        updatedPlayer.cards = [...updatedPlayer.cards, newCard];
-        toast.success(`${updatedPlayer.name} otrzymuje kartę ${newCard.name} ${reward.message}`);
-        playSound('reward');
-      }
-
-      // Update player's points and state
-      updatedPlayer.points += pointsToAdd;
-      toast.success(`${updatedPlayer.name} odpowiedział poprawnie! +${pointsToAdd} punktów`);
-    } else {
-      // For incorrect answers - deduct lives in speed round
-      if (state.currentRound === 'speed') {
-        livesToDeduct = 1;
-
-        // Check for reanimation card to prevent life loss
-        if (hasReanimationCard) {
-          // Find the reanimation card and mark it as used
-          const reanimationCardIndex = updatedPlayer.cards.findIndex(
-            (card) => card.type === 'reanimacja' && !card.isUsed
-          );
-          if (reanimationCardIndex >= 0) {
-            updatedPlayer.cards = updatedPlayer.cards.map((card, index) => {
-              if (index === reanimationCardIndex) {
-                return { ...card, isUsed: true };
-              }
-              return card;
-            });
-            livesToDeduct = 0;
-            toast.info(`${updatedPlayer.name} użył karty Reanimacja! Życie zostało zachowane.`);
-          }
-        }
-
-        // Apply life deduction if needed
-        if (livesToDeduct > 0) {
-          updatedPlayer.lives = Math.max(0, updatedPlayer.lives - livesToDeduct);
-          if (updatedPlayer.lives === 0) {
-            updatedPlayer.eliminated = true;
-            toast.error(`${updatedPlayer.name} został wyeliminowany!`);
-          } else {
-            toast.error(`${updatedPlayer.name} odpowiedział niepoprawnie! Utrata życia.`);
-          }
-        }
-      } else {
-        toast.error(`${updatedPlayer.name} odpowiedział niepoprawnie!`);
-      }
-
-      // Reset consecutive correct counter
-      updatedPlayer.consecutiveCorrect = 0;
-    }
-
-    // Update the player in the players array
-    updatedPlayers[playerIndex] = updatedPlayer;
-
-    // Check if this was the last player for this round and all have answered
-    const allAnswered = state.currentRound === 'knowledge' && 
-                        updatedPlayers.every(p => p.eliminated || p.consecutiveCorrect !== undefined);
-    
-    if (allAnswered) {
-      // Check for top scorer reward
-      const maxPoints = Math.max(...updatedPlayers.map(p => p.points));
-      const topScorers = updatedPlayers.filter(p => p.points === maxPoints && !p.eliminated);
-      
-      // Award a card to the top scorer(s)
-      topScorers.forEach(scorer => {
-        const reward = checkForReward(scorer, 'topScore', { 
-          round: state.currentRound, 
-          players: updatedPlayers 
-        });
-        
-        if (reward) {
-          const playerIndex = updatedPlayers.findIndex(p => p.id === scorer.id);
-          if (playerIndex >= 0) {
-            const newCard = createCard(reward.cardType);
-            updatedPlayers[playerIndex].cards = [...updatedPlayers[playerIndex].cards, newCard];
-            toast.success(`${scorer.name} otrzymuje kartę ${newCard.name} ${reward.message}`);
-            playSound('reward');
-          }
-        }
-      });
-      
-      // Check for last place player ("Na ratunek")
-      const activePlayers = updatedPlayers.filter(p => !p.eliminated);
-      if (activePlayers.length > 1) {
-        const minPoints = Math.min(...activePlayers.map(p => p.points));
-        const lastPlacePlayer = activePlayers.find(p => p.points === minPoints);
-        
-        if (lastPlacePlayer) {
-          const reward = checkForReward(lastPlacePlayer, 'lastPlace', {
-            round: state.currentRound,
-            players: updatedPlayers
-          });
-          
-          if (reward) {
-            const playerIndex = updatedPlayers.findIndex(p => p.id === lastPlacePlayer.id);
-            if (playerIndex >= 0) {
-              const newCard = createCard(reward.cardType);
-              updatedPlayers[playerIndex].cards = [...updatedPlayers[playerIndex].cards, newCard];
-              toast.success(`${lastPlacePlayer.name} otrzymuje kartę ${newCard.name} ${reward.message}`);
-              playSound('reward');
-            }
-          }
-        }
-      }
-    }
-
-    // Mark question as used
-    const updatedCurrentQuestion = state.currentQuestion
-      ? { ...state.currentQuestion, used: true }
-      : undefined;
-
-    return {
-      ...state,
-      players: updatedPlayers,
-      currentQuestion: updatedCurrentQuestion,
-    };
-  } catch (error) {
-    console.error('Error handling question answer:', error);
-    toast.error('Failed to process answer');
+  const playerIndex = state.players.findIndex(p => p.id === playerId);
+  
+  if (playerIndex === -1) {
+    console.error(`Player with ID ${playerId} not found`);
     return state;
   }
+  
+  // Clone the state and players array for immutability
+  const newState = { ...state };
+  const updatedPlayers = [...state.players];
+  const player = { ...updatedPlayers[playerIndex] };
+  
+  // Handle correct answer
+  if (isCorrect) {
+    // Calculate points based on round type
+    let pointsEarned = 100;
+    switch (state.currentRound) {
+      case 'knowledge':
+        pointsEarned = 100;
+        break;
+      case 'speed':
+        pointsEarned = 150;
+        break;
+      case 'wheel':
+        pointsEarned = 200;
+        break;
+      default:
+        pointsEarned = 100;
+    }
+    
+    // Update player's points
+    player.points += pointsEarned;
+    
+    // Increment consecutive correct answers
+    player.consecutiveCorrect = (player.consecutiveCorrect || 0) + 1;
+    
+    // Check for reward for consecutive correct answers
+    if (player.consecutiveCorrect >= 3) {
+      const rewardResult = checkForReward(player, 'consecutiveCorrectAnswers');
+      
+      if (rewardResult.shouldReward && rewardResult.cardType) {
+        // Award the player with a card
+        player.cards.push({
+          type: rewardResult.cardType,
+          description: `Card earned for ${rewardResult.message || 'consecutive correct answers'}`,
+          isUsed: false
+        });
+        
+        toast.success(`${player.name} otrzymał kartę ${rewardResult.cardType} za serię poprawnych odpowiedzi!`);
+        
+        // Reset consecutive correct counter after rewarding
+        player.consecutiveCorrect = 0;
+      }
+    }
+    
+    toast.success(`${player.name} odpowiedział poprawnie! +${pointsEarned} punktów`);
+    
+    // Check for reward for correct answer
+    const rewardResult = checkForReward(player, 'correctAnswer');
+    
+    if (rewardResult.shouldReward) {
+      if (rewardResult.cardType) {
+        // Award the player with a card
+        player.cards.push({
+          type: rewardResult.cardType,
+          description: `Card earned for ${rewardResult.message || 'correct answer'}`,
+          isUsed: false
+        });
+        
+        toast.success(`${player.name} otrzymał kartę ${rewardResult.cardType}!`);
+      }
+      
+      if (rewardResult.points) {
+        // Award bonus points
+        player.points += rewardResult.points;
+        toast.success(`${player.name} otrzymał ${rewardResult.points} dodatkowych punktów!`);
+      }
+    }
+  } 
+  // Handle incorrect answer
+  else {
+    // Reset consecutive correct answers
+    player.consecutiveCorrect = 0;
+    
+    // Handle life loss based on round type
+    let livesToLose = 0;
+    
+    switch (state.currentRound) {
+      case 'knowledge':
+        livesToLose = 1;
+        break;
+      case 'speed':
+        livesToLose = 1;
+        break;
+      case 'wheel':
+        livesToLose = 1;
+        break;
+      default:
+        livesToLose = 1;
+    }
+    
+    player.lives = Math.max(0, player.lives - livesToLose);
+    
+    if (player.lives <= 0) {
+      player.eliminated = true;
+      toast.error(`${player.name} został wyeliminowany!`);
+      
+      // Check for reward for elimination (for other players potentially)
+      const eliminatingPlayer = state.players.find(p => p.isActive && p.id !== playerId);
+      if (eliminatingPlayer) {
+        const eliminationReward = checkForReward(eliminatingPlayer, 'elimination');
+        
+        if (eliminationReward.shouldReward && eliminationReward.cardType) {
+          // Update the eliminating player
+          const eliminatingPlayerIndex = updatedPlayers.findIndex(p => p.id === eliminatingPlayer.id);
+          if (eliminatingPlayerIndex !== -1) {
+            const updatedEliminatingPlayer = { ...updatedPlayers[eliminatingPlayerIndex] };
+            updatedEliminatingPlayer.cards.push({
+              type: eliminationReward.cardType,
+              description: `Card earned for ${eliminationReward.message || 'eliminating a player'}`,
+              isUsed: false
+            });
+            
+            updatedPlayers[eliminatingPlayerIndex] = updatedEliminatingPlayer;
+            toast.success(`${eliminatingPlayer.name} otrzymał kartę ${eliminationReward.cardType} za wyeliminowanie przeciwnika!`);
+          }
+        }
+      }
+    } else {
+      toast.error(`${player.name} odpowiedział niepoprawnie! -${livesToLose} życie`);
+    }
+  }
+  
+  // Mark the current question as used if there is one
+  if (newState.currentQuestion) {
+    const updatedCurrentQuestion = { ...newState.currentQuestion, used: true };
+    newState.currentQuestion = updatedCurrentQuestion;
+    
+    // Also update the question in the questions array
+    const questionIndex = newState.questions.findIndex(q => q.id === updatedCurrentQuestion.id);
+    if (questionIndex !== -1) {
+      const updatedQuestions = [...newState.questions];
+      updatedQuestions[questionIndex] = updatedCurrentQuestion;
+      newState.questions = updatedQuestions;
+      
+      // Update remaining questions to exclude the used one
+      newState.remainingQuestions = newState.questions.filter(q => !q.used);
+    }
+  }
+  
+  // Update the player in the array
+  updatedPlayers[playerIndex] = player;
+  newState.players = updatedPlayers;
+  
+  return newState;
 };

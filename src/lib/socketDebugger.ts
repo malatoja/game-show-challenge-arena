@@ -1,201 +1,103 @@
 
-/**
- * SocketDebugger - A utility to help debug WebSocket connections
- * This can be used to log all socket events, check connection status,
- * and test websocket connectivity.
- */
+import socketCore from './socket/socketCore';
+import { SocketEvent } from './socket/socketTypes';
 
-import socketService, { SocketEvent } from './socketService';
-import { toast } from 'sonner';
+interface EventLog {
+  timestamp: number;
+  type: 'emit' | 'receive';
+  event: string;
+  payload: any;
+}
 
 class SocketDebugger {
   private enabled: boolean = false;
-  private logHistory: Array<{
-    timestamp: Date;
-    type: 'sent' | 'received' | 'error' | 'info';
-    event?: SocketEvent;
-    data?: any;
-    message?: string;
-  }> = [];
-  private unsubscribeFunctions: Array<() => void> = [];
+  private eventLogs: EventLog[] = [];
+  private maxLogs: number = 100;
 
-  constructor() {
-    // Initialize with debugging disabled by default
-    if (import.meta.env.DEV) {
-      this.enabled = localStorage.getItem('socketDebug') === 'true';
-    }
+  // Enable the debugger
+  public enable(): void {
+    this.enabled = true;
+    console.log('[SocketDebugger] Enabled');
   }
 
-  // Enable or disable the debugger
-  public setEnabled(enabled: boolean): void {
-    this.enabled = enabled;
-    localStorage.setItem('socketDebug', enabled.toString());
-    
-    if (enabled) {
-      this.startListening();
-      this.log('info', undefined, undefined, 'Socket debugging enabled');
-      toast.info('Socket debugging enabled');
-    } else {
-      this.stopListening();
-      this.log('info', undefined, undefined, 'Socket debugging disabled');
-    }
+  // Disable the debugger
+  public disable(): void {
+    this.enabled = false;
+    console.log('[SocketDebugger] Disabled');
   }
 
-  // Check if debugging is enabled
-  public isEnabled(): boolean {
-    return this.enabled;
-  }
+  // Log an emitted event
+  public logEmit(event: SocketEvent, payload: any): void {
+    if (!this.enabled) return;
 
-  // Listen to all socket events
-  private startListening(): void {
-    // Clean up any existing listeners first
-    this.stopListening();
-    
-    // Listen for connection status changes
-    this.unsubscribeFunctions.push(
-      socketService.on('connection:status', (data) => {
-        this.log('received', 'connection:status', data);
-      })
-    );
-    
-    // Listen for errors
-    this.unsubscribeFunctions.push(
-      socketService.on('connection:error', (data) => {
-        this.log('error', 'connection:error', data);
-      })
-    );
-    
-    // Add a monkey patch to capture all emitted events
-    const originalEmit = socketService.emit;
-    socketService.emit = <E extends SocketEvent>(event: E, data: any) => {
-      this.log('sent', event, data);
-      return originalEmit.call(socketService, event, data);
-    };
-    
-    // Store this function to restore the original emit later
-    this.unsubscribeFunctions.push(() => {
-      socketService.emit = originalEmit;
-    });
-    
-    // Log that we started listening
-    this.log('info', undefined, undefined, 'Started listening to all socket events');
-  }
-
-  // Stop listening to all socket events
-  private stopListening(): void {
-    this.unsubscribeFunctions.forEach(unsubscribe => unsubscribe());
-    this.unsubscribeFunctions = [];
-    
-    this.log('info', undefined, undefined, 'Stopped listening to all socket events');
-  }
-
-  // Log a socket event
-  private log(
-    type: 'sent' | 'received' | 'error' | 'info',
-    event?: SocketEvent,
-    data?: any,
-    message?: string
-  ): void {
-    const logEntry = {
-      timestamp: new Date(),
-      type,
+    this.addLog({
+      timestamp: Date.now(),
+      type: 'emit',
       event,
-      data,
-      message
-    };
-    
-    this.logHistory.push(logEntry);
-    
-    // Trim history if it gets too large
-    if (this.logHistory.length > 1000) {
-      this.logHistory = this.logHistory.slice(-500);
-    }
-    
-    // Only output to console if debugging is enabled
-    if (this.enabled) {
-      const prefix = `[Socket][${type.toUpperCase()}]`;
-      if (event) {
-        console.log(`${prefix} ${event}`, data || '');
-      } else if (message) {
-        console.log(`${prefix} ${message}`);
-      }
-    }
+      payload
+    });
+
+    console.log(`[SOCKET EMIT] ${event}`, payload);
   }
 
-  // Get the log history
-  public getLogHistory(): Array<{
-    timestamp: Date;
-    type: 'sent' | 'received' | 'error' | 'info';
-    event?: SocketEvent;
-    data?: any;
-    message?: string;
-  }> {
-    return [...this.logHistory];
+  // Log a received event
+  public logReceive(event: SocketEvent, payload: any): void {
+    if (!this.enabled) return;
+
+    this.addLog({
+      timestamp: Date.now(),
+      type: 'receive',
+      event,
+      payload
+    });
+
+    console.log(`[SOCKET RECEIVE] ${event}`, payload);
   }
 
-  // Clear the log history
-  public clearLogHistory(): void {
-    this.logHistory = [];
-    this.log('info', undefined, undefined, 'Log history cleared');
-  }
-
-  // Test the socket connection
-  public async testConnection(url?: string): Promise<{
-    success: boolean;
-    message: string;
-    details?: any;
-  }> {
-    try {
-      const connected = await socketService.checkConnectivity(url);
-      
-      if (connected) {
-        this.log('info', undefined, undefined, 'Connection test successful');
-        return {
-          success: true,
-          message: 'Connection test successful. Server is reachable.'
-        };
-      } else {
-        this.log('error', undefined, undefined, 'Connection test failed');
-        return {
-          success: false,
-          message: 'Connection test failed. Server is not reachable.'
-        };
-      }
-    } catch (error) {
-      this.log('error', undefined, undefined, `Connection test error: ${error}`);
-      return {
-        success: false,
-        message: 'Connection test error',
-        details: error
-      };
+  // Add a log entry and maintain the maximum log size
+  private addLog(log: EventLog): void {
+    this.eventLogs.unshift(log);
+    
+    // Trim the log array if it exceeds the maximum size
+    if (this.eventLogs.length > this.maxLogs) {
+      this.eventLogs = this.eventLogs.slice(0, this.maxLogs);
     }
   }
 
-  // Check the current connection status
-  public checkStatus(): {
-    connected: boolean;
-    mockMode: boolean;
-    url?: string;
-  } {
+  // Get all logs
+  public getLogs(): EventLog[] {
+    return [...this.eventLogs];
+  }
+
+  // Clear all logs
+  public clearLogs(): void {
+    this.eventLogs = [];
+    console.log('[SocketDebugger] Logs cleared');
+  }
+
+  // Get connection status
+  public getConnectionStatus(): { connected: boolean; mockMode: boolean } {
     return {
-      connected: socketService.connected,
-      mockMode: socketService.mockMode,
-      url: socketService.url
+      connected: socketCore.connected,
+      mockMode: socketCore.mockMode
     };
   }
 
-  // Test send a specific event
-  public testSendEvent<E extends SocketEvent>(
-    event: E,
-    data: any
-  ): void {
-    this.log('info', event, data, 'Manually sending test event');
-    socketService.emit(event, data);
+  // Get connection info
+  public getConnectionInfo(): { url: string } {
+    return {
+      url: socketCore.getUrl()
+    };
+  }
+
+  // Force reconnect
+  public forceReconnect(): void {
+    socketCore.reconnect();
+    console.log('[SocketDebugger] Forced reconnection');
   }
 }
 
 // Create a singleton instance
-export const socketDebugger = new SocketDebugger();
+const socketDebugger = new SocketDebugger();
 
-// Export for convenience
 export default socketDebugger;

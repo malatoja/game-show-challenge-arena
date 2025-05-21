@@ -1,7 +1,7 @@
 
-import { GameState } from '../types/gameTypes';
-import { SAMPLE_QUESTIONS } from '../constants/gameConstants';
+import { GameState, RoundType } from '../types/gameTypes';
 import { toast } from 'sonner';
+import { SAMPLE_QUESTIONS } from '../constants/gameConstants';
 
 // Load saved questions from localStorage if available
 export const loadQuestionsFromStorage = (): import('../types/gameTypes').Question[] => {

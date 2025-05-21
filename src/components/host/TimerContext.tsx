@@ -1,103 +1,139 @@
 
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import { RoundType } from '@/types/gameTypes';
 
-// Update the TimerContextType interface to include missing properties
 export interface TimerContextType {
-  timerValue: number;
-  startTimer: (seconds?: number) => void;
+  seconds: number;
+  setSeconds: (seconds: number) => void;
+  isRunning: boolean;
+  startTimer: (duration?: number) => void;
+  pauseTimer: () => void;
+  resumeTimer: () => void;
+  stopTimer: () => void; // Added
   resetTimer: () => void;
-  stopTimer: () => void;
-  isTimerRunning: boolean;
-  setTimerForRound: (roundType: string) => void;
+  isTimerRunning: boolean; // Added
+  setTimerForRound: (roundType: RoundType) => void; // Added
 }
 
-const TimerContext = createContext<TimerContextType>({
-  timerValue: 0,
+const defaultTimerContext: TimerContextType = {
+  seconds: 0,
+  setSeconds: () => {},
+  isRunning: false,
   startTimer: () => {},
+  pauseTimer: () => {},
+  resumeTimer: () => {},
+  stopTimer: () => {}, // Added
   resetTimer: () => {},
-  stopTimer: () => {},
-  isTimerRunning: false,
-  setTimerForRound: () => {}
-});
+  isTimerRunning: false, // Added
+  setTimerForRound: () => {} // Added
+};
 
-export function TimerProvider({ children }: { children: React.ReactNode }) {
-  const [timerValue, setTimerValue] = useState(30);
+export const TimerContext = createContext<TimerContextType>(defaultTimerContext);
+
+export const useTimer = () => useContext(TimerContext);
+
+interface TimerProviderProps {
+  children: React.ReactNode;
+}
+
+export const TimerProvider = ({ children }: TimerProviderProps) => {
+  const [seconds, setSeconds] = useState<number>(0);
+  const [isRunning, setIsRunning] = useState<boolean>(false);
   const [intervalId, setIntervalId] = useState<NodeJS.Timeout | null>(null);
-  const [isTimerRunning, setIsTimerRunning] = useState(false);
 
-  const startTimer = (seconds = 30) => {
-    // Clear existing timer if any
-    if (intervalId) {
-      clearInterval(intervalId);
+  // Clear interval on unmount
+  useEffect(() => {
+    return () => {
+      if (intervalId) clearInterval(intervalId);
+    };
+  }, [intervalId]);
+
+  const startTimer = (duration?: number) => {
+    if (duration !== undefined) {
+      setSeconds(duration);
     }
-
-    setTimerValue(seconds);
-    setIsTimerRunning(true);
-
+    
+    setIsRunning(true);
+    
     const id = setInterval(() => {
-      setTimerValue((prev) => {
-        if (prev <= 1) {
+      setSeconds(prevSeconds => {
+        if (prevSeconds <= 1) {
           clearInterval(id);
-          setIntervalId(null);
-          setIsTimerRunning(false);
+          setIsRunning(false);
           return 0;
         }
-        return prev - 1;
+        return prevSeconds - 1;
       });
     }, 1000);
-
+    
     setIntervalId(id);
   };
 
+  const pauseTimer = () => {
+    if (intervalId) {
+      clearInterval(intervalId);
+      setIntervalId(null);
+    }
+    setIsRunning(false);
+  };
+  
+  const resumeTimer = () => {
+    if (!isRunning && seconds > 0) {
+      startTimer();
+    }
+  };
+  
+  const resetTimer = () => {
+    if (intervalId) {
+      clearInterval(intervalId);
+      setIntervalId(null);
+    }
+    setIsRunning(false);
+    setSeconds(0);
+  };
+
+  // Added function to stop timer
   const stopTimer = () => {
     if (intervalId) {
       clearInterval(intervalId);
       setIntervalId(null);
     }
-    setIsTimerRunning(false);
+    setIsRunning(false);
   };
 
-  const resetTimer = () => {
-    stopTimer();
-    setTimerValue(30);
-  };
-
-  // Add implementation for setTimerForRound
-  const setTimerForRound = (roundType: string) => {
-    stopTimer();
-    // Different rounds can have different timer values
-    switch(roundType) {
+  // Added function to set timer duration based on round type
+  const setTimerForRound = (roundType: RoundType) => {
+    switch (roundType) {
       case 'knowledge':
-        setTimerValue(60); // 60 seconds for knowledge round
+        setSeconds(60); // 1 minute for knowledge round
         break;
       case 'speed':
-        setTimerValue(15); // 15 seconds for speed round
+        setSeconds(30); // 30 seconds for speed round
         break;
       case 'wheel':
-        setTimerValue(30); // 30 seconds for wheel round
+        setSeconds(45); // 45 seconds for wheel round
         break;
       default:
-        setTimerValue(30); // Default timer value
+        setSeconds(60); // Default timer
     }
-    // Don't auto-start the timer, just set the value
   };
-
+  
   return (
-    <TimerContext.Provider
-      value={{
-        timerValue,
-        startTimer,
+    <TimerContext.Provider 
+      value={{ 
+        seconds, 
+        setSeconds, 
+        isRunning, 
+        startTimer, 
+        pauseTimer, 
+        resumeTimer, 
+        stopTimer, 
         resetTimer,
-        stopTimer,
-        isTimerRunning,
+        isTimerRunning: isRunning,
         setTimerForRound
       }}
     >
       {children}
     </TimerContext.Provider>
   );
-}
-
-export function useTimer() {
-  return useContext(TimerContext);
-}
+};

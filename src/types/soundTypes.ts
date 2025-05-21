@@ -12,7 +12,8 @@ export type SoundType =
   | 'round-start'
   | 'game-over'
   | 'winner'
-  | 'hint';
+  | 'hint'
+  | 'hint-sound';
 
 export interface SoundOptions {
   volume?: number;

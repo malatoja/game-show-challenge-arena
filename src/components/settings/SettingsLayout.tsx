@@ -18,6 +18,11 @@ export function SettingsLayout({ activeTab, setActiveTab, children }: SettingsLa
   };
 
   // Group tabs by category for better organization
+  const generalTabs = [
+    { id: "general", label: "Ogólne" },
+    { id: "rounds", label: "Rundy" },
+  ];
+  
   const gameTabs = [
     { id: "players", label: "Gracze" },
     { id: "questions", label: "Pytania" },
@@ -58,9 +63,17 @@ export function SettingsLayout({ activeTab, setActiveTab, children }: SettingsLa
         <Separator className="my-6" />
 
         <Tabs defaultValue={activeTab} onValueChange={handleTabChange} value={activeTab}>
+          {/* General Settings */}
+          <h3 className="text-sm font-medium text-gameshow-muted mb-2">Ogólne ustawienia</h3>
+          <TabsList className="grid grid-cols-2 sm:grid-cols-2 gap-2 mb-4">
+            {generalTabs.map(tab => (
+              <TabsTrigger key={tab.id} value={tab.id}>{tab.label}</TabsTrigger>
+            ))}
+          </TabsList>
+          
           {/* Game Settings */}
-          <h3 className="text-sm font-medium text-gameshow-muted mb-2">Ustawienia gry</h3>
-          <TabsList className="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-4">
+          <h3 className="text-sm font-medium text-gameshow-muted mb-2 mt-4">Ustawienia gry</h3>
+          <TabsList className="grid grid-cols-3 sm:grid-cols-3 gap-2 mb-4">
             {gameTabs.map(tab => (
               <TabsTrigger key={tab.id} value={tab.id}>{tab.label}</TabsTrigger>
             ))}
@@ -68,7 +81,7 @@ export function SettingsLayout({ activeTab, setActiveTab, children }: SettingsLa
           
           {/* Display Settings */}
           <h3 className="text-sm font-medium text-gameshow-muted mb-2 mt-4">Wygląd i multimedia</h3>
-          <TabsList className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+          <TabsList className="grid grid-cols-3 sm:grid-cols-3 gap-2">
             {displayTabs.map(tab => (
               <TabsTrigger key={tab.id} value={tab.id}>{tab.label}</TabsTrigger>
             ))}

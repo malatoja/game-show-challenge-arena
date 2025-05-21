@@ -7,7 +7,8 @@ export type RewardCondition =
   | 'correctAnswer'
   | 'cardUsage'
   | 'roundEnd'
-  | 'consecutiveCorrectAnswers';
+  | 'consecutiveCorrectAnswers'
+  | 'consecutiveCorrect'; // Added this to fix the error
 
 export type RewardType =
   | 'cardAward'
@@ -16,12 +17,13 @@ export type RewardType =
 
 // Define the structure for a reward configuration
 export interface RewardConfig {
-  id: string;
+  id: string; // Make sure id is defined
   name: string;
   description: string;
   condition: RewardCondition;
   reward: RewardType;
   cardType?: CardType;
+  message?: string; // Add message field
 }
 
 // Sample reward configurations
@@ -31,28 +33,32 @@ export const rewardConfigs: RewardConfig[] = [
     name: 'Elimination Card Reward',
     description: 'Award a random card for eliminating a player.',
     condition: 'elimination',
-    reward: 'cardAward'
+    reward: 'cardAward',
+    message: 'Card awarded for elimination'
   },
   {
     id: 'reward-2',
     name: 'Correct Answer Points',
     description: 'Award 100 points for each correct answer.',
     condition: 'correctAnswer',
-    reward: 'pointsAward'
+    reward: 'pointsAward',
+    message: 'Points awarded for correct answer'
   },
   {
     id: 'reward-3',
     name: 'Card Usage Points',
     description: 'Award 50 points for using a card.',
     condition: 'cardUsage',
-    reward: 'pointsAward'
+    reward: 'pointsAward',
+    message: 'Points awarded for using a card'
   },
   {
     id: 'reward-4',
     name: 'Round End Card',
     description: 'Award a random card at the end of each round.',
     condition: 'roundEnd',
-    reward: 'cardAward'
+    reward: 'cardAward',
+    message: 'Card awarded for completing the round'
   },
   {
     id: 'reward-5',
@@ -60,15 +66,17 @@ export const rewardConfigs: RewardConfig[] = [
     description: 'Award a special card for answering 3 questions correctly in a row.',
     condition: 'consecutiveCorrectAnswers',
     reward: 'cardAward',
-    cardType: 'turbo' // Example: Award a 'turbo' card
+    cardType: 'turbo', // Example: Award a 'turbo' card
+    message: 'Card awarded for consecutive correct answers'
   }
 ];
 
 // Function to check if a player should receive a reward
 export const checkForReward = (
   player: Player, 
-  condition: RewardCondition
-): { shouldReward: boolean; rewardType: RewardType | null; cardType?: CardType } => {
+  condition: RewardCondition,
+  eventDetails?: any // Added to support additional reward context
+): { shouldReward: boolean; rewardType: RewardType | null; cardType?: CardType; message?: string } => {
   // Find applicable reward configuration
   const rewardConfig = rewardConfigs.find(config => config.condition === condition);
   
@@ -82,7 +90,8 @@ export const checkForReward = (
   return {
     shouldReward,
     rewardType: shouldReward ? rewardConfig.reward : null,
-    cardType: shouldReward ? rewardConfig.cardType || getRandomCardType() : undefined
+    cardType: shouldReward ? rewardConfig.cardType || getRandomCardType() : undefined,
+    message: shouldReward ? rewardConfig.message : undefined
   };
 };
 
@@ -119,6 +128,7 @@ export const shouldAwardReward = (
       return true;
 
     case 'consecutiveCorrectAnswers':
+    case 'consecutiveCorrect':
       // Award the reward if the player has answered 3 questions correctly in a row
       const consecutiveCorrect = player.consecutiveCorrect || 0;
       return consecutiveCorrect >= 3;
@@ -133,7 +143,7 @@ export const awardReward = (
   condition: RewardCondition,
   player: Player,
   eventDetails?: any // More specific type can be defined based on the event
-): { cardType?: CardType; points?: number; lives?: number } => {
+): { cardType?: CardType; points?: number; lives?: number; message?: string } => {
   // Find the reward configuration for the given condition
   const rewardConfig = rewardConfigs.find(config => config.condition === condition);
 
@@ -146,15 +156,24 @@ export const awardReward = (
   switch (rewardConfig.reward) {
     case 'cardAward':
       // Award a random card to the player
-      return { cardType: rewardConfig.cardType || getRandomCardType() };
+      return { 
+        cardType: rewardConfig.cardType || getRandomCardType(),
+        message: rewardConfig.message
+      };
 
     case 'pointsAward':
       // Award points to the player
-      return { points: 100 };
+      return { 
+        points: 100,
+        message: rewardConfig.message
+      };
 
     case 'livesAward':
       // Award lives to the player
-      return { lives: 1 };
+      return { 
+        lives: 1,
+        message: rewardConfig.message
+      };
 
     default:
       return {};

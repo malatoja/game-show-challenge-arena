@@ -1,146 +1,92 @@
 
-import { CardType, Card } from '@/types/gameTypes';
+import { CardType, RoundType, Question } from '@/types/gameTypes';
 
-export const ROUND_NAMES: Record<string, string> = {
-  knowledge: 'Eliminacje',
-  speed: 'Szybka odpowiedź',
-  wheel: 'Koło fortuny',
-  standard: 'Standardowa',
-  all: 'Wszystkie rundy'
+// Round names (for display)
+export const ROUND_NAMES: Record<RoundType, string> = {
+  knowledge: 'Runda Wiedzy',
+  speed: 'Szybka Odpowiedź',
+  wheel: 'Koło Fortuny',
+  standard: 'Runda Standardowa',
+  all: 'Wszystkie Rundy'
 };
-
-export const CARD_DETAILS: Record<CardType, { name: string; description: string }> = {
-  dejavu: {
-    name: 'Deja Vu',
-    description: 'Pozwala powtórnie odpowiedzieć na pytanie po udzieleniu błędnej odpowiedzi'
-  },
-  kontra: {
-    name: 'Kontra',
-    description: 'Przekazuje pytanie innemu graczowi'
-  },
-  reanimacja: {
-    name: 'Reanimacja',
-    description: 'Zapobiega utracie życia w 2 rundzie'
-  },
-  skip: {
-    name: 'Skip',
-    description: 'Pomija aktualne pytanie bez konsekwencji'
-  },
-  turbo: {
-    name: 'Turbo',
-    description: 'Podwaja liczbę punktów za poprawną odpowiedź'
-  },
-  refleks2: {
-    name: 'Refleks x2',
-    description: 'Podwaja dostępny czas na odpowiedź'
-  },
-  refleks3: {
-    name: 'Refleks x3',
-    description: 'Potraja dostępny czas na odpowiedź'
-  },
-  lustro: {
-    name: 'Lustro',
-    description: 'Usuwa jedną niepoprawną odpowiedź'
-  },
-  oswiecenie: {
-    name: 'Oświecenie',
-    description: 'Daje wskazówkę do aktualnego pytania'
-  }
-};
-
-// Card conflict definitions
-export const CONFLICTING_CARDS: Record<CardType, CardType[]> = {
-  dejavu: ['skip', 'kontra'],
-  kontra: ['skip', 'dejavu'],
-  reanimacja: [],
-  skip: ['dejavu', 'kontra'],
-  turbo: [],
-  refleks2: ['refleks3'],
-  refleks3: ['refleks2'],
-  lustro: [],
-  oswiecenie: []
-};
-
-// Create a card instance
-export function createCard(type: CardType): Card {
-  return {
-    id: `card-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`, // Generate unique id
-    type,
-    name: CARD_DETAILS[type].name,
-    description: CARD_DETAILS[type].description,
-    isUsed: false
-  };
-}
-
-// Check if two cards conflict
-export function doCardsConflict(cardType1: CardType, cardType2: CardType): boolean {
-  return CONFLICTING_CARDS[cardType1]?.includes(cardType2) || 
-         CONFLICTING_CARDS[cardType2]?.includes(cardType1);
-}
-
-// Difficulty options
-export const DIFFICULTY_OPTIONS = [
-  { value: 'easy', label: 'Łatwy' },
-  { value: 'medium', label: 'Średni' },
-  { value: 'hard', label: 'Trudny' }
-];
-
-// Round options
-export const ROUND_OPTIONS = [
-  { value: 'knowledge', label: 'Runda 1: Eliminacje' },
-  { value: 'speed', label: 'Runda 2: Szybka odpowiedź' },
-  { value: 'wheel', label: 'Runda 3: Koło fortuny' },
-  { value: 'standard', label: 'Standardowa (poza rundami)' },
-  { value: 'all', label: 'Wszystkie rundy' }
-];
 
 // Initial lives for players
 export const INITIAL_LIVES = 3;
 
-// Categories for the wheel round
+// Maximum points per question
+export const MAX_POINTS_PER_QUESTION = 100;
+
+// Card descriptions and effects
+export const CARD_DESCRIPTIONS: Record<CardType, string> = {
+  dejavu: 'Pozwala na ponowną próbę odpowiedzi po błędzie',
+  kontra: 'Przekazuje pytanie innemu graczowi',
+  reanimacja: 'Zapobiega utracie życia w Rundzie 2',
+  skip: 'Pozwala pominąć pytanie',
+  turbo: 'Podwaja zdobyte punkty',
+  refleks2: 'Podwaja czas na odpowiedź',
+  refleks3: 'Potraja czas na odpowiedź',
+  lustro: 'Usuwa jedną błędną odpowiedź',
+  oswiecenie: 'Daje podpowiedź do pytania'
+};
+
+// Wheel categories
 export const WHEEL_CATEGORIES = [
-  'Historia',
-  'Geografia',
-  'Sport',
-  'Film',
-  'Muzyka',
-  'Literatura',
-  'Nauka',
-  'Technologia',
-  'Popkultura',
-  'Motoryzacja',
-  'Gry i zabawy',
-  'Jedzenie i napoje'
+  'Nauka', 
+  'Historia', 
+  'Geografia', 
+  'Film i TV', 
+  'Muzyka', 
+  'Sport', 
+  'Literatura', 
+  'Technologia', 
+  'Gry', 
+  'Sztuka', 
+  'Jedzenie', 
+  'Zwierzęta'
 ];
 
-// Sample questions for testing
-export const SAMPLE_QUESTIONS = [
+// Sample questions for initial state
+export const SAMPLE_QUESTIONS: Question[] = [
   {
     id: '1',
-    text: 'Jaki kraj ma największą powierzchnię na świecie?',
-    category: 'Geografia',
+    text: 'Który z tych języków NIE jest językiem programowania?',
+    category: 'Programowanie',
     answers: [
-      { text: 'Rosja', isCorrect: true },
-      { text: 'Kanada', isCorrect: false },
-      { text: 'Chiny', isCorrect: false },
-      { text: 'USA', isCorrect: false }
+      { text: 'Python', isCorrect: false },
+      { text: 'HTML', isCorrect: true },
+      { text: 'JavaScript', isCorrect: false },
+      { text: 'Java', isCorrect: false }
     ],
-    correctAnswerIndex: 0,
-    round: 'all',
-    hint: 'To kraj znajdujący się na dwóch kontynentach.'
+    correctAnswerIndex: 1,
+    round: 'knowledge',
+    hint: 'To język znaczników, a nie programowania'
   },
   {
     id: '2',
+    text: 'Ile wynosi wynik operacji 5 + 5 * 2?',
+    category: 'Matematyka',
+    answers: [
+      { text: '15', isCorrect: true },
+      { text: '20', isCorrect: false },
+      { text: '25', isCorrect: false },
+      { text: '10', isCorrect: false }
+    ],
+    correctAnswerIndex: 0,
+    round: 'speed',
+    hint: 'Pamiętaj o kolejności wykonywania działań'
+  },
+  {
+    id: '3',
     text: 'Kto jest autorem "Pana Tadeusza"?',
     category: 'Literatura',
     answers: [
       { text: 'Juliusz Słowacki', isCorrect: false },
-      { text: 'Adam Mickiewicz', isCorrect: true },
       { text: 'Henryk Sienkiewicz', isCorrect: false },
+      { text: 'Adam Mickiewicz', isCorrect: true },
       { text: 'Bolesław Prus', isCorrect: false }
     ],
-    correctAnswerIndex: 1,
-    round: 'all',
-    hint: 'To poeta epoki romantyzmu.'
+    correctAnswerIndex: 2,
+    round: 'wheel',
+    hint: 'Polski poeta narodowy, żył na emigracji'
   }
 ];

@@ -8,9 +8,10 @@ import {
 
 import { SettingsLayout } from '@/components/settings/SettingsLayout';
 import { SettingsHeader } from '@/components/settings/SettingsHeader';
-import { PasswordSettings } from '@/components/settings/PasswordSettings';
 import { SettingsAuth } from '@/components/settings/SettingsAuth';
 
+// Import tab components
+import { GeneralTab } from '@/components/settings/GeneralTab';
 import { PlayersTab } from '@/components/settings/PlayersTab';
 import { QuestionsTab } from '@/components/settings/QuestionsTab';
 import { ThemesTab } from '@/components/settings/ThemesTab';
@@ -25,32 +26,20 @@ import { InfoBarTab } from '@/components/settings/InfoBarTab';
 import { BackupTab } from '@/components/settings/BackupTab';
 import { AdvancedTab } from '@/components/settings/AdvancedTab';
 import { TestsTab } from '@/components/settings/TestsTab';
+import { PasswordTab } from '@/components/settings/PasswordTab';
+import { RoundsTab } from '@/components/settings/RoundsTab';
 
 const SettingsPage = () => {
-  const [activeTab, setActiveTab] = useState('questions');
+  const [activeTab, setActiveTab] = useState('general');
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  
-  // Password management
-  const [showPasswordSettings, setShowPasswordSettings] = useState(false);
-  const [hostPassword, setHostPassword] = useState('');
-  const [settingsPassword, setSettingsPassword] = useState('');
   
   useEffect(() => {
     const authStatus = isSettingsAuthenticated();
     setIsAuthenticated(authStatus);
-    
-    if (authStatus) {
-      const settings = getAuthSettings();
-      setHostPassword(settings.hostPassword || '');
-      setSettingsPassword(settings.settingsPassword || '');
-    }
   }, []);
   
   const handleLoginSuccess = () => {
     setIsAuthenticated(true);
-    const settings = getAuthSettings();
-    setHostPassword(settings.hostPassword || '');
-    setSettingsPassword(settings.settingsPassword || '');
   };
   
   const handleLogout = () => {
@@ -65,21 +54,12 @@ const SettingsPage = () => {
   return (
     <SettingsLayout activeTab={activeTab} setActiveTab={setActiveTab}>
       <SettingsHeader 
-        showPasswordSettings={showPasswordSettings}
-        setShowPasswordSettings={setShowPasswordSettings}
         handleLogout={handleLogout}
       />
       
-      {showPasswordSettings && (
-        <PasswordSettings
-          hostPassword={hostPassword}
-          settingsPassword={settingsPassword}
-          setHostPassword={setHostPassword}
-          setSettingsPassword={setSettingsPassword}
-        />
-      )}
-
       <div className="mt-6">
+        {activeTab === 'general' && <GeneralTab />}
+        {activeTab === 'rounds' && <RoundsTab />}
         {activeTab === 'players' && <PlayersTab />}
         {activeTab === 'questions' && <QuestionsTab />}
         {activeTab === 'cards' && <CardsTab />}
@@ -94,14 +74,7 @@ const SettingsPage = () => {
         {activeTab === 'backup' && <BackupTab />}
         {activeTab === 'advanced' && <AdvancedTab />}
         {activeTab === 'tests' && <TestsTab />}
-        {activeTab === 'password' && (
-          <PasswordSettings
-            hostPassword={hostPassword}
-            settingsPassword={settingsPassword}
-            setHostPassword={setHostPassword}
-            setSettingsPassword={setSettingsPassword}
-          />
-        )}
+        {activeTab === 'password' && <PasswordTab />}
       </div>
     </SettingsLayout>
   );
