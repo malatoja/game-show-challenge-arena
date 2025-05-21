@@ -47,6 +47,7 @@ export interface Question {
   used?: boolean; // Adding used property
   favorite?: boolean; // Adding favorite property
   points?: number; // Adding points property
+  hint?: string; // Adding hint property for "Oświecenie" card
 }
 
 export interface Answer {

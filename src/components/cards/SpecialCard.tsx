@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Card as CardType } from '../../types/gameTypes';
 import { 
-  Clock, Star, SkipForward, RefreshCcw, Eye, 
+  Clock, Star, SkipForward, RefreshCw, Eye, 
   HelpCircle, Undo, ArrowRight, Heart 
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -41,7 +41,7 @@ export function SpecialCard({
   // Get card icon component based on type
   const getCardIcon = () => {
     switch (card.type) {
-      case 'dejavu': return <RefreshCcw className="h-6 w-6 text-white" />;
+      case 'dejavu': return <RefreshCw className="h-6 w-6 text-white" />;
       case 'kontra': return <ArrowRight className="h-6 w-6 text-white" />;
       case 'reanimacja': return <Heart className="h-6 w-6 text-white" />;
       case 'skip': return <SkipForward className="h-6 w-6 text-white" />;

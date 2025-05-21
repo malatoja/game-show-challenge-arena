@@ -1,22 +1,26 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Gift } from 'lucide-react';
+import { Gift, CreditCard } from 'lucide-react';
 
 interface NoCardsViewProps {
   onOpenAwardDialog: () => void;
 }
 
-export const NoCardsView: React.FC<NoCardsViewProps> = ({ onOpenAwardDialog }) => {
+const NoCardsView: React.FC<NoCardsViewProps> = ({ onOpenAwardDialog }) => {
   return (
-    <div className="text-center py-4 text-gameshow-muted">
-      <p className="mb-3">Gracz nie posiada kart specjalnych</p>
+    <div className="py-6 border border-dashed border-gameshow-primary/20 rounded-lg text-center">
+      <CreditCard className="w-10 h-10 mx-auto mb-2 opacity-40" />
+      <p className="text-gameshow-muted mb-3">
+        Gracz nie ma jeszcze żadnych kart
+      </p>
       <Button 
-        className="bg-neon-pink/20 hover:bg-neon-pink/30 border border-neon-pink text-neon-pink shadow-[0_0_10px_rgba(255,56,100,0.3)]"
+        variant="outline" 
+        className="border-neon-pink text-neon-pink hover:bg-neon-pink/10"
         onClick={onOpenAwardDialog}
       >
-        <Gift className="h-5 w-5 mr-2" />
-        Przyznaj kartę
+        <Gift className="h-4 w-4 mr-2" />
+        Przyznaj pierwszą kartę
       </Button>
     </div>
   );

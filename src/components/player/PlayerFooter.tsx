@@ -55,10 +55,10 @@ const PlayerFooter: React.FC<PlayerFooterProps> = ({ player, onUseCard }) => {
             exit={{ opacity: 0 }}
           >
             <motion.div
-              initial={{ scale: 0, rotate: -10 }}
+              initial={{ scale: 0.5, rotate: -10 }}
               animate={{ scale: 1, rotate: 0 }}
               exit={{ scale: 0, rotate: 10 }}
-              transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+              transition={{ type: "spring", stiffness: 300, damping: 20 }}
               className="text-center max-w-lg"
             >
               <motion.div 

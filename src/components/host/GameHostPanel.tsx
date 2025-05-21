@@ -8,8 +8,10 @@ import { useGameControlProvider } from './hooks/useGameControlProvider';
 import TabsHostPanel from './TabsHostPanel';
 import ConnectionStatus from './ConnectionStatus';
 import GameResultsWrapper from './components/GameResultsWrapper';
+import { useGame } from '@/context/GameContext';
 
 export function GameHostPanel() {
+  const { state } = useGame();
   const gameControl = useGameControlProvider();
   const { showResults, resultType, handleResetGame, setShowResults } = gameControl;
   
@@ -17,8 +19,8 @@ export function GameHostPanel() {
   if (showResults) {
     return (
       <GameResultsWrapper
-        players={gameControl.state.players}
-        currentRound={gameControl.state.currentRound}
+        players={state.players}
+        currentRound={state.currentRound}
         resultType={resultType}
         onResetGame={handleResetGame}
         onCloseResults={() => setShowResults(false)}
