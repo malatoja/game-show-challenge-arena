@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Link } from 'react-router-dom';
@@ -17,6 +17,34 @@ export function SettingsLayout({ activeTab, setActiveTab, children }: SettingsLa
     setActiveTab(value);
   };
 
+  // Group tabs by category for better organization
+  const gameTabs = [
+    { id: "players", label: "Gracze" },
+    { id: "questions", label: "Pytania" },
+    { id: "cards", label: "Karty" }
+  ];
+  
+  const displayTabs = [
+    { id: "themes", label: "Motywy" },
+    { id: "sounds", label: "Dźwięki" },
+    { id: "info-bar", label: "Pasek info" }
+  ];
+  
+  const technicalTabs = [
+    { id: "lucky-loser", label: "Lucky Loser" },
+    { id: "cameras", label: "Kamery" },
+    { id: "backup", label: "Kopia zapasowa" },
+    { id: "automation", label: "Automatyzacja" }
+  ];
+  
+  const advancedTabs = [
+    { id: "roles", label: "Role" },
+    { id: "ranking", label: "Ranking" },
+    { id: "advanced", label: "Zaawansowane" },
+    { id: "tests", label: "Testy" },
+    { id: "password", label: "Hasło" }
+  ];
+
   return (
     <div className="min-h-screen bg-gameshow-background text-gameshow-text p-4 md:p-8">
       <div className="max-w-7xl mx-auto">
@@ -30,28 +58,36 @@ export function SettingsLayout({ activeTab, setActiveTab, children }: SettingsLa
         <Separator className="my-6" />
 
         <Tabs defaultValue={activeTab} onValueChange={handleTabChange} value={activeTab}>
-          <TabsList className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2 mb-4">
-            <TabsTrigger value="players">Gracze</TabsTrigger>
-            <TabsTrigger value="questions">Pytania</TabsTrigger>
-            <TabsTrigger value="cards">Karty</TabsTrigger>
-            <TabsTrigger value="themes">Motywy</TabsTrigger>
-            <TabsTrigger value="sounds">Dźwięki</TabsTrigger>
+          {/* Game Settings */}
+          <h3 className="text-sm font-medium text-gameshow-muted mb-2">Ustawienia gry</h3>
+          <TabsList className="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-4">
+            {gameTabs.map(tab => (
+              <TabsTrigger key={tab.id} value={tab.id}>{tab.label}</TabsTrigger>
+            ))}
           </TabsList>
           
-          <TabsList className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2">
-            <TabsTrigger value="lucky-loser">Lucky Loser</TabsTrigger>
-            <TabsTrigger value="info-bar">Pasek info</TabsTrigger>
-            <TabsTrigger value="cameras">Kamery</TabsTrigger>
-            <TabsTrigger value="backup">Kopia zapasowa</TabsTrigger>
-            <TabsTrigger value="automation">Automatyzacja</TabsTrigger>
+          {/* Display Settings */}
+          <h3 className="text-sm font-medium text-gameshow-muted mb-2 mt-4">Wygląd i multimedia</h3>
+          <TabsList className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+            {displayTabs.map(tab => (
+              <TabsTrigger key={tab.id} value={tab.id}>{tab.label}</TabsTrigger>
+            ))}
+          </TabsList>
+          
+          {/* Technical Settings */}
+          <h3 className="text-sm font-medium text-gameshow-muted mb-2 mt-4">Ustawienia techniczne</h3>
+          <TabsList className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+            {technicalTabs.map(tab => (
+              <TabsTrigger key={tab.id} value={tab.id}>{tab.label}</TabsTrigger>
+            ))}
           </TabsList>
 
-          <TabsList className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2 mt-2">
-            <TabsTrigger value="roles">Role</TabsTrigger>
-            <TabsTrigger value="ranking">Ranking</TabsTrigger>
-            <TabsTrigger value="advanced">Zaawansowane</TabsTrigger>
-            <TabsTrigger value="tests">Testy</TabsTrigger>
-            <TabsTrigger value="password">Hasło</TabsTrigger>
+          {/* Advanced Settings */}
+          <h3 className="text-sm font-medium text-gameshow-muted mb-2 mt-4">Ustawienia zaawansowane</h3>
+          <TabsList className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+            {advancedTabs.map(tab => (
+              <TabsTrigger key={tab.id} value={tab.id}>{tab.label}</TabsTrigger>
+            ))}
           </TabsList>
 
           <div className="mt-6">
@@ -63,26 +99,4 @@ export function SettingsLayout({ activeTab, setActiveTab, children }: SettingsLa
   );
 }
 
-export const SettingsTabs = ({ children, activeTab, setActiveTab }: {
-  children: React.ReactNode;
-  activeTab: string;
-  setActiveTab: (tab: string) => void;
-}) => {
-  return (
-    <Tabs defaultValue={activeTab} onValueChange={setActiveTab} value={activeTab}>
-      <TabsList className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2">
-        <TabsTrigger value="players">Gracze</TabsTrigger>
-        <TabsTrigger value="questions">Pytania</TabsTrigger>
-        <TabsTrigger value="cards">Karty</TabsTrigger>
-        <TabsTrigger value="themes">Motywy</TabsTrigger>
-        <TabsTrigger value="sounds">Dźwięki</TabsTrigger>
-        <TabsTrigger value="roles">Role</TabsTrigger>
-        <TabsTrigger value="ranking">Ranking</TabsTrigger>
-        <TabsTrigger value="automation">Automatyzacja</TabsTrigger>
-      </TabsList>
-      <div className="mt-6">
-        {children}
-      </div>
-    </Tabs>
-  );
-};
+export default SettingsLayout;
