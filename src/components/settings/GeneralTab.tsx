@@ -2,353 +2,276 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Slider } from '@/components/ui/slider';
-import { Label } from '@/components/ui/label';
-import { Form, FormField, FormItem, FormLabel, FormControl, FormDescription, FormMessage } from '@/components/ui/form';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Save, RefreshCw } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Card, CardContent } from '@/components/ui/card';
+import { Separator } from '@/components/ui/separator';
 import { toast } from 'sonner';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm } from 'react-hook-form';
-import * as z from 'zod';
-
-// Define the schema for general settings
-const generalSettingsSchema = z.object({
-  gameName: z.string().min(3, 'Nazwa teleturnieju musi mieć przynajmniej 3 znaki').max(50),
-  maxPlayers: z.number().min(2, 'Minimum 2 graczy').max(20, 'Maksymalnie 20 graczy'),
-  initialLives: z.number().min(1, 'Minimum 1 życie').max(10, 'Maksymalnie 10 żyć'),
-  roundTimeMin: z.number().min(10, 'Minimum 10 sekund').max(300, 'Maksymalnie 5 minut'),
-  roundTimeMax: z.number().min(30, 'Minimum 30 sekund').max(600, 'Maksymalnie 10 minut'),
-  maxPoints: z.number().min(100, 'Minimum 100 punktów').max(10000, 'Maksymalnie 10000 punktów'),
-  showPoints: z.boolean(),
-  showLives: z.boolean(),
-  showTimer: z.boolean(),
-  allowSounds: z.boolean(),
-});
-
-type GeneralSettingsFormValues = z.infer<typeof generalSettingsSchema>;
 
 export function GeneralTab() {
-  const [saved, setSaved] = useState(false);
-
-  // Load settings from localStorage
-  const getDefaultValues = (): GeneralSettingsFormValues => {
-    try {
-      const savedSettings = localStorage.getItem('gameshow-general-settings');
-      if (savedSettings) {
-        return JSON.parse(savedSettings);
-      }
-    } catch (error) {
-      console.error('Error loading settings:', error);
-    }
-
-    // Default values
-    return {
-      gameName: 'Discord Game Show',
-      maxPlayers: 10,
-      initialLives: 3,
-      roundTimeMin: 30,
-      roundTimeMax: 120,
-      maxPoints: 1000,
-      showPoints: true,
-      showLives: true,
-      showTimer: true,
-      allowSounds: true,
-    };
-  };
-
-  const form = useForm<GeneralSettingsFormValues>({
-    resolver: zodResolver(generalSettingsSchema),
-    defaultValues: getDefaultValues(),
+  // Game settings state
+  const [gameSettings, setGameSettings] = useState({
+    name: 'Quiz Show',
+    description: 'Interaktywny teleturniej z pytaniami i nagrodami',
+    hostName: 'Prowadzący',
+    maxPlayers: 10,
+    minPlayers: 2,
+    initialLives: 3,
+    maxPoints: 1000,
+    roundTimeout: 60,
+    streamDelay: 4,
+    enableChat: true,
+    enableSound: true,
+    enableAnimation: true,
+    debugMode: false,
+    language: 'pl'
   });
-
+  
+  // Load settings from localStorage on component mount
+  useEffect(() => {
+    const savedSettings = localStorage.getItem('gameSettings');
+    if (savedSettings) {
+      try {
+        const parsedSettings = JSON.parse(savedSettings);
+        setGameSettings(prev => ({ ...prev, ...parsedSettings }));
+      } catch (error) {
+        console.error('Failed to parse saved settings:', error);
+      }
+    }
+  }, []);
+  
+  // Update a single setting
+  const updateSetting = <K extends keyof typeof gameSettings>(key: K, value: typeof gameSettings[K]) => {
+    setGameSettings(prev => ({
+      ...prev,
+      [key]: value
+    }));
+  };
+  
   // Save settings to localStorage
-  const onSubmit = (values: GeneralSettingsFormValues) => {
+  const handleSaveSettings = () => {
     try {
-      localStorage.setItem('gameshow-general-settings', JSON.stringify(values));
-      toast.success('Zapisano ustawienia ogólne');
-      setSaved(true);
-      setTimeout(() => setSaved(false), 2000);
+      localStorage.setItem('gameSettings', JSON.stringify(gameSettings));
+      toast.success('Ustawienia zostały zapisane');
     } catch (error) {
-      console.error('Error saving settings:', error);
+      console.error('Failed to save settings:', error);
       toast.error('Nie udało się zapisać ustawień');
     }
   };
-
-  // Reset to defaults
-  const handleReset = () => {
-    if (confirm('Czy na pewno chcesz przywrócić domyślne ustawienia? Ta operacja nie może zostać cofnięta.')) {
-      const defaultValues = {
-        gameName: 'Discord Game Show',
+  
+  // Reset settings to defaults
+  const handleResetSettings = () => {
+    if (confirm('Czy na pewno chcesz przywrócić domyślne ustawienia? Wprowadzone zmiany zostaną utracone.')) {
+      setGameSettings({
+        name: 'Quiz Show',
+        description: 'Interaktywny teleturniej z pytaniami i nagrodami',
+        hostName: 'Prowadzący',
         maxPlayers: 10,
+        minPlayers: 2,
         initialLives: 3,
-        roundTimeMin: 30,
-        roundTimeMax: 120,
         maxPoints: 1000,
-        showPoints: true,
-        showLives: true,
-        showTimer: true,
-        allowSounds: true,
-      };
-      
-      form.reset(defaultValues);
-      localStorage.setItem('gameshow-general-settings', JSON.stringify(defaultValues));
-      toast.success('Przywrócono domyślne ustawienia');
+        roundTimeout: 60,
+        streamDelay: 4,
+        enableChat: true,
+        enableSound: true,
+        enableAnimation: true,
+        debugMode: false,
+        language: 'pl'
+      });
+      toast.info('Przywrócono domyślne ustawienia');
     }
   };
-
+  
   return (
-    <div className="space-y-6">
-      <h2 className="text-2xl font-bold mb-4 text-gameshow-text">Ustawienia ogólne</h2>
+    <div className="space-y-8">
+      <h2 className="text-2xl font-bold">Ustawienia Ogólne</h2>
       
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-          <Card className="bg-gameshow-card shadow-lg">
-            <CardHeader>
-              <CardTitle>Podstawowe ustawienia</CardTitle>
-              <CardDescription>Skonfiguruj podstawowe parametry teleturnieju</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {/* Game Name */}
-              <FormField
-                control={form.control}
-                name="gameName"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Nazwa teleturnieju</FormLabel>
-                    <FormControl>
-                      <Input 
-                        placeholder="Wpisz nazwę teleturnieju" 
-                        {...field} 
-                        className="bg-gameshow-background"
-                      />
-                    </FormControl>
-                    <FormDescription>
-                      Nazwa będzie widoczna na wszystkich ekranach
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+      <Card className="bg-gameshow-card">
+        <CardContent className="p-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <h3 className="text-xl font-semibold mb-4">Podstawowe informacje</h3>
               
-              {/* Max Players */}
-              <FormField
-                control={form.control}
-                name="maxPlayers"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Maksymalna liczba graczy: {field.value}</FormLabel>
-                    <FormControl>
-                      <Slider
-                        defaultValue={[field.value]}
-                        min={2}
-                        max={20}
-                        step={1}
-                        onValueChange={(value) => field.onChange(value[0])}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              {/* Initial Lives */}
-              <FormField
-                control={form.control}
-                name="initialLives"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Początkowa liczba żyć: {field.value}</FormLabel>
-                    <FormControl>
-                      <Slider
-                        defaultValue={[field.value]}
-                        min={1}
-                        max={10}
-                        step={1}
-                        onValueChange={(value) => field.onChange(value[0])}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </CardContent>
-          </Card>
-          
-          <Card className="bg-gameshow-card shadow-lg">
-            <CardHeader>
-              <CardTitle>Czas i punktacja</CardTitle>
-              <CardDescription>Skonfiguruj ustawienia czasu i punktacji</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {/* Round Time Min */}
-              <FormField
-                control={form.control}
-                name="roundTimeMin"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Minimalny czas rundy: {field.value} sekund</FormLabel>
-                    <FormControl>
-                      <Slider
-                        defaultValue={[field.value]}
-                        min={10}
-                        max={300}
-                        step={5}
-                        onValueChange={(value) => field.onChange(value[0])}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              {/* Round Time Max */}
-              <FormField
-                control={form.control}
-                name="roundTimeMax"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Maksymalny czas rundy: {field.value} sekund</FormLabel>
-                    <FormControl>
-                      <Slider
-                        defaultValue={[field.value]}
-                        min={30}
-                        max={600}
-                        step={10}
-                        onValueChange={(value) => field.onChange(value[0])}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              {/* Max Points */}
-              <FormField
-                control={form.control}
-                name="maxPoints"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Maksymalna liczba punktów: {field.value}</FormLabel>
-                    <FormControl>
-                      <Slider
-                        defaultValue={[field.value]}
-                        min={100}
-                        max={10000}
-                        step={100}
-                        onValueChange={(value) => field.onChange(value[0])}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </CardContent>
-          </Card>
-          
-          <Card className="bg-gameshow-card shadow-lg">
-            <CardHeader>
-              <CardTitle>Interfejs użytkownika</CardTitle>
-              <CardDescription>Skonfiguruj wyświetlane elementy</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* Show Points */}
-                <FormField
-                  control={form.control}
-                  name="showPoints"
-                  render={({ field }) => (
-                    <FormItem className="flex items-center gap-2">
-                      <FormControl>
-                        <input
-                          type="checkbox"
-                          checked={field.value}
-                          onChange={field.onChange}
-                          className="h-4 w-4"
-                        />
-                      </FormControl>
-                      <FormLabel>Pokaż punkty</FormLabel>
-                    </FormItem>
-                  )}
-                />
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1">Nazwa teleturnieju</label>
+                  <Input 
+                    value={gameSettings.name} 
+                    onChange={(e) => updateSetting('name', e.target.value)} 
+                    maxLength={50}
+                  />
+                </div>
                 
-                {/* Show Lives */}
-                <FormField
-                  control={form.control}
-                  name="showLives"
-                  render={({ field }) => (
-                    <FormItem className="flex items-center gap-2">
-                      <FormControl>
-                        <input
-                          type="checkbox"
-                          checked={field.value}
-                          onChange={field.onChange}
-                          className="h-4 w-4"
-                        />
-                      </FormControl>
-                      <FormLabel>Pokaż życia</FormLabel>
-                    </FormItem>
-                  )}
-                />
+                <div>
+                  <label className="block text-sm font-medium mb-1">Opis</label>
+                  <Textarea 
+                    value={gameSettings.description} 
+                    onChange={(e) => updateSetting('description', e.target.value)} 
+                    maxLength={200}
+                    className="h-24"
+                  />
+                </div>
                 
-                {/* Show Timer */}
-                <FormField
-                  control={form.control}
-                  name="showTimer"
-                  render={({ field }) => (
-                    <FormItem className="flex items-center gap-2">
-                      <FormControl>
-                        <input
-                          type="checkbox"
-                          checked={field.value}
-                          onChange={field.onChange}
-                          className="h-4 w-4"
-                        />
-                      </FormControl>
-                      <FormLabel>Pokaż timer</FormLabel>
-                    </FormItem>
-                  )}
-                />
+                <div>
+                  <label className="block text-sm font-medium mb-1">Nazwa prowadzącego</label>
+                  <Input 
+                    value={gameSettings.hostName} 
+                    onChange={(e) => updateSetting('hostName', e.target.value)} 
+                    maxLength={30}
+                  />
+                </div>
                 
-                {/* Allow Sounds */}
-                <FormField
-                  control={form.control}
-                  name="allowSounds"
-                  render={({ field }) => (
-                    <FormItem className="flex items-center gap-2">
-                      <FormControl>
-                        <input
-                          type="checkbox"
-                          checked={field.value}
-                          onChange={field.onChange}
-                          className="h-4 w-4"
-                        />
-                      </FormControl>
-                      <FormLabel>Włącz dźwięki</FormLabel>
-                    </FormItem>
-                  )}
-                />
+                <div>
+                  <label className="block text-sm font-medium mb-1">Język</label>
+                  <Select 
+                    value={gameSettings.language}
+                    onValueChange={(value) => updateSetting('language', value)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Wybierz język" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="pl">Polski</SelectItem>
+                      <SelectItem value="en">English</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
-            </CardContent>
-            <CardFooter className="flex justify-between">
-              <Button 
-                type="button" 
-                variant="outline" 
-                onClick={handleReset}
-                className="flex items-center gap-2"
-              >
-                <RefreshCw className="h-4 w-4" /> Przywróć domyślne
-              </Button>
-              <Button 
-                type="submit" 
-                className={`flex items-center gap-2 ${saved ? 'bg-green-500' : ''}`}
-              >
-                <Save className="h-4 w-4" /> {saved ? 'Zapisano!' : 'Zapisz ustawienia'}
-              </Button>
-            </CardFooter>
-          </Card>
-        </form>
-      </Form>
+            </div>
+            
+            <div>
+              <h3 className="text-xl font-semibold mb-4">Parametry gry</h3>
+              
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Minimalna liczba graczy</label>
+                    <Input 
+                      type="number"
+                      value={gameSettings.minPlayers} 
+                      onChange={(e) => updateSetting('minPlayers', parseInt(e.target.value))} 
+                      min={1}
+                      max={gameSettings.maxPlayers}
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Maksymalna liczba graczy</label>
+                    <Input 
+                      type="number"
+                      value={gameSettings.maxPlayers} 
+                      onChange={(e) => updateSetting('maxPlayers', parseInt(e.target.value))} 
+                      min={gameSettings.minPlayers}
+                      max={20}
+                    />
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Początkowa liczba żyć</label>
+                    <Input 
+                      type="number"
+                      value={gameSettings.initialLives} 
+                      onChange={(e) => updateSetting('initialLives', parseInt(e.target.value))} 
+                      min={1}
+                      max={10}
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Maksymalna liczba punktów</label>
+                    <Input 
+                      type="number"
+                      value={gameSettings.maxPoints} 
+                      onChange={(e) => updateSetting('maxPoints', parseInt(e.target.value))} 
+                      min={100}
+                      max={10000}
+                      step={100}
+                    />
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Domyślny czas rundy (s)</label>
+                    <Input 
+                      type="number"
+                      value={gameSettings.roundTimeout} 
+                      onChange={(e) => updateSetting('roundTimeout', parseInt(e.target.value))} 
+                      min={10}
+                      max={300}
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Opóźnienie streamu (s)</label>
+                    <Input 
+                      type="number"
+                      value={gameSettings.streamDelay} 
+                      onChange={(e) => updateSetting('streamDelay', parseInt(e.target.value))} 
+                      min={0}
+                      max={30}
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <Separator className="my-6" />
+          
+          <h3 className="text-xl font-semibold mb-4">Dodatkowe opcje</h3>
+          
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="flex items-center space-x-2">
+              <Switch 
+                id="enableChat" 
+                checked={gameSettings.enableChat}
+                onCheckedChange={(checked) => updateSetting('enableChat', checked)}
+              />
+              <label htmlFor="enableChat" className="cursor-pointer">Włącz czat</label>
+            </div>
+            
+            <div className="flex items-center space-x-2">
+              <Switch 
+                id="enableSound" 
+                checked={gameSettings.enableSound}
+                onCheckedChange={(checked) => updateSetting('enableSound', checked)}
+              />
+              <label htmlFor="enableSound" className="cursor-pointer">Włącz dźwięki</label>
+            </div>
+            
+            <div className="flex items-center space-x-2">
+              <Switch 
+                id="enableAnimation" 
+                checked={gameSettings.enableAnimation}
+                onCheckedChange={(checked) => updateSetting('enableAnimation', checked)}
+              />
+              <label htmlFor="enableAnimation" className="cursor-pointer">Włącz animacje</label>
+            </div>
+            
+            <div className="flex items-center space-x-2">
+              <Switch 
+                id="debugMode" 
+                checked={gameSettings.debugMode}
+                onCheckedChange={(checked) => updateSetting('debugMode', checked)}
+              />
+              <label htmlFor="debugMode" className="cursor-pointer">Tryb debugowania</label>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+      
+      <div className="flex justify-between">
+        <Button variant="outline" onClick={handleResetSettings}>
+          Przywróć domyślne
+        </Button>
+        <Button onClick={handleSaveSettings}>
+          Zapisz ustawienia
+        </Button>
+      </div>
     </div>
   );
 }

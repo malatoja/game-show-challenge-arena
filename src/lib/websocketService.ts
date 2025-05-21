@@ -1,131 +1,67 @@
 
-import socketService, { SocketEvent, SocketPayloads } from './socketService';
+import socketCore from './socket/socketCore';
+import { toast } from 'sonner';
+import debugLog from './socket/debugUtils';
 
-export type WebSocketMessageType = 
-  | 'QUESTION_UPDATE' 
-  | 'TIMER_UPDATE' 
-  | 'PLAYER_UPDATE'
-  | 'CATEGORY_SELECT'
-  | 'ROUND_UPDATE';
+// Base WebSocket URL, can be overridden in environment
+const WS_URL = process.env.REACT_APP_WS_URL || 'http://localhost:3001';
 
-export interface WebSocketMessage {
-  type: WebSocketMessageType;
-  data: any;
-}
-
-// This WebSocketService is now a wrapper around our new socketService 
-// to maintain backward compatibility
-class WebSocketService {
-  private listeners: Record<WebSocketMessageType, Function[]> = {
-    'QUESTION_UPDATE': [],
-    'TIMER_UPDATE': [],
-    'PLAYER_UPDATE': [],
-    'CATEGORY_SELECT': [],
-    'ROUND_UPDATE': []
-  };
-
-  // Map old event types to new socket events
-  private eventMapping: Record<WebSocketMessageType, SocketEvent> = {
-    'QUESTION_UPDATE': 'question:show',
-    'TIMER_UPDATE': 'overlay:update',
-    'PLAYER_UPDATE': 'player:update',
-    'CATEGORY_SELECT': 'overlay:update',
-    'ROUND_UPDATE': 'round:start'
-  };
-
-  connect(url: string): Promise<void> {
-    return new Promise((resolve) => {
-      // Initialize the new socketService
-      socketService.initialize(url);
-      
-      // Set up listeners for the new socketService to route to old listeners
-      this.setupSocketListeners();
-      
-      // Resolve immediately to maintain backward compatibility
-      resolve();
-    });
-  }
-
-  private setupSocketListeners(): void {
-    // Listen to question:show events and convert to QUESTION_UPDATE
-    socketService.on('question:show', (data) => {
-      this.handleMessage({
-        type: 'QUESTION_UPDATE',
-        data: data.question
-      });
-    });
-
-    // Listen to overlay:update events for timer updates
-    socketService.on('overlay:update', (data) => {
-      if (data.timeRemaining !== undefined) {
-        this.handleMessage({
-          type: 'TIMER_UPDATE',
-          data: { time: data.timeRemaining }
-        });
+// Initialize and export WebSocket service
+const websocketService = {
+  /**
+   * Initialize the WebSocket connection
+   * @param mockMode Enable mock mode for development without a real server
+   */
+  init: (mockMode = false) => {
+    try {
+      if (mockMode) {
+        debugLog('WebSocket initializing in mock mode');
+        socketCore.mockMode = true;
+        return;
       }
+
+      socketCore.init(WS_URL, {
+        reconnectionAttempts: 5,
+        reconnectionDelay: 2000,
+        autoConnect: true,
+        transports: ['websocket', 'polling']
+      });
       
-      if (data.category !== undefined) {
-        this.handleMessage({
-          type: 'CATEGORY_SELECT',
-          data: {
-            category: data.category,
-            difficulty: data.difficulty || 10
-          }
-        });
-      }
-    });
-
-    // Listen to player:update events
-    socketService.on('player:update', (data) => {
-      this.handleMessage({
-        type: 'PLAYER_UPDATE',
-        data: data.player
-      });
-    });
-
-    // Listen to round:start events
-    socketService.on('round:start', (data) => {
-      this.handleMessage({
-        type: 'ROUND_UPDATE',
-        data: { title: data.roundName }
-      });
-    });
-  }
-
-  disconnect(): void {
-    socketService.disconnect();
-  }
-
-  addListener(type: WebSocketMessageType, callback: Function): void {
-    if (!this.listeners[type]) {
-      this.listeners[type] = [];
+      debugLog(`WebSocket initialized with URL: ${WS_URL}`);
+    } catch (error) {
+      console.error('Failed to initialize WebSocket:', error);
+      toast.error('Failed to initialize WebSocket connection');
     }
-    this.listeners[type].push(callback);
-  }
+  },
 
-  removeListener(type: WebSocketMessageType, callback: Function): void {
-    if (this.listeners[type]) {
-      this.listeners[type] = this.listeners[type].filter(cb => cb !== callback);
-    }
-  }
+  /**
+   * Get the connection status
+   */
+  isConnected: () => {
+    return socketCore.connected;
+  },
 
-  private handleMessage(message: WebSocketMessage): void {
-    const { type, data } = message;
+  /**
+   * Force a reconnection attempt
+   */
+  reconnect: () => {
+    socketCore.reconnect();
+    toast.info('Attempting to reconnect WebSocket...');
+  },
+
+  /**
+   * Enable or disable mock mode
+   */
+  setMockMode: (enabled: boolean) => {
+    socketCore.mockMode = enabled;
     
-    if (this.listeners[type]) {
-      this.listeners[type].forEach(callback => {
-        try {
-          callback(data);
-        } catch (error) {
-          console.error(`Error in WebSocket listener for ${type}:`, error);
-        }
-      });
+    if (enabled) {
+      toast.success('WebSocket mock mode enabled');
+    } else {
+      toast.info('WebSocket mock mode disabled, using real connection');
+      socketCore.reconnect();
     }
   }
-}
+};
 
-// Create a singleton instance
-export const websocketService = new WebSocketService();
-
-// For backward compatibility
 export default websocketService;

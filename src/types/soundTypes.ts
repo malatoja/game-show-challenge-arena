@@ -13,7 +13,13 @@ export type SoundType =
   | 'game-over'
   | 'winner'
   | 'hint'
-  | 'hint-sound';
+  | 'hint-sound'
+  | 'card-use'
+  | 'correct-answer'
+  | 'wrong-answer'
+  | 'timeout'
+  | 'round-end'
+  | 'reward';
 
 export interface SoundOptions {
   volume?: number;

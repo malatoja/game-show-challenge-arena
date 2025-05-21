@@ -2,14 +2,14 @@
 import { io, Socket } from 'socket.io-client';
 import { SocketEvent, SocketOptions, PayloadFor } from './socketTypes';
 import { toast } from 'sonner';
-import { debugLog } from './debugUtils';
+import debugLog from './debugUtils';
 
 const DEFAULT_RECONNECTION_ATTEMPTS = 5;
 const DEFAULT_RECONNECTION_DELAY = 2000;
 
 class SocketCore {
   private socket: Socket | null = null;
-  private url: string = '';
+  private _url: string = '';
   private options: SocketOptions = {};
   private reconnectionAttempts = 0;
   private maxReconnectionAttempts = DEFAULT_RECONNECTION_ATTEMPTS;
@@ -24,12 +24,12 @@ class SocketCore {
 
   // Getter method for url
   public getUrl(): string {
-    return this.url;
+    return this._url;
   }
 
   // Method to initialize the socket connection
   public init(url: string, options: SocketOptions = {}): void {
-    this.url = url;
+    this._url = url;
     this.options = {
       reconnectionAttempts: DEFAULT_RECONNECTION_ATTEMPTS,
       reconnectionDelay: DEFAULT_RECONNECTION_DELAY,
@@ -43,22 +43,27 @@ class SocketCore {
     this.connect();
   }
 
+  // Initialize method for backward compatibility
+  public initialize(url: string, options: SocketOptions = {}): void {
+    this.init(url, options);
+  }
+
   // Connect to the socket server
   public connect(): void {
     if (this._mockMode) {
       console.log('[SocketCore] Mock mode enabled, not connecting to real socket');
       this._connected = true;
-      this.emit('connection:status', { connected: true });
+      this.emit('connection:status' as SocketEvent, { connected: true });
       return;
     }
 
-    if (!this.url) {
+    if (!this._url) {
       console.error('[SocketCore] No URL provided for socket connection');
       return;
     }
 
     try {
-      this.socket = io(this.url, {
+      this.socket = io(this._url, {
         ...this.options,
         reconnection: false, // We'll handle reconnection manually
       });
@@ -79,20 +84,20 @@ class SocketCore {
       debugLog('[SocketCore] Connected to socket server');
       this._connected = true;
       this.reconnectionAttempts = 0;
-      this.emit('connection:status', { connected: true });
+      this.emit('connection:status' as SocketEvent, { connected: true });
     });
 
     this.socket.on('disconnect', () => {
       debugLog('[SocketCore] Disconnected from socket server');
       this._connected = false;
-      this.emit('connection:status', { connected: false });
+      this.emit('connection:status' as SocketEvent, { connected: false });
       this.handleReconnection();
     });
 
     this.socket.on('connect_error', (error) => {
       debugLog('[SocketCore] Connection error:', error);
       this._connected = false;
-      this.emit('connection:error', { message: error.message });
+      this.emit('connection:error' as SocketEvent, { message: error.message });
       this.handleReconnection();
     });
   }
@@ -102,7 +107,7 @@ class SocketCore {
     if (this.reconnectionAttempts >= this.maxReconnectionAttempts) {
       debugLog(`[SocketCore] Maximum reconnection attempts reached (${this.maxReconnectionAttempts})`);
       toast.error(`Maximum reconnection attempts reached (${this.maxReconnectionAttempts}). Try again later.`);
-      this.emit('connection:error', { 
+      this.emit('connection:error' as SocketEvent, { 
         message: `Maximum reconnection attempts reached (${this.maxReconnectionAttempts}). Try again later.` 
       });
       return;
@@ -176,7 +181,7 @@ class SocketCore {
     }
 
     debugLog(`[SocketCore] Emitting event: ${event}`, payload);
-    this.socket.emit(event, payload);
+    this.socket.emit(event as string, payload);
   }
 
   // Subscribe to an event from the socket server
@@ -195,13 +200,13 @@ class SocketCore {
     }
 
     debugLog(`[SocketCore] Subscribing to event: ${event}`);
-    this.socket.on(event, callback);
+    this.socket.on(event as string, callback as any);
 
     // Return an unsubscribe function
     return () => {
       if (this.socket) {
         debugLog(`[SocketCore] Unsubscribing from event: ${event}`);
-        this.socket.off(event, callback);
+        this.socket.off(event as string, callback as any);
       }
     };
   }
@@ -211,7 +216,7 @@ class SocketCore {
     if (!this.socket) return;
     
     debugLog(`[SocketCore] Unsubscribing from all callbacks for event: ${event}`);
-    this.socket.off(event);
+    this.socket.off(event as string);
   }
 
   // Enable mock mode for testing
@@ -235,6 +240,12 @@ class SocketCore {
   // Get mock mode status
   public get mockMode(): boolean {
     return this._mockMode;
+  }
+
+  // Setter for mock mode - useful when it needs to be changed from outside
+  public set mockMode(value: boolean) {
+    this._mockMode = value;
+    debugLog(`[SocketCore] Mock mode ${value ? 'enabled' : 'disabled'}`);
   }
 }
 

@@ -84,9 +84,14 @@ export function SoundsTab() {
       return;
     }
     
-    // Implementation for setCustomSound would need to be added to the soundService
-    // soundService.setCustomSound(selectedSound, customFile);
-    toast.success(`Ustawiono niestandardowy dźwięk dla: ${selectedSound}`);
+    soundService.setCustomSound(selectedSound, customFile)
+      .then(() => {
+        toast.success(`Ustawiono niestandardowy dźwięk dla: ${selectedSound}`);
+        setCustomFile(null);
+      })
+      .catch((error) => {
+        toast.error(`Błąd podczas ustawiania dźwięku: ${error.message}`);
+      });
   };
   
   const handleResetSound = () => {
@@ -95,15 +100,13 @@ export function SoundsTab() {
       return;
     }
     
-    // Implementation for resetSound would need to be added to the soundService
-    // soundService.resetSound(selectedSound);
+    soundService.resetSound(selectedSound);
     toast.success(`Zresetowano dźwięk: ${selectedSound}`);
   };
   
   const handleResetAllSounds = () => {
     if (confirm('Czy na pewno chcesz przywrócić wszystkie domyślne dźwięki? Ta operacja nie może zostać cofnięta.')) {
-      // Implementation for resetAllSounds would need to be added to the soundService
-      // soundService.resetAllSounds();
+      soundService.resetAllSounds();
       toast.success('Przywrócono wszystkie domyślne dźwięki');
     }
   };

@@ -304,3 +304,5 @@ export const InfoBarTab = () => {
     </div>
   );
 };
+
+export default InfoBarTab;

@@ -218,3 +218,5 @@ export const LuckyLoserTab = () => {
     </div>
   );
 };
+
+export default LuckyLoserTab;

@@ -1,21 +1,7 @@
 
-// Sound file paths
-export type SoundType = 
-  | 'card-use' 
-  | 'correct-answer' 
-  | 'wrong-answer' 
-  | 'hint' 
-  | 'timeout' 
-  | 'round-end' 
-  | 'reward'
-  | 'round-start'
-  | 'wheel-spin'
-  | 'countdown'
-  | 'buzzer'
-  | 'correct'
-  | 'incorrect';
+import { SoundType } from '@/types/soundTypes';
 
-// Sound configuration
+// Sound file paths
 const SOUND_PATHS: Record<SoundType, string> = {
   'card-use': '/sounds/card-use.mp3',
   'correct-answer': '/sounds/correct.mp3',
@@ -28,8 +14,14 @@ const SOUND_PATHS: Record<SoundType, string> = {
   'wheel-spin': '/sounds/wheel-spin.mp3',
   'countdown': '/sounds/countdown.mp3',
   'buzzer': '/sounds/buzzer.mp3',
-  'correct': '/sounds/correct.mp3',  // Alias for correct-answer
-  'incorrect': '/sounds/wrong.mp3'  // Alias for wrong-answer
+  'correct': '/sounds/correct.mp3',
+  'incorrect': '/sounds/wrong.mp3',
+  'elimination': '/sounds/elimination.mp3',
+  'timer-end': '/sounds/timer-end.mp3',
+  'winner': '/sounds/winner.mp3',
+  'game-over': '/sounds/game-over.mp3',
+  'card-activate': '/sounds/card-activate.mp3',
+  'hint-sound': '/sounds/hint-sound.mp3'
 };
 
 // Volume settings
@@ -45,8 +37,14 @@ const VOLUME_SETTINGS: Record<SoundType, number> = {
   'wheel-spin': 0.5,
   'countdown': 0.5,
   'buzzer': 0.4,
-  'correct': 0.5,  // Alias for correct-answer
-  'incorrect': 0.5  // Alias for wrong-answer
+  'correct': 0.5,
+  'incorrect': 0.5,
+  'elimination': 0.6,
+  'timer-end': 0.5,
+  'winner': 0.7,
+  'game-over': 0.7,
+  'card-activate': 0.6,
+  'hint-sound': 0.5
 };
 
 // Current sound settings
@@ -238,6 +236,13 @@ export const cleanupSounds = (): void => {
   });
 };
 
+// Re-export individual functions as a service object
+export const setVolume = setMasterVolume;
+export const setEnabled = setSoundEnabled;
+export const isEnabled = isSoundEnabled;
+export const getVolume = getMasterVolume;
+export const play = playSound;
+
 // Export the sound service object for components that need full service access
 export const soundService = {
   play: playSound,
@@ -252,4 +257,19 @@ export const soundService = {
   setCustomSound: setCustomSound,
   resetSound: resetSound,
   resetAllSounds: resetAllSounds
+};
+
+export default {
+  play,
+  setEnabled,
+  isEnabled,
+  setVolume,
+  getVolume,
+  preload: preloadSounds,
+  cleanup: cleanupSounds,
+  isMuted,
+  toggleMute,
+  setCustomSound,
+  resetSound,
+  resetAllSounds
 };

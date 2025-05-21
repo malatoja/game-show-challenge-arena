@@ -1,74 +1,15 @@
 
-import { CardType } from '@/types/gameTypes';
+import { CardType } from "@/types/gameTypes";
 
-// Load custom card images from localStorage if available
-const getCustomCardImages = (): Partial<Record<CardType, string>> => {
-  try {
-    const customImages = localStorage.getItem('customCardImages');
-    return customImages ? JSON.parse(customImages) : {};
-  } catch (error) {
-    console.error('Error loading custom card images:', error);
-    return {};
-  }
+// Map of card types to their image URLs
+export const CARD_IMAGES: Partial<Record<CardType, string>> = {
+  dejavu: '/images/cards/dejavu.webp',
+  kontra: '/images/cards/kontra.webp',
+  reanimacja: '/images/cards/reanimacja.webp',
+  skip: '/images/cards/skip.webp',
+  turbo: '/images/cards/turbo.webp',
+  refleks2: '/images/cards/refleks2.webp',
+  refleks3: '/images/cards/refleks3.webp',
+  lustro: '/images/cards/lustro.webp',
+  oswiecenie: '/images/cards/oswiecenie.webp'
 };
-
-// Load custom card animations from localStorage if available
-const getCustomCardAnimations = (): Partial<Record<CardType, string>> => {
-  try {
-    const customAnimations = localStorage.getItem('customCardAnimations');
-    return customAnimations ? JSON.parse(customAnimations) : {};
-  } catch (error) {
-    console.error('Error loading custom card animations:', error);
-    return {};
-  }
-};
-
-// Default image paths for cards
-const DEFAULT_CARD_IMAGES: Record<CardType, string> = {
-  'dejavu': '/images/cards/dejavu.png',
-  'kontra': '/images/cards/kontra.png',
-  'reanimacja': '/images/cards/reanimacja.png',
-  'skip': '/images/cards/skip.png',
-  'turbo': '/images/cards/turbo.png',
-  'refleks2': '/images/cards/refleks2.png',
-  'refleks3': '/images/cards/refleks3.png',
-  'lustro': '/images/cards/lustro.png',
-  'oswiecenie': '/images/cards/oswiecenie.png'
-};
-
-// Default animation paths for cards
-const DEFAULT_CARD_ANIMATIONS: Record<CardType, string> = {
-  'dejavu': '/animations/cards/dejavu.webm',
-  'kontra': '/animations/cards/kontra.webm',
-  'reanimacja': '/animations/cards/reanimacja.webm',
-  'skip': '/animations/cards/skip.webm',
-  'turbo': '/animations/cards/turbo.webm',
-  'refleks2': '/animations/cards/refleks2.webm',
-  'refleks3': '/animations/cards/refleks3.webm',
-  'lustro': '/animations/cards/lustro.webm',
-  'oswiecenie': '/animations/cards/oswiecenie.webm'
-};
-
-// Get custom images if available, fallback to defaults
-const customImages = typeof window !== 'undefined' ? getCustomCardImages() : {};
-
-// Get custom animations if available, fallback to defaults
-const customAnimations = typeof window !== 'undefined' ? getCustomCardAnimations() : {};
-
-// Map of card types to their image paths - override defaults with custom images
-export const CARD_IMAGES: Record<CardType, string> = {
-  ...DEFAULT_CARD_IMAGES,
-  ...customImages
-};
-
-// Export default images for reference
-export const DEFAULT_CARD_IMAGES_PATHS = DEFAULT_CARD_IMAGES;
-
-// Map of card types to their animation paths - override defaults with custom animations
-export const CARD_ANIMATIONS: Record<CardType, string> = {
-  ...DEFAULT_CARD_ANIMATIONS,
-  ...customAnimations
-};
-
-// Export default animations for reference
-export const DEFAULT_CARD_ANIMATIONS_PATHS = DEFAULT_CARD_ANIMATIONS;

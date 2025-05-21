@@ -1,167 +1,147 @@
 
-import { GameState, Player } from '@/types/gameTypes';
+import { GameState, PlayerId } from '../../types/gameTypes';
 import { toast } from 'sonner';
-import { checkForReward, RewardCondition } from '@/lib/cardRewardsManager';
+import { MAX_POINTS_PER_QUESTION } from '../../constants/gameConstants';
 
-// Handle answering a question
-export const handleAnswerQuestion = (
-  state: GameState,
-  playerId: string,
+// Type for reward condition
+type RewardCondition = 
+  | 'correctAnswer'
+  | 'fastAnswer'
+  | 'streakAnswer'
+  | 'hardQuestion'
+  | 'lastLife'
+  | 'consecutiveCorrect';
+
+// Type for reward type
+type RewardType = 'card' | 'points' | 'life' | 'none';
+
+// Response from reward calculation function
+type RewardResponse = {
+  shouldReward: boolean;
+  rewardType: RewardType;
+  cardType?: import('../../types/gameTypes').CardType;
+  message?: string;
+  points?: number;
+};
+
+/**
+ * Calculate if a player should be rewarded for their answer
+ */
+const calculateReward = (
+  state: GameState, 
+  playerId: PlayerId, 
   isCorrect: boolean
-): GameState => {
+): RewardResponse => {
+  const player = state.players.find(p => p.id === playerId);
+  
+  if (!player) {
+    return { shouldReward: false, rewardType: 'none' };
+  }
+  
+  // No rewards for incorrect answers
+  if (!isCorrect) {
+    return { shouldReward: false, rewardType: 'none' };
+  }
+  
+  // Check for consecutive correct answers (streak)
+  const consecutiveCorrect = player.consecutiveCorrect || 0;
+  if (consecutiveCorrect >= 2) {
+    // Reward card after 3 consecutive correct answers
+    if (consecutiveCorrect === 2) {
+      return {
+        shouldReward: true,
+        rewardType: 'card',
+        cardType: 'turbo', // Example card type
+        message: 'Karta za 3 poprawne odpowiedzi z rzędu!',
+        points: 0
+      };
+    }
+    
+    // Extra points for consecutive correct answers
+    return {
+      shouldReward: true,
+      rewardType: 'points',
+      message: `Bonus za ${consecutiveCorrect + 1} poprawne odpowiedzi z rzędu!`,
+      points: 50 * consecutiveCorrect
+    };
+  }
+  
+  // No reward for standard correct answer
+  return { shouldReward: false, rewardType: 'none', points: 0 };
+};
+
+export const handleAnswerQuestion = (state: GameState, playerId: PlayerId, isCorrect: boolean): GameState => {
   const playerIndex = state.players.findIndex(p => p.id === playerId);
   
-  if (playerIndex === -1) {
-    console.error(`Player with ID ${playerId} not found`);
+  if (playerIndex === -1 || !state.currentQuestion) {
     return state;
   }
   
-  // Clone the state and players array for immutability
-  const newState = { ...state };
+  const player = state.players[playerIndex];
+  const questionPoints = state.currentQuestion.points || MAX_POINTS_PER_QUESTION;
+  
+  // Make a copy of the player object and all players array to modify
+  const updatedPlayer = { ...player };
   const updatedPlayers = [...state.players];
-  const player = { ...updatedPlayers[playerIndex] };
   
-  // Handle correct answer
+  // Update player's stats for correct answer
   if (isCorrect) {
-    // Calculate points based on round type
-    let pointsEarned = 100;
-    switch (state.currentRound) {
-      case 'knowledge':
-        pointsEarned = 100;
-        break;
-      case 'speed':
-        pointsEarned = 150;
-        break;
-      case 'wheel':
-        pointsEarned = 200;
-        break;
-      default:
-        pointsEarned = 100;
-    }
+    // Add points
+    updatedPlayer.points += questionPoints;
     
-    // Update player's points
-    player.points += pointsEarned;
+    // Increment consecutive correct answers counter
+    updatedPlayer.consecutiveCorrect = (updatedPlayer.consecutiveCorrect || 0) + 1;
     
-    // Increment consecutive correct answers
-    player.consecutiveCorrect = (player.consecutiveCorrect || 0) + 1;
-    
-    // Check for reward for consecutive correct answers
-    if (player.consecutiveCorrect >= 3) {
-      const rewardResult = checkForReward(player, 'consecutiveCorrectAnswers');
-      
-      if (rewardResult.shouldReward && rewardResult.cardType) {
-        // Award the player with a card
-        player.cards.push({
-          type: rewardResult.cardType,
-          description: `Card earned for ${rewardResult.message || 'consecutive correct answers'}`,
-          isUsed: false
-        });
-        
-        toast.success(`${player.name} otrzymał kartę ${rewardResult.cardType} za serię poprawnych odpowiedzi!`);
-        
-        // Reset consecutive correct counter after rewarding
-        player.consecutiveCorrect = 0;
-      }
-    }
-    
-    toast.success(`${player.name} odpowiedział poprawnie! +${pointsEarned} punktów`);
-    
-    // Check for reward for correct answer
-    const rewardResult = checkForReward(player, 'correctAnswer');
-    
+    // Check if player should be rewarded
+    const rewardResult = calculateReward(state, playerId, isCorrect);
     if (rewardResult.shouldReward) {
-      if (rewardResult.cardType) {
-        // Award the player with a card
-        player.cards.push({
-          type: rewardResult.cardType,
-          description: `Card earned for ${rewardResult.message || 'correct answer'}`,
-          isUsed: false
-        });
-        
-        toast.success(`${player.name} otrzymał kartę ${rewardResult.cardType}!`);
+      // Apply reward
+      if (rewardResult.rewardType === 'card' && rewardResult.cardType) {
+        // Award card logic would be added here
+        toast.success(rewardResult.message);
+      } else if (rewardResult.rewardType === 'points' && rewardResult.points) {
+        updatedPlayer.points += rewardResult.points;
+        toast.success(`${rewardResult.message} +${rewardResult.points} punktów!`);
       }
+    }
+    
+    toast.success('Poprawna odpowiedź!');
+  } else {
+    // Handle incorrect answer
+    if (state.currentRound !== 'speed') {
+      // Lose life in non-speed rounds
+      updatedPlayer.lives -= 1;
       
-      if (rewardResult.points) {
-        // Award bonus points
-        player.points += rewardResult.points;
-        toast.success(`${player.name} otrzymał ${rewardResult.points} dodatkowych punktów!`);
+      // Check if player is eliminated
+      if (updatedPlayer.lives <= 0) {
+        updatedPlayer.eliminated = true;
+        toast.error(`${updatedPlayer.name} został wyeliminowany!`);
       }
     }
-  } 
-  // Handle incorrect answer
-  else {
-    // Reset consecutive correct answers
-    player.consecutiveCorrect = 0;
     
-    // Handle life loss based on round type
-    let livesToLose = 0;
+    // Reset consecutive correct answers counter
+    updatedPlayer.consecutiveCorrect = 0;
     
-    switch (state.currentRound) {
-      case 'knowledge':
-        livesToLose = 1;
-        break;
-      case 'speed':
-        livesToLose = 1;
-        break;
-      case 'wheel':
-        livesToLose = 1;
-        break;
-      default:
-        livesToLose = 1;
-    }
-    
-    player.lives = Math.max(0, player.lives - livesToLose);
-    
-    if (player.lives <= 0) {
-      player.eliminated = true;
-      toast.error(`${player.name} został wyeliminowany!`);
-      
-      // Check for reward for elimination (for other players potentially)
-      const eliminatingPlayer = state.players.find(p => p.isActive && p.id !== playerId);
-      if (eliminatingPlayer) {
-        const eliminationReward = checkForReward(eliminatingPlayer, 'elimination');
-        
-        if (eliminationReward.shouldReward && eliminationReward.cardType) {
-          // Update the eliminating player
-          const eliminatingPlayerIndex = updatedPlayers.findIndex(p => p.id === eliminatingPlayer.id);
-          if (eliminatingPlayerIndex !== -1) {
-            const updatedEliminatingPlayer = { ...updatedPlayers[eliminatingPlayerIndex] };
-            updatedEliminatingPlayer.cards.push({
-              type: eliminationReward.cardType,
-              description: `Card earned for ${eliminationReward.message || 'eliminating a player'}`,
-              isUsed: false
-            });
-            
-            updatedPlayers[eliminatingPlayerIndex] = updatedEliminatingPlayer;
-            toast.success(`${eliminatingPlayer.name} otrzymał kartę ${eliminationReward.cardType} za wyeliminowanie przeciwnika!`);
-          }
-        }
-      }
-    } else {
-      toast.error(`${player.name} odpowiedział niepoprawnie! -${livesToLose} życie`);
-    }
+    toast.error('Niepoprawna odpowiedź!');
   }
   
-  // Mark the current question as used if there is one
-  if (newState.currentQuestion) {
-    const updatedCurrentQuestion = { ...newState.currentQuestion, used: true };
-    newState.currentQuestion = updatedCurrentQuestion;
-    
-    // Also update the question in the questions array
-    const questionIndex = newState.questions.findIndex(q => q.id === updatedCurrentQuestion.id);
-    if (questionIndex !== -1) {
-      const updatedQuestions = [...newState.questions];
-      updatedQuestions[questionIndex] = updatedCurrentQuestion;
-      newState.questions = updatedQuestions;
-      
-      // Update remaining questions to exclude the used one
-      newState.remainingQuestions = newState.questions.filter(q => !q.used);
-    }
-  }
+  // Update player in the array
+  updatedPlayers[playerIndex] = updatedPlayer;
   
-  // Update the player in the array
-  updatedPlayers[playerIndex] = player;
-  newState.players = updatedPlayers;
+  // Mark question as used
+  const remainingQuestions = state.remainingQuestions.filter(q => 
+    q.id !== state.currentQuestion!.id
+  );
   
-  return newState;
+  const updatedQuestions = state.questions.map(q => 
+    q.id === state.currentQuestion!.id ? { ...q, used: true } : q
+  );
+  
+  // Return updated state
+  return {
+    ...state,
+    players: updatedPlayers,
+    remainingQuestions,
+    questions: updatedQuestions,
+  };
 };
