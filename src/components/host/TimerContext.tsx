@@ -8,6 +8,7 @@ export interface TimerContextType {
   resetTimer: () => void;
   stopTimer: () => void;
   isTimerRunning: boolean;
+  setTimerForRound: (roundType: string) => void;
 }
 
 const TimerContext = createContext<TimerContextType>({
@@ -15,7 +16,8 @@ const TimerContext = createContext<TimerContextType>({
   startTimer: () => {},
   resetTimer: () => {},
   stopTimer: () => {},
-  isTimerRunning: false
+  isTimerRunning: false,
+  setTimerForRound: () => {}
 });
 
 export function TimerProvider({ children }: { children: React.ReactNode }) {
@@ -60,6 +62,26 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
     setTimerValue(30);
   };
 
+  // Add implementation for setTimerForRound
+  const setTimerForRound = (roundType: string) => {
+    stopTimer();
+    // Different rounds can have different timer values
+    switch(roundType) {
+      case 'knowledge':
+        setTimerValue(60); // 60 seconds for knowledge round
+        break;
+      case 'speed':
+        setTimerValue(15); // 15 seconds for speed round
+        break;
+      case 'wheel':
+        setTimerValue(30); // 30 seconds for wheel round
+        break;
+      default:
+        setTimerValue(30); // Default timer value
+    }
+    // Don't auto-start the timer, just set the value
+  };
+
   return (
     <TimerContext.Provider
       value={{
@@ -67,7 +89,8 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
         startTimer,
         resetTimer,
         stopTimer,
-        isTimerRunning
+        isTimerRunning,
+        setTimerForRound
       }}
     >
       {children}

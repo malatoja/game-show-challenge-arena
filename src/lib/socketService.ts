@@ -1,6 +1,4 @@
 
-import socketCore from './socket/socketCore';
-
 // Re-export the types with proper TypeScript syntax
 export type { SocketEvent, SocketPayloads } from './socket/socketTypes';
 

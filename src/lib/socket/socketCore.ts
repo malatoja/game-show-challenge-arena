@@ -1,3 +1,5 @@
+
+// Update SocketEvent imports
 import { io, Socket } from 'socket.io-client';
 import { toast } from 'sonner';
 import { SocketEvent, SocketPayloads, SocketOptions } from './socketTypes';

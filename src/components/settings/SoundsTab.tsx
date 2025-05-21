@@ -22,19 +22,19 @@ type SoundItem = {
 
 export function SoundsTab() {
   const [volume, setVolume] = useState(soundService.getVolume());
-  const [isMuted, setIsMuted] = useState(soundService.isMuted());
+  const [isMuted, setIsMuted] = useState(!soundService.isEnabled());
   
   const soundItems: SoundItem[] = [
     { id: 'countdown', name: 'Timer', description: 'Dźwięk odliczania czasu' },
     { id: 'correct', name: 'Poprawna odpowiedź', description: 'Dźwięk dla poprawnej odpowiedzi' },
-    { id: 'incorrect', name: 'Błędna odpowiedź', description: 'Dźwięk dla błędnej odpowiedzi' },
+    { id: 'wrong-answer', name: 'Błędna odpowiedź', description: 'Dźwięk dla błędnej odpowiedzi' },
     { id: 'round-start', name: 'Początek rundy', description: 'Dźwięk rozpoczęcia rundy' },
     { id: 'round-end', name: 'Koniec rundy', description: 'Dźwięk zakończenia rundy' },
     { id: 'card-use', name: 'Użycie karty', description: 'Dźwięk użycia karty specjalnej' },
     { id: 'wheel-spin', name: 'Koło fortuny', description: 'Dźwięk obracającego się koła fortuny' },
     { id: 'hint', name: 'Buzzer', description: 'Dźwięk buzzera' },
-    { id: 'game-over', name: 'Zwycięzca', description: 'Dźwięk ogłoszenia zwycięzcy' },
-    { id: 'hint-sound', name: 'Pytanie', description: 'Dźwięk wyświetlenia nowego pytania' },
+    { id: 'reward', name: 'Zwycięzca', description: 'Dźwięk ogłoszenia zwycięzcy' },
+    { id: 'timeout', name: 'Pytanie', description: 'Dźwięk wyświetlenia nowego pytania' },
   ];
 
   const handleVolumeChange = (newVolume: number[]) => {
@@ -44,8 +44,9 @@ export function SoundsTab() {
   };
 
   const handleToggleMute = () => {
-    soundService.toggleMute();
-    setIsMuted(soundService.isMuted());
+    const newMuteState = !isMuted;
+    setIsMuted(newMuteState);
+    soundService.setEnabled(!newMuteState);
   };
 
   const handlePlaySound = (type: SoundType) => {
@@ -61,28 +62,41 @@ export function SoundsTab() {
       return;
     }
 
-    soundService.setCustomSound(type, file)
-      .then(() => {
-        toast.success(`Dźwięk "${type}" został zaktualizowany`);
-      })
-      .catch(error => {
-        console.error('Error uploading sound:', error);
-        toast.error('Wystąpił błąd podczas zapisywania dźwięku');
-      });
+    // Use our extended soundService with the proper method
+    if ('setCustomSound' in soundService) {
+      (soundService as any).setCustomSound(type, file)
+        .then(() => {
+          toast.success(`Dźwięk "${type}" został zaktualizowany`);
+        })
+        .catch((error: any) => {
+          console.error('Error uploading sound:', error);
+          toast.error('Wystąpił błąd podczas zapisywania dźwięku');
+        });
+    } else {
+      toast.error('Custom sound functionality not available');
+    }
       
     // Clear the input value so the same file can be selected again
     event.target.value = '';
   };
 
   const handleResetSound = (type: SoundType) => {
-    soundService.resetSound(type);
-    toast.success(`Dźwięk "${type}" został zresetowany do domyślnego`);
+    if ('resetSound' in soundService) {
+      (soundService as any).resetSound(type);
+      toast.success(`Dźwięk "${type}" został zresetowany do domyślnego`);
+    } else {
+      toast.error('Reset sound functionality not available');
+    }
   };
 
   const handleResetAllSounds = () => {
     if (confirm('Czy na pewno chcesz zresetować wszystkie dźwięki do ustawień domyślnych?')) {
-      soundService.resetAllSounds();
-      toast.success('Wszystkie dźwięki zostały zresetowane do ustawień domyślnych');
+      if ('resetAllSounds' in soundService) {
+        (soundService as any).resetAllSounds();
+        toast.success('Wszystkie dźwięki zostały zresetowane do ustawień domyślnych');
+      } else {
+        toast.error('Reset all sounds functionality not available');
+      }
     }
   };
 

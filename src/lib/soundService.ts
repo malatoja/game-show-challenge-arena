@@ -12,7 +12,8 @@ export type SoundType =
   | 'wheel-spin'
   | 'countdown'
   | 'buzzer'
-  | 'correct';
+  | 'correct'
+  | 'incorrect';
 
 // Sound configuration
 const SOUND_PATHS: Record<SoundType, string> = {
@@ -27,7 +28,8 @@ const SOUND_PATHS: Record<SoundType, string> = {
   'wheel-spin': '/sounds/wheel-spin.mp3',
   'countdown': '/sounds/countdown.mp3',
   'buzzer': '/sounds/buzzer.mp3',
-  'correct': '/sounds/correct.mp3'  // Alias for correct-answer
+  'correct': '/sounds/correct.mp3',  // Alias for correct-answer
+  'incorrect': '/sounds/wrong.mp3'  // Alias for wrong-answer
 };
 
 // Volume settings
@@ -43,12 +45,14 @@ const VOLUME_SETTINGS: Record<SoundType, number> = {
   'wheel-spin': 0.5,
   'countdown': 0.5,
   'buzzer': 0.4,
-  'correct': 0.5  // Alias for correct-answer
+  'correct': 0.5,  // Alias for correct-answer
+  'incorrect': 0.5  // Alias for wrong-answer
 };
 
 // Current sound settings
 let soundEnabled = true;
 let masterVolume = 0.5;
+let isMuted = false;
 
 // Audio elements cache
 const audioCache: Partial<Record<SoundType, HTMLAudioElement>> = {};
@@ -107,6 +111,7 @@ export const playSound = (sound: SoundType, volume?: number): Promise<void> => {
  */
 export const setSoundEnabled = (enabled: boolean): void => {
   soundEnabled = enabled;
+  isMuted = !enabled;
 };
 
 /**
@@ -128,6 +133,79 @@ export const isSoundEnabled = (): boolean => soundEnabled;
  * @returns Current master volume (0-1)
  */
 export const getMasterVolume = (): number => masterVolume;
+
+/**
+ * Get mute status
+ * @returns True if sounds are muted
+ */
+export const isSoundMuted = (): boolean => isMuted;
+
+/**
+ * Toggle mute state
+ */
+export const toggleMute = (): void => {
+  isMuted = !isMuted;
+  soundEnabled = !isMuted;
+};
+
+/**
+ * Set a custom sound
+ * @param type Sound type to customize
+ * @param file Audio file to use
+ */
+export const setCustomSound = (type: SoundType, file: File): Promise<void> => {
+  return new Promise((resolve, reject) => {
+    try {
+      const url = URL.createObjectURL(file);
+      
+      // Clean up existing audio if present
+      if (audioCache[type]) {
+        audioCache[type]!.src = '';
+        delete audioCache[type];
+      }
+      
+      // Create new audio with custom file
+      audioCache[type] = new Audio(url);
+      
+      // Store in localStorage for persistence
+      localStorage.setItem(`sound_${type}`, url);
+      
+      resolve();
+    } catch (error) {
+      console.error(`Failed to set custom sound: ${error}`);
+      reject(error);
+    }
+  });
+};
+
+/**
+ * Reset a sound to default
+ * @param type Sound type to reset
+ */
+export const resetSound = (type: SoundType): void => {
+  // Remove from cache
+  if (audioCache[type]) {
+    audioCache[type]!.src = '';
+    delete audioCache[type];
+  }
+  
+  // Remove from localStorage
+  localStorage.removeItem(`sound_${type}`);
+  
+  // Create new audio with default path
+  audioCache[type] = new Audio(SOUND_PATHS[type]);
+};
+
+/**
+ * Reset all sounds to defaults
+ */
+export const resetAllSounds = (): void => {
+  // Clean up all custom sounds
+  Object.keys(audioCache).forEach(key => {
+    const soundType = key as SoundType;
+    resetSound(soundType);
+  });
+};
 
 /**
  * Preload sounds for better performance
@@ -168,5 +246,10 @@ export const soundService = {
   setVolume: setMasterVolume,
   getVolume: getMasterVolume,
   preload: preloadSounds,
-  cleanup: cleanupSounds
+  cleanup: cleanupSounds,
+  isMuted: isSoundMuted,
+  toggleMute: toggleMute,
+  setCustomSound: setCustomSound,
+  resetSound: resetSound,
+  resetAllSounds: resetAllSounds
 };

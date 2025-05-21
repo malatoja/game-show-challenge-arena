@@ -1,3 +1,4 @@
+
 import { CardType, Player } from '@/types/gameTypes';
 
 // Define the types for reward conditions and rewards

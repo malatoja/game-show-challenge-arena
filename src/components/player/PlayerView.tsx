@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useGame } from '@/context/GameContext';
 import { CardType, Player } from '@/types/gameTypes';
@@ -32,9 +33,9 @@ export function PlayerView({ playerId }: { playerId: string }) {
   
   // Listen for card awards
   useEffect(() => {
-    const unsubCardResolve = on('card:resolve', (data) => {
+    const unsubCardResolve = on('card:resolve', (data: { playerId: string, cardType: string, success: boolean }) => {
       if (data.playerId === playerId && data.success) {
-        toast.success(`Karta ${CARD_DETAILS[data.cardType].name} została aktywowana!`, {
+        toast.success(`Karta ${CARD_DETAILS[data.cardType as CardType].name} została aktywowana!`, {
           duration: 3000,
         });
       }

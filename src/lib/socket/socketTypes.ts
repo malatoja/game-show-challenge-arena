@@ -1,3 +1,4 @@
+
 // Define event types for the socket
 export type SocketEvent = 
   | 'player:connected'
@@ -5,6 +6,10 @@ export type SocketEvent =
   | 'player:ready'
   | 'player:answer'
   | 'player:card'
+  | 'player:update'
+  | 'player:eliminate'
+  | 'player:active'
+  | 'player:reset'
   | 'admin:start'
   | 'admin:question'
   | 'admin:round'
@@ -15,8 +20,16 @@ export type SocketEvent =
   | 'admin:timer'
   | 'overlay:confetti'
   | 'overlay:update'
-  | 'overlay:sound'  // Add the overlay:sound event
-  | 'game:state';
+  | 'overlay:sound'
+  | 'game:state'
+  | 'connection:status'
+  | 'connection:error'
+  | 'card:use'
+  | 'card:resolve'
+  | 'question:show'
+  | 'question:answer'
+  | 'round:start'
+  | 'round:end';
 
 // Define payload types for each event
 export interface SocketPayloads {
@@ -25,6 +38,10 @@ export interface SocketPayloads {
   'player:ready': { playerId: string };
   'player:answer': { playerId: string; answerId: number };
   'player:card': { playerId: string; cardType: string };
+  'player:update': { player: Record<string, any> };
+  'player:eliminate': { playerId: string };
+  'player:active': { playerId: string };
+  'player:reset': {};
   'admin:start': { roundType: string };
   'admin:question': { questionId: string };
   'admin:round': { roundType: string };
@@ -37,6 +54,14 @@ export interface SocketPayloads {
   'overlay:update': Record<string, any>;
   'overlay:sound': { type: string };
   'game:state': Record<string, any>;
+  'connection:status': { connected: boolean };
+  'connection:error': { message: string };
+  'card:use': { playerId: string; cardType: string };
+  'card:resolve': { playerId: string; cardType: string; success: boolean };
+  'question:show': { question: Record<string, any> };
+  'question:answer': { playerId: string; correct: boolean; answerIndex: number };
+  'round:start': { roundType: string; roundName: string };
+  'round:end': { roundType: string };
 }
 
 // Helper type to extract payload type for a specific event
