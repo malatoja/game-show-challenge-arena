@@ -16,7 +16,7 @@ export type RewardType =
 
 // Define the structure for a reward configuration
 export interface RewardConfig {
-  id: string;  // Add the missing id property
+  id: string;
   name: string;
   description: string;
   condition: RewardCondition;
@@ -63,6 +63,28 @@ export const rewardConfigs: RewardConfig[] = [
     cardType: 'turbo' // Example: Award a 'turbo' card
   }
 ];
+
+// Function to check if a player should receive a reward
+export const checkForReward = (
+  player: Player, 
+  condition: RewardCondition
+): { shouldReward: boolean; rewardType: RewardType | null; cardType?: CardType } => {
+  // Find applicable reward configuration
+  const rewardConfig = rewardConfigs.find(config => config.condition === condition);
+  
+  if (!rewardConfig) {
+    return { shouldReward: false, rewardType: null };
+  }
+  
+  // Determine if player should be rewarded based on condition
+  const shouldReward = shouldAwardReward(condition, player);
+  
+  return {
+    shouldReward,
+    rewardType: shouldReward ? rewardConfig.reward : null,
+    cardType: shouldReward ? rewardConfig.cardType || getRandomCardType() : undefined
+  };
+};
 
 // Function to determine if a player should receive a reward based on the event and reward configurations
 export const shouldAwardReward = (

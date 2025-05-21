@@ -29,7 +29,27 @@ export type SocketEvent =
   | 'question:show'
   | 'question:answer'
   | 'round:start'
-  | 'round:end';
+  | 'round:end'
+  // Add Discord Game Show specific events
+  | 'updatePlayer'
+  | 'questionUpdate'
+  | 'cardUsed'
+  | 'elimination'
+  | 'victory'
+  | 'players:update';
+
+// Define socket connection options
+export interface SocketOptions {
+  reconnectionAttempts?: number;
+  reconnectionDelay?: number;
+  autoConnect?: boolean;
+  transports?: string[];
+  cors?: {
+    origin: string[];
+    methods: string[];
+    credentials?: boolean;
+  };
+}
 
 // Define payload types for each event
 export interface SocketPayloads {
@@ -62,6 +82,13 @@ export interface SocketPayloads {
   'question:answer': { playerId: string; correct: boolean; answerIndex: number };
   'round:start': { roundType: string; roundName: string };
   'round:end': { roundType: string };
+  // Discord Game Show specific events
+  'updatePlayer': Record<string, any>;
+  'questionUpdate': Record<string, any>;
+  'cardUsed': Record<string, any>;
+  'elimination': Record<string, any>;
+  'victory': Record<string, any>;
+  'players:update': any[];
 }
 
 // Helper type to extract payload type for a specific event

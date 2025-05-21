@@ -1,6 +1,7 @@
 
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import socketService, { SocketEvent, SocketPayloads } from '@/lib/socketService';
+import socketService from '@/lib/socketService';
+import { SocketEvent, SocketPayloads } from '@/lib/socketService';
 import { toast } from 'sonner';
 
 interface SocketContextType {
@@ -41,16 +42,20 @@ export const SocketProvider: React.FC<{
 
   // Update connected status when socket connection changes
   useEffect(() => {
-    const unsubscribe = socketService.on('connection:status', (data) => {
-      setConnected(data.connected);
-      
-      if (data.connected) {
-        setLastError(null);
-        setReconnectAttempts(0);
-        if (reconnecting) {
-          toast.success('Ponownie połączono z serwerem!');
-          setReconnecting(false);
+    const unsubscribe = socketService.on('connection:status', (data: any) => {
+      if (data && typeof data.connected === 'boolean') {
+        setConnected(data.connected);
+        
+        if (data.connected) {
+          setLastError(null);
+          setReconnectAttempts(0);
+          if (reconnecting) {
+            toast.success('Ponownie połączono z serwerem!');
+            setReconnecting(false);
+          }
         }
+      } else {
+        console.warn('[Socket] Received malformed connection:status event:', data);
       }
     });
     
@@ -59,34 +64,38 @@ export const SocketProvider: React.FC<{
 
   // Handle connection errors
   useEffect(() => {
-    const unsubscribe = socketService.on('connection:error', (data) => {
-      console.error(`[Socket] Connection error: ${data.message}`);
-      setLastError(data.message);
-      
-      // Auto-reconnect when not in mock mode
-      if (!mockMode && reconnectAttempts < maxReconnectAttempts) {
-        if (!reconnecting) {
-          setReconnecting(true);
-          toast.info('Próba ponownego połączenia...');
+    const unsubscribe = socketService.on('connection:error', (data: any) => {
+      if (data && typeof data.message === 'string') {
+        console.error(`[Socket] Connection error: ${data.message}`);
+        setLastError(data.message);
+        
+        // Auto-reconnect when not in mock mode
+        if (!mockMode && reconnectAttempts < maxReconnectAttempts) {
+          if (!reconnecting) {
+            setReconnecting(true);
+            toast.info('Próba ponownego połączenia...');
+          }
+          
+          const nextAttempt = reconnectAttempts + 1;
+          setReconnectAttempts(nextAttempt);
+          const delay = Math.min(1000 * Math.pow(2, reconnectAttempts), 30000); // Exponential backoff
+          
+          console.log(`[Socket] Reconnecting in ${delay/1000}s (attempt ${nextAttempt}/${maxReconnectAttempts})`);
+          
+          // Clear any existing timeout
+          if (connectionTimeout) {
+            clearTimeout(connectionTimeout);
+          }
+          
+          // Set new timeout for reconnection
+          const timeout = setTimeout(() => connect(serverUrl), delay);
+          setConnectionTimeout(timeout);
+        } else if (reconnectAttempts >= maxReconnectAttempts) {
+          toast.error(`Osiągnięto maksymalną liczbę prób połączenia (${maxReconnectAttempts}). Spróbuj ponownie później.`);
+          setReconnecting(false);
         }
-        
-        const nextAttempt = reconnectAttempts + 1;
-        setReconnectAttempts(nextAttempt);
-        const delay = Math.min(1000 * Math.pow(2, reconnectAttempts), 30000); // Exponential backoff
-        
-        console.log(`[Socket] Reconnecting in ${delay/1000}s (attempt ${nextAttempt}/${maxReconnectAttempts})`);
-        
-        // Clear any existing timeout
-        if (connectionTimeout) {
-          clearTimeout(connectionTimeout);
-        }
-        
-        // Set new timeout for reconnection
-        const timeout = setTimeout(() => connect(serverUrl), delay);
-        setConnectionTimeout(timeout);
-      } else if (reconnectAttempts >= maxReconnectAttempts) {
-        toast.error(`Osiągnięto maksymalną liczbę prób połączenia (${maxReconnectAttempts}). Spróbuj ponownie później.`);
-        setReconnecting(false);
+      } else {
+        console.warn('[Socket] Received malformed connection:error event:', data);
       }
     });
     

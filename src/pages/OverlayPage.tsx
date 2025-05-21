@@ -17,6 +17,8 @@ const OverlayPage = () => {
   const { connected, mockMode, setMockMode, connect, reconnect, lastError } = useSocket();
   const [showConnectionAlert, setShowConnectionAlert] = useState(false);
   const [alertDismissed, setAlertDismissed] = useState(false);
+  const [autoReconnectEnabled, setAutoReconnectEnabled] = useState(true);
+  const [autoReconnectInterval, setAutoReconnectInterval] = useState<NodeJS.Timeout | null>(null);
   
   // Use our custom hook to manage overlay state
   const {
@@ -80,6 +82,32 @@ const OverlayPage = () => {
     setDemoMode(prev => !prev);
   };
   
+  // Auto-reconnect system
+  useEffect(() => {
+    // Clear any existing interval when component mounts or connection status changes
+    if (autoReconnectInterval) {
+      clearInterval(autoReconnectInterval);
+      setAutoReconnectInterval(null);
+    }
+    
+    // If we're not connected and auto-reconnect is enabled, start the interval
+    if (!connected && !mockMode && !demoMode && autoReconnectEnabled) {
+      const interval = setInterval(() => {
+        console.log('[Overlay] Attempting auto-reconnect...');
+        reconnect();
+        toast.info('Próba automatycznego ponownego połączenia...');
+      }, 30000); // Try every 30 seconds
+      
+      setAutoReconnectInterval(interval);
+    }
+    
+    return () => {
+      if (autoReconnectInterval) {
+        clearInterval(autoReconnectInterval);
+      }
+    };
+  }, [connected, mockMode, demoMode, autoReconnectEnabled, reconnect]);
+  
   // Show connection alert when not in demo mode, not connected, and alert not dismissed
   useEffect(() => {
     if (!demoMode && !connected && !alertDismissed) {
@@ -106,6 +134,14 @@ const OverlayPage = () => {
     setShowConnectionAlert(false);
   };
   
+  // Toggle auto-reconnect
+  const handleToggleAutoReconnect = () => {
+    setAutoReconnectEnabled(prev => !prev);
+    toast.info(autoReconnectEnabled 
+      ? 'Auto-reconnect wyłączony' 
+      : 'Auto-reconnect włączony - system będzie próbował połączyć się automatycznie co 30 sekund');
+  };
+  
   return (
     <div style={{ width: '100vw', height: '100vh', overflow: 'hidden'}}>
       {/* Connection error alert */}
@@ -118,6 +154,13 @@ const OverlayPage = () => {
                 Problem z połączeniem WebSocket: {lastError || 'Nie można połączyć się z serwerem'}
               </span>
               <div className="flex space-x-2">
+                <Button 
+                  variant={autoReconnectEnabled ? "secondary" : "outline"}
+                  size="sm" 
+                  onClick={handleToggleAutoReconnect}
+                >
+                  {autoReconnectEnabled ? 'Auto-reconnect: Włączony' : 'Auto-reconnect: Wyłączony'}
+                </Button>
                 <Button 
                   variant="outline" 
                   size="sm" 

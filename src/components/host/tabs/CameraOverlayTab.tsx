@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -17,7 +18,7 @@ import {
   Tv,
   Settings
 } from 'lucide-react';
-import { SoundType } from '@/lib/soundService';
+import { SoundType } from '@/types/soundTypes';
 import { Question } from '@/types/gameTypes';
 
 interface CameraConfig {
@@ -90,7 +91,7 @@ export default function CameraOverlayTab() {
     localStorage.setItem('hostCameraActive', hostCamera.active.toString());
     
     // Send to overlay via socket
-    emit('overlay:update', { hostCamera } as OverlayData);
+    emit('overlay:update', { hostCamera } as unknown as OverlayData);
     
     toast.success("Zaktualizowano kamerę hosta");
   };
@@ -104,7 +105,7 @@ export default function CameraOverlayTab() {
     localStorage.setItem('playerCameras', JSON.stringify(newCameras));
     
     // Send to overlay via socket
-    emit('overlay:update', { playerCameras: newCameras } as OverlayData);
+    emit('overlay:update', { playerCameras: newCameras } as unknown as OverlayData);
   };
   
   // Connect to OBS
@@ -129,12 +130,12 @@ export default function CameraOverlayTab() {
 
   // Fix confetti emit call
   const handleTestConfetti = () => {
-    emit('overlay:confetti', { playerId: 'test' });  // Add required playerId
+    emit('overlay:confetti', { playerId: 'test' });
   };
 
   // Fix timer animation emit call
   const handleTestTimerAnimation = () => {
-    emit('overlay:update', { animateTimer: true } as OverlayData);
+    emit('overlay:update', { animateTimer: true } as unknown as OverlayData);
   };
 
   // Fix sound emit call

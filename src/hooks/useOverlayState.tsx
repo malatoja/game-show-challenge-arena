@@ -1,10 +1,11 @@
+
 import { useState, useEffect } from 'react';
 import { Player, CardType } from '@/types/gameTypes';
 import { useSocket } from '@/context/SocketContext';
 import { toast } from 'sonner';
 import { playSound } from '@/lib/soundService';
 import { SoundType } from '@/types/soundTypes';
-import { SocketEvent } from '@/lib/socket/socketTypes';
+import { SocketEvent } from '@/lib/socketService';
 
 export interface OverlayState {
   roundTitle: string;
@@ -55,14 +56,29 @@ export const useOverlayState = (demoMode: boolean) => {
   const [hostCameraUrl, setHostCameraUrl] = useState(localStorage.getItem('hostCameraUrl') || '');
   const [showHostCamera, setShowHostCamera] = useState(localStorage.getItem('hostCameraActive') === 'true');
   
-  const { on } = useSocket();
+  // Last received data timestamps for reconnection handling
+  const [lastDataTimestamps, setLastDataTimestamps] = useState<Record<string, number>>({});
+  
+  const { on, connected } = useSocket();
+  
+  // Handle WebSocket reconnection - request current state
+  useEffect(() => {
+    if (connected && !demoMode) {
+      // When we reconnect, request current state
+      console.log('[Overlay] Connected, requesting current state');
+      
+      // We don't directly emit here as this could lead to a loop
+      // Instead, the host should periodically broadcast state
+    }
+  }, [connected, demoMode]);
   
   useEffect(() => {
     if (demoMode) return;
 
     // Listen for overlay update events from the host
-    on('overlay:update' as SocketEvent, (data: any) => {
+    const unsubscribeOverlayUpdate = on('overlay:update' as SocketEvent, (data: any) => {
       console.log('Overlay update received:', data);
+      setLastDataTimestamps(prev => ({ ...prev, 'overlay:update': Date.now() }));
       
       // Update question if provided
       if (data.question) {
@@ -77,7 +93,7 @@ export const useOverlayState = (demoMode: boolean) => {
       }
       
       // Update time if provided
-      if (data.timeRemaining) {
+      if (data.timeRemaining !== undefined) {
         setCurrentTime(data.timeRemaining);
         setMaxTime(data.timeRemaining);
       }
@@ -95,7 +111,7 @@ export const useOverlayState = (demoMode: boolean) => {
       // Show hint if provided
       if (data.showHint) {
         setShowHint(true);
-        playSound('hint' as SoundType);
+        playSound('hint');
         toast.info("Wskazówka dostępna!");
       }
       
@@ -106,32 +122,56 @@ export const useOverlayState = (demoMode: boolean) => {
           setHostCameraUrl(data.hostCamera.url);
         }
       }
+      
+      // Handle timer animation
+      if (data.animateTimer) {
+        setTimerPulsing(true);
+        setTimeout(() => setTimerPulsing(false), 3000);
+      }
     });
 
     // Listen for player update events
-    on('players:update' as SocketEvent, (updatedPlayers: Player[]) => {
+    const unsubscribePlayersUpdate = on('players:update' as SocketEvent, (updatedPlayers: any) => {
       console.log('Players update received:', updatedPlayers);
+      setLastDataTimestamps(prev => ({ ...prev, 'players:update': Date.now() }));
       setPlayers(updatedPlayers);
     });
 
     // Listen for card activation events
-    on('card:activate' as SocketEvent, (data: { cardType: CardType, playerName: string }) => {
-      console.log('Card activation received:', data.cardType, data.playerName);
-      setActiveCardType(data.cardType);
-      setActivePlayerName(data.playerName);
-      setShowCardAnimation(true);
+    const unsubscribeCardActivate = on('card:use' as SocketEvent, (data: any) => {
+      if (data && data.cardType && data.playerId) {
+        const playerName = players.find(p => p.id === data.playerId)?.name || 'Unknown';
+        console.log('Card activation received:', data.cardType, playerName);
+        setLastDataTimestamps(prev => ({ ...prev, 'card:activate': Date.now() }));
+        setActiveCardType(data.cardType as CardType);
+        setActivePlayerName(playerName);
+        setShowCardAnimation(true);
+        playSound('card-activate');
+      }
     });
 
     // Listen for round start events
-    on('round:start' as SocketEvent, (data: { roundType: string, roundName: string }) => {
+    const unsubscribeRoundStart = on('round:start' as SocketEvent, (data: any) => {
       console.log('Round start received:', data);
-      setRoundTitle(data.roundName || `RUNDA ${data.roundType}`);
+      setLastDataTimestamps(prev => ({ ...prev, 'round:start': Date.now() }));
+      if (data.roundName) {
+        setRoundTitle(data.roundName);
+      } else if (data.roundType) {
+        setRoundTitle(`RUNDA ${data.roundType.toUpperCase()}`);
+      }
       setShowCategoryTable(true);
       setQuestion("");
       setHint("");
+      playSound('round-start');
     });
 
-  }, [demoMode, on]);
+    return () => {
+      unsubscribeOverlayUpdate();
+      unsubscribePlayersUpdate();
+      unsubscribeCardActivate();
+      unsubscribeRoundStart();
+    };
+  }, [demoMode, on, players]);
 
   return {
     roundTitle,
@@ -165,6 +205,7 @@ export const useOverlayState = (demoMode: boolean) => {
     hostCameraUrl,
     showHostCamera,
     setHostCameraUrl,
-    setShowHostCamera
+    setShowHostCamera,
+    lastDataTimestamps
   };
 };

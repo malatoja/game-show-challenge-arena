@@ -150,7 +150,7 @@ class SocketCore {
     ];
     
     discordEvents.forEach(event => {
-      this.socket?.on(event, (data: any) => {
+      this.socket?.on(event as string, (data: any) => {
         console.log(`[Socket] Received Discord event: ${event}`, data);
         this.notifyListeners(event, data);
       });
