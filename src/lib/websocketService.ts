@@ -61,6 +61,21 @@ const websocketService = {
       toast.info('WebSocket mock mode disabled, using real connection');
       socketCore.reconnect();
     }
+  },
+
+  /**
+   * Connect to a specific URL
+   */
+  connect: (url?: string) => {
+    const targetUrl = url || WS_URL;
+    socketCore.init(targetUrl, {
+      reconnectionAttempts: 5,
+      reconnectionDelay: 2000,
+      autoConnect: true,
+      transports: ['websocket', 'polling']
+    });
+    
+    toast.info(`Connecting to WebSocket server at ${targetUrl}`);
   }
 };
 

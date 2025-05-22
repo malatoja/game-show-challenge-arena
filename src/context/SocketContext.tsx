@@ -11,6 +11,9 @@ interface SocketContextType {
   on: <E extends SocketEvent>(event: E, callback: (payload: PayloadFor<E>) => void) => () => void;
   reconnect: () => void;
   useMockMode: (enable: boolean) => void;
+  mockMode: boolean;
+  setMockMode: (enable: boolean) => void;
+  connect: (url?: string) => void;
 }
 
 const defaultSocketContext: SocketContextType = {
@@ -19,7 +22,10 @@ const defaultSocketContext: SocketContextType = {
   emit: () => {},
   on: () => () => {},
   reconnect: () => {},
-  useMockMode: () => {}
+  useMockMode: () => {},
+  mockMode: false,
+  setMockMode: () => {},
+  connect: () => {}
 };
 
 const SocketContext = createContext<SocketContextType>(defaultSocketContext);
@@ -39,10 +45,11 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({
 }) => {
   const [connected, setConnected] = useState<boolean>(false);
   const [lastError, setLastError] = useState<string | null>(null);
+  const [isMockMode, setIsMockMode] = useState<boolean>(mockMode);
 
   // Initialize the socket with the URL
   useEffect(() => {
-    if (mockMode) {
+    if (isMockMode) {
       socketCore.mockMode = true;
       setConnected(true);
       return;
@@ -73,7 +80,7 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({
       unsubError();
       socketCore.disconnect();
     };
-  }, [url, mockMode]);
+  }, [url, isMockMode]);
 
   // Emit an event
   const emit = useCallback(<E extends SocketEvent>(event: E, payload: PayloadFor<E>) => {
@@ -98,13 +105,43 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({
     if (enable) {
       socketCore.mockMode = true;
       setConnected(true);
+      setIsMockMode(true);
       toast.success('Mock mode enabled - using simulated WebSocket');
     } else {
       socketCore.mockMode = false;
+      setIsMockMode(false);
       socketCore.reconnect();
       toast.info('Mock mode disabled - connecting to real WebSocket');
     }
   }, []);
+
+  // Set mock mode directly
+  const setMockMode = useCallback((enable: boolean) => {
+    if (enable) {
+      socketCore.mockMode = true;
+      setConnected(true);
+    } else {
+      socketCore.mockMode = false;
+    }
+    setIsMockMode(enable);
+  }, []);
+
+  // Connect to a specific URL
+  const connect = useCallback((newUrl?: string) => {
+    if (isMockMode) {
+      toast.info('Cannot connect in mock mode. Disable mock mode first.');
+      return;
+    }
+    
+    socketCore.init(newUrl || url, {
+      reconnectionAttempts: 5,
+      reconnectionDelay: 2000,
+      autoConnect: true,
+      transports: ['websocket', 'polling']
+    });
+    
+    toast.info('Connecting to WebSocket server...');
+  }, [isMockMode, url]);
 
   const contextValue: SocketContextType = {
     connected,
@@ -112,7 +149,10 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({
     emit,
     on,
     reconnect,
-    useMockMode
+    useMockMode,
+    mockMode: isMockMode,
+    setMockMode,
+    connect
   };
 
   return (

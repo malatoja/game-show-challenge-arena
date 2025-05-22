@@ -242,7 +242,7 @@ class SocketCore {
     return this._mockMode;
   }
 
-  // Setter for mock mode - useful when it needs to be changed from outside
+  // Setter for mock mode - making it public to allow external updates
   public set mockMode(value: boolean) {
     this._mockMode = value;
     debugLog(`[SocketCore] Mock mode ${value ? 'enabled' : 'disabled'}`);
