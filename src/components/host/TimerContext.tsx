@@ -1,5 +1,6 @@
 
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
+import { RoundType } from '@/types/gameTypes';
 
 export interface TimerContextType {
   timerValue: number;
@@ -8,6 +9,7 @@ export interface TimerContextType {
   stopTimer: () => void;
   resetTimer: () => void;
   setTimerValue: (value: number) => void;
+  setTimerForRound: (roundType: RoundType) => void;
 }
 
 const TimerContext = createContext<TimerContextType>({
@@ -17,6 +19,7 @@ const TimerContext = createContext<TimerContextType>({
   stopTimer: () => {},
   resetTimer: () => {},
   setTimerValue: () => {},
+  setTimerForRound: () => {},
 });
 
 export const useTimer = () => useContext(TimerContext);
@@ -89,6 +92,24 @@ export const TimerProvider: React.FC<TimerProviderProps> = ({
     setTimerValue(initialValue);
   }, [initialValue, stopTimer]);
 
+  // Set timer based on round type
+  const setTimerForRound = useCallback((roundType: RoundType) => {
+    // Default values for each round type
+    const roundTimers = {
+      knowledge: 30,
+      speed: 15,
+      wheel: 45,
+      final: 60
+    };
+
+    // Get the timer value for the round type, or use default if not found
+    const timerValue = roundTimers[roundType] || initialValue;
+    
+    // Stop any running timer and set the new value
+    stopTimer();
+    setTimerValue(timerValue);
+  }, [initialValue, stopTimer]);
+
   // The context value
   const contextValue: TimerContextType = {
     timerValue,
@@ -96,7 +117,8 @@ export const TimerProvider: React.FC<TimerProviderProps> = ({
     startTimer,
     stopTimer,
     resetTimer,
-    setTimerValue
+    setTimerValue,
+    setTimerForRound
   };
 
   return (
