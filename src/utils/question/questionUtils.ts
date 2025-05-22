@@ -1,102 +1,62 @@
 
-import { Question, RoundType } from '@/types/gameTypes';
+import { Question } from '../../types/gameTypes';
 
 /**
- * Generates a unique ID for a question
+ * Load questions from localStorage or return an empty array if none exist
  */
-export const generateQuestionId = (): string => {
-  return `q-${Date.now()}-${Math.floor(Math.random() * 10000)}`;
-};
-
-/**
- * Filters questions based on various criteria
- */
-export const filterQuestions = (
-  questions: Question[],
-  filters: {
-    searchTerm?: string;
-    round?: RoundType | 'all';
-    category?: string;
-    showUsed?: boolean;
-    showFavorites?: boolean;
-    difficulty?: 'easy' | 'medium' | 'hard' | '';
+export const loadQuestions = (): Question[] => {
+  const savedQuestions = localStorage.getItem('gameQuestions');
+  if (savedQuestions) {
+    try {
+      return JSON.parse(savedQuestions);
+    } catch (error) {
+      console.error('Error parsing questions from localStorage:', error);
+      return [];
+    }
   }
-): Question[] => {
-  return questions.filter(question => {
-    // Filter by search term
-    if (filters.searchTerm && !question.text.toLowerCase().includes(filters.searchTerm.toLowerCase())) {
-      return false;
+  return [];
+};
+
+/**
+ * Save questions to localStorage
+ */
+export const saveQuestions = (questions: Question[]): void => {
+  try {
+    localStorage.setItem('gameQuestions', JSON.stringify(questions));
+  } catch (error) {
+    console.error('Error saving questions to localStorage:', error);
+  }
+};
+
+/**
+ * Get all unique categories from questions
+ */
+export const getUniqueCategories = (questions: Question[]): string[] => {
+  const categories = new Set<string>();
+  questions.forEach(question => {
+    if (question.category) {
+      categories.add(question.category);
     }
-    
-    // Filter by round
-    if (filters.round && filters.round !== 'all' && question.round !== filters.round) {
-      return false;
-    }
-    
-    // Filter by category
-    if (filters.category && question.category !== filters.category) {
-      return false;
-    }
-    
-    // Filter by used status
-    if (!filters.showUsed && question.used) {
-      return false;
-    }
-    
-    // Filter by favorites
-    if (filters.showFavorites && !question.favorite) {
-      return false;
-    }
-    
-    // Filter by difficulty
-    if (filters.difficulty && question.difficulty !== filters.difficulty) {
-      return false;
-    }
-    
-    return true;
   });
+  return Array.from(categories);
 };
 
 /**
- * Sorts questions alphabetically by text
+ * Filter questions by various criteria
  */
-export const sortQuestionsAlphabetically = (questions: Question[]): Question[] => {
-  return [...questions].sort((a, b) => a.text.localeCompare(b.text));
-};
-
-/**
- * Sorts questions by a specific criterion
- */
-export const sortQuestions = (
-  questions: Question[],
-  sortBy: 'text' | 'category' | 'difficulty' | 'round',
-  sortOrder: 'asc' | 'desc' = 'asc'
-): Question[] => {
-  return [...questions].sort((a, b) => {
-    let comparison = 0;
-    
-    switch (sortBy) {
-      case 'text':
-        comparison = a.text.localeCompare(b.text);
-        break;
-      case 'category':
-        comparison = a.category.localeCompare(b.category);
-        break;
-      case 'difficulty':
-        const difficultyValues = { easy: 1, medium: 2, hard: 3 };
-        const aValue = a.difficulty ? difficultyValues[a.difficulty] || 2 : 2;
-        const bValue = b.difficulty ? difficultyValues[b.difficulty] || 2 : 2;
-        comparison = aValue - bValue;
-        break;
-      case 'round':
-        const aRound = a.round || 'standard';
-        const bRound = b.round || 'standard';
-        comparison = aRound.localeCompare(bRound);
-        break;
-      default:
-        comparison = a.text.localeCompare(b.text);
-    }
-    
-    return sortOrder === 'asc' ? comparison : -comparison;
+export const filterQuestions = (questions: Question[], filters: {
+  round?: string;
+  category?: string;
+  difficulty?: string;
+  used?: boolean;
+  favorite?: boolean;
+}): Question[] => {
+  return questions.filter(question => {
+    if (filters.round && filters.round !== 'all' && question.round !== filters.round) return false;
+    if (filters.category && question.category !== filters.category) return false;
+    if (filters.difficulty && question.difficulty !== filters.difficulty) return false;
+    if (filters.used !== undefined && question.used !== filters.used) return false;
+    if (filters.favorite !== undefined && question.favorite !== filters.favorite) return false;
+    return true;
   });
 };

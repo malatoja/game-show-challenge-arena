@@ -1,3 +1,4 @@
+
 import { GameState } from '../../types/gameTypes';
 import { GameAction } from '../actions';
 
@@ -9,10 +10,13 @@ export const handleStartGame = (state: GameState): GameState => {
 };
 
 export const handleStartRound = (state: GameState, action: { roundType: string }): GameState => {
+  // Ensure roundType is a valid RoundType
+  const validRoundType = action.roundType as 'knowledge' | 'speed' | 'wheel' | 'standard';
+  
   return {
     ...state,
     roundActive: true,
-    currentRound: action.roundType
+    currentRound: validRoundType
   };
 };
 

@@ -1,5 +1,7 @@
+
 import { GameState, Question } from '../../types/gameTypes';
 import { toast } from 'sonner';
+import { saveQuestions } from '../../utils/question/questionUtils';
 
 // Set the current question
 export const handleSetCurrentQuestion = (state: GameState, question: Question): GameState => {
@@ -14,7 +16,7 @@ export const handleAddQuestion = (state: GameState, question: Question): GameSta
   const newQuestions = [...state.questions, question];
   
   // Save to localStorage
-  localStorage.setItem('gameQuestions', JSON.stringify(newQuestions));
+  saveQuestions(newQuestions);
   
   return {
     ...state,
@@ -30,7 +32,7 @@ export const handleUpdateQuestion = (state: GameState, question: Question): Game
   );
   
   // Save to localStorage
-  localStorage.setItem('gameQuestions', JSON.stringify(updatedQuestions));
+  saveQuestions(updatedQuestions);
   
   // Also update in remaining questions if it exists there
   const updatedRemaining = state.remainingQuestions.map(q => 
@@ -51,7 +53,7 @@ export const handleRemoveQuestion = (state: GameState, questionId: string): Game
   const filteredQuestions = state.questions.filter(q => q.id !== questionId);
   
   // Save to localStorage
-  localStorage.setItem('gameQuestions', JSON.stringify(filteredQuestions));
+  saveQuestions(filteredQuestions);
   
   // Also remove from remaining questions
   const filteredRemaining = state.remainingQuestions.filter(q => q.id !== questionId);
@@ -106,7 +108,7 @@ export const handleMarkQuestionUsed = (state: GameState, questionId: string): Ga
   };
 };
 
-// Add the missing function
+// Set selected category
 export const handleSetCategory = (state: GameState, category: string): GameState => {
   return {
     ...state,

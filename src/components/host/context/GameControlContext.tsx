@@ -24,9 +24,10 @@ export interface GameControlContextType {
   handleResetGame: () => void;
   handleResetRound: () => void;
   handleUseCard: (playerId: string, cardType: CardType) => void;
-  handleAddPlayer: () => void; // Changed from (player: Player) => void to match implementation
+  handleAddPlayer: () => void;
   handleAddTestCards: (playerId: string) => void;
   setShowResults: React.Dispatch<React.SetStateAction<boolean>>;
+  setResultType: React.Dispatch<React.SetStateAction<'round' | 'final'>>;
 }
 
 // Create the context

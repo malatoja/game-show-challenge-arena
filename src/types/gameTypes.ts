@@ -1,6 +1,6 @@
 
 export type PlayerId = string;
-export type RoundType = 'knowledge' | 'speed' | 'wheel' | 'standard' | 'all';
+export type RoundType = 'knowledge' | 'speed' | 'wheel' | 'standard';
 
 export type CardType = 
   | 'dejavu'     // Retry after wrong answer
@@ -28,9 +28,9 @@ export interface Player {
 }
 
 export interface Card {
-  id?: string; // Adding id as optional
+  id?: string;
   type: CardType;
-  name?: string; // Adding name as optional
+  name?: string;
   description: string;
   isUsed: boolean;
 }
@@ -42,12 +42,12 @@ export interface Question {
   answers: Answer[];
   correctAnswerIndex: number;
   timeLimit?: number; // in seconds
-  round?: RoundType; // Adding round property
-  difficulty?: 'easy' | 'medium' | 'hard'; // Adding difficulty property
-  used?: boolean; // Adding used property
-  favorite?: boolean; // Adding favorite property
-  points?: number; // Adding points property
-  hint?: string; // Adding hint property for "Oświecenie" card
+  round?: RoundType;
+  difficulty?: 'easy' | 'medium' | 'hard';
+  used?: boolean;
+  favorite?: boolean;
+  points?: number;
+  hint?: string;
 }
 
 export interface Answer {
@@ -56,14 +56,15 @@ export interface Answer {
 }
 
 export interface GameState {
+  gameStarted: boolean;
+  roundActive: boolean;
   currentRound: RoundType;
   players: Player[];
-  currentPlayerIndex: number;
-  currentQuestion: Question | null;
   questions: Question[];
+  usedQuestions: Question[];
   remainingQuestions: Question[];
-  roundStarted: boolean;
-  roundEnded: boolean;
+  currentQuestion: Question | null;
+  selectedCategory: string;
   wheelSpinning: boolean;
-  selectedCategory?: string;
+  activePlayerId: string | null;
 }

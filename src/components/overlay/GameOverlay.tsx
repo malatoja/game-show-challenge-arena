@@ -5,7 +5,7 @@ import { CategoryTable } from './CategoryTable';
 import QuestionPanel from './QuestionPanel';
 import { Timer } from './Timer';
 import HostCamera from './HostCamera';
-import CardAnimation from '../animations/CardEffectOverlay';
+import { CardAnimation } from '@/components/animations/CardEffectOverlay';
 import BroadcastBar from './BroadcastBar';
 
 interface GameOverlayProps {
@@ -69,7 +69,7 @@ export const GameOverlay: React.FC<GameOverlayProps> = ({
         <Timer 
           currentTime={currentTime} 
           maxTime={maxTime} 
-          pulsing={timerPulsing} 
+          isPulsing={timerPulsing} 
         />
       </div>
       

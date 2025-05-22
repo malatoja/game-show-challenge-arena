@@ -6,104 +6,103 @@ interface BroadcastBarProps {
   text: string;
   backgroundColor?: string;
   textColor?: string;
+  position?: 'top' | 'bottom';
   animation?: 'slide' | 'fade' | 'static';
   scrollSpeed?: number;
-  position?: 'top' | 'bottom';
 }
 
 export const BroadcastBar: React.FC<BroadcastBarProps> = ({
   text,
   backgroundColor = '#000000',
   textColor = '#ffffff',
+  position = 'bottom',
   animation = 'slide',
-  scrollSpeed = 5,
-  position = 'bottom'
+  scrollSpeed = 5
 }) => {
-  const [animatedText, setAnimatedText] = useState(text);
-  const [isAnimating, setIsAnimating] = useState(animation === 'slide');
+  const [marqueeWidth, setMarqueeWidth] = useState(0);
+  const [containerWidth, setContainerWidth] = useState(0);
+  const [isOverflowing, setIsOverflowing] = useState(false);
   
-  // Calculate animation duration based on text length and speed
-  const calculateDuration = () => {
-    if (animation === 'static') return 0;
-    const baseSpeed = 20; // base speed in seconds
-    const textFactor = text.length / 50; // adjust based on text length
-    return baseSpeed * textFactor / scrollSpeed;
-  };
-
-  // Update text when props change
+  // Reference for the text and container to calculate width
+  const textRef = React.useRef<HTMLDivElement>(null);
+  const containerRef = React.useRef<HTMLDivElement>(null);
+  
   useEffect(() => {
-    setAnimatedText(text);
-    setIsAnimating(animation === 'slide');
-  }, [text, animation]);
-
-  // Animation variants based on type
-  const getAnimationVariants = () => {
+    if (textRef.current && containerRef.current) {
+      const textWidth = textRef.current.scrollWidth;
+      const containerWidth = containerRef.current.clientWidth;
+      
+      setMarqueeWidth(textWidth);
+      setContainerWidth(containerWidth);
+      setIsOverflowing(textWidth > containerWidth);
+    }
+  }, [text]);
+  
+  // Calculate the animation duration based on text length and speed
+  const animationDuration = Math.max(5, marqueeWidth / (scrollSpeed * 30));
+  
+  // Position style
+  const positionStyle = position === 'top' 
+    ? { top: 0 } 
+    : { bottom: 0 };
+  
+  // Get the appropriate animation variant based on animation type
+  const getAnimationVariant = () => {
     switch (animation) {
       case 'slide':
+        if (!isOverflowing) {
+          return {}; // No animation if text fits
+        }
+        // For slide animation, we need to account for text width
         return {
-          initial: { x: '100%' },
-          animate: { x: '-100%' },
-          transition: { 
-            duration: calculateDuration(),
-            repeat: Infinity,
-            ease: 'linear'
+          animate: {
+            x: [containerWidth, -marqueeWidth],
+            transition: {
+              duration: animationDuration,
+              repeat: Infinity,
+              ease: "linear"
+            }
           }
         };
       case 'fade':
         return {
-          initial: { opacity: 0 },
-          animate: { opacity: 1 },
-          transition: {
-            duration: 1.5,
-            repeatType: 'reverse' as const,
-            repeat: Infinity
+          animate: {
+            opacity: [0, 1, 1, 0],
+            transition: {
+              duration: 5,
+              repeatType: "loop", // "loop" is a valid value
+              repeat: Infinity,
+            }
           }
         };
       case 'static':
       default:
-        return {
-          initial: { opacity: 1 },
-          animate: { opacity: 1 }
-        };
+        return {}; // No animation
     }
   };
-
-  // Position style
-  const positionClass = position === 'top' 
-    ? 'top-0' 
-    : 'bottom-0';
-
-  // Animation variants
-  const animationVariants = getAnimationVariants();
-
+  
+  const animationVariant = getAnimationVariant();
+  
   return (
-    <div 
-      className={`fixed left-0 right-0 z-50 ${positionClass}`}
-      style={{ backgroundColor }}
+    <div
+      ref={containerRef}
+      className="broadcast-bar w-full absolute overflow-hidden"
+      style={{
+        backgroundColor,
+        color: textColor,
+        height: '40px',
+        ...positionStyle,
+        zIndex: 100
+      }}
     >
-      <div className="relative h-12 overflow-hidden flex items-center px-4">
-        {animation === 'slide' ? (
-          <motion.div
-            className="whitespace-nowrap absolute"
-            initial={animationVariants.initial}
-            animate={animationVariants.animate}
-            transition={animationVariants.transition}
-            style={{ color: textColor }}
-          >
-            {animatedText}
-          </motion.div>
-        ) : (
-          <motion.div
-            className="text-center w-full"
-            initial={animationVariants.initial}
-            animate={animationVariants.animate}
-            transition={animationVariants.transition}
-            style={{ color: textColor }}
-          >
-            {animatedText}
-          </motion.div>
-        )}
-      </div>
+      <motion.div
+        ref={textRef}
+        className="h-full flex items-center px-4 whitespace-nowrap"
+        initial={animation !== 'static' ? { x: isOverflowing ? containerWidth : 0 } : {}}
+        {...animationVariant}
+      >
+        <span className="text-lg font-semibold">{text}</span>
+      </motion.div>
     </div>
   );
 };

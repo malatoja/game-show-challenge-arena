@@ -1,5 +1,4 @@
 
-// Fix the handleAddPlayer type issue
 import { useCallback, useState } from 'react';
 import { useGame } from '@/context/GameContext';
 import { useCardHandlers } from './gameHandlers/cardHandlers';
@@ -37,17 +36,27 @@ export function useGameControlProvider() {
   const { handleSpinWheel, handleWheelSpinEnd, handleSelectCategory } = useWheelHandlers();
   const { handlePause, handleSkipQuestion, handleEndGame, handleResetGame } = useUtilHandlers();
   
-  // Select a player handler
-  const handleSelectPlayer = useCallback((playerId: string) => {
-    setActivePlayerId(playerId);
+  // Select a player handler - updated to accept player object
+  const handleSelectPlayer = useCallback((player: Player) => {
+    setActivePlayerId(player.id);
   }, []);
   
   // Add new player handler
-  const handleAddPlayer = useCallback((player: Player) => {
-    // Logic for adding a new player
-    console.log("Adding new player:", player);
+  const handleAddPlayer = useCallback(() => {
+    const playerNumber = state.players.length + 1;
+    const newPlayer: Player = {
+      id: `player-${Date.now()}`,
+      name: `Gracz ${playerNumber}`,
+      lives: 3,
+      points: 0,
+      cards: [],
+      isActive: state.players.length === 0,
+      eliminated: false
+    };
+    
     // This would typically dispatch an ADD_PLAYER action
-  }, []);
+    console.log("Adding new player:", newPlayer);
+  }, [state.players.length]);
   
   // Calculate if we can start a new round
   const canStartRound = !state.roundActive && state.players.length > 0;

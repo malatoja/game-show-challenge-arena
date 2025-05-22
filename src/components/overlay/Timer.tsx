@@ -1,116 +1,68 @@
 
-import React, { useEffect } from 'react';
-import { motion, useAnimation } from 'framer-motion';
+import React, { useState, useEffect } from 'react';
 
-interface TimerProps {
+export interface TimerProps {
   currentTime: number;
   maxTime: number;
   isPulsing?: boolean;
 }
 
-export const Timer: React.FC<TimerProps> = ({ currentTime, maxTime, isPulsing = false }) => {
-  const percentage = (currentTime / maxTime) * 100;
-  const controls = useAnimation();
+export const Timer: React.FC<TimerProps> = ({ 
+  currentTime, 
+  maxTime, 
+  isPulsing = false 
+}) => {
+  const [radius] = useState(45);
+  const [circumference] = useState(2 * Math.PI * radius);
   
-  // Animation effect for pulsing timer
-  useEffect(() => {
-    if (isPulsing) {
-      controls.start({
-        scale: [1, 1.1, 1],
-        filter: [
-          'drop-shadow(0 0 5px rgba(255,56,100,0.7))', 
-          'drop-shadow(0 0 15px rgba(255,56,100,0.9))', 
-          'drop-shadow(0 0 5px rgba(255,56,100,0.7))'
-        ],
-        transition: {
-          duration: 0.7,
-          repeat: Infinity,
-          repeatType: 'loop'
-        }
-      });
-    } else {
-      controls.start({
-        scale: 1,
-        filter: 'drop-shadow(0 0 5px rgba(255,56,100,0.5))',
-        transition: { duration: 0.3 }
-      });
-    }
-  }, [isPulsing, controls]);
+  // Calculate stroke-dashoffset
+  const strokeDashoffset = () => {
+    const progress = currentTime / maxTime;
+    return circumference * (1 - progress);
+  };
   
-  // Timer color based on remaining time
-  const getTimerColor = () => {
-    if (currentTime <= 5) return '#FF3864';
-    if (currentTime <= 10) return '#FFC107';
-    return '#39FF14';
+  // Color based on time remaining
+  const timerColor = () => {
+    const percentage = currentTime / maxTime;
+    if (percentage > 0.66) return 'stroke-green-500';
+    if (percentage > 0.33) return 'stroke-yellow-500';
+    return 'stroke-red-500';
   };
   
   return (
-    <motion.div 
-      className="absolute top-5 right-5 z-10"
-      animate={controls}
-    >
-      <div className="relative flex justify-center items-center w-24 h-24">
-        <svg width="100" height="100" viewBox="0 0 100 100">
-          {/* Background circle */}
-          <circle
-            cx="50"
-            cy="50"
-            r="45"
-            fill="transparent"
-            stroke="rgba(0,0,0,0.5)"
-            strokeWidth="8"
-          />
-          
-          {/* Progress circle */}
-          <motion.circle
-            cx="50"
-            cy="50"
-            r="45"
-            fill="transparent"
-            stroke={getTimerColor()}
-            strokeWidth="8"
-            strokeLinecap="round"
-            strokeDasharray={`${2 * Math.PI * 45}`}
-            initial={{ strokeDashoffset: 0 }}
-            animate={{ 
-              strokeDashoffset: `${2 * Math.PI * 45 * (1 - percentage / 100)}` 
-            }}
-            transition={{
-              duration: 0.5,
-              ease: "easeInOut"
-            }}
-            transform="rotate(-90 50 50)"
-          />
-          
-          {/* Additional decorative circles */}
-          <circle
-            cx="50"
-            cy="50"
-            r="38"
-            fill="transparent"
-            stroke="rgba(0,0,0,0.3)"
-            strokeWidth="1"
-          />
-        </svg>
+    <div className={`relative ${isPulsing ? 'animate-pulse' : ''}`}>
+      <svg width="120" height="120" className="transform -rotate-90">
+        {/* Background circle */}
+        <circle
+          cx="60"
+          cy="60"
+          r={radius}
+          fill="transparent"
+          stroke="#333"
+          strokeWidth="10"
+        />
         
-        {/* Timer text */}
-        <motion.span 
-          className="absolute text-3xl font-bold text-white"
-          animate={{ 
-            scale: currentTime <= 5 ? [1, 1.2, 1] : 1,
-          }}
-          transition={{ 
-            duration: 0.5,
-            repeat: currentTime <= 5 ? Infinity : 0,
-            repeatType: "reverse"
-          }}
-          style={{
-            textShadow: '0 0 10px rgba(255,255,255,0.7)'
-          }}
-        >
-          {currentTime}
-        </motion.span>
+        {/* Timer circle */}
+        <circle
+          cx="60"
+          cy="60"
+          r={radius}
+          fill="transparent"
+          stroke="currentColor"
+          strokeWidth="10"
+          strokeDasharray={circumference}
+          strokeDashoffset={strokeDashoffset()}
+          className={timerColor()}
+          strokeLinecap="round"
+        />
+      </svg>
+      
+      {/* Time display */}
+      <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center">
+        <span className="text-3xl font-bold text-white">{currentTime}</span>
       </div>
-    </motion.div>
+    </div>
   );
 };
+
+export default Timer;
