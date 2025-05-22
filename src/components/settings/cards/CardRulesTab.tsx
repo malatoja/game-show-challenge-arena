@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
@@ -10,15 +9,7 @@ import { PlusCircle, Edit, Trash2 } from 'lucide-react';
 import { CardType } from '@/types/gameTypes';
 import { CARD_DETAILS } from '@/constants/gameConstants';
 import { toast } from 'sonner';
-
-interface CardRule {
-  id: string;
-  name: string;
-  description: string;
-  isEnabled: boolean;
-  condition: string;
-  cardType: CardType;
-}
+import { CardRule } from '@/utils/card/cardUtils';
 
 interface CardRulesProps {
   cardRules: {

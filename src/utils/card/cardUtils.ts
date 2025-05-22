@@ -16,7 +16,37 @@ interface CardRule {
 export const loadCardRules = (): CardRule[] => {
   try {
     const savedRules = localStorage.getItem('customCardRules');
-    return savedRules ? JSON.parse(savedRules) : [];
+    if (savedRules) {
+      return JSON.parse(savedRules);
+    }
+    
+    // Default rules if none are saved
+    return [
+      {
+        id: 'topPoints',
+        name: 'Top Points Player',
+        description: 'Award card to player with highest points after Round 1',
+        isEnabled: true,
+        condition: 'top_player',
+        cardType: 'dejavu'
+      },
+      {
+        id: 'lowestPoints',
+        name: 'Lowest Points Player',
+        description: 'Award card to player with lowest points after Round 1',
+        isEnabled: true,
+        condition: 'lowest_points',
+        cardType: 'reanimacja'
+      },
+      {
+        id: 'advanceRound',
+        name: 'Advance Round',
+        description: 'Award card to players who advance to next round',
+        isEnabled: true,
+        condition: 'advance_round',
+        cardType: 'kontra'
+      }
+    ];
   } catch (error) {
     console.error('Error loading card rules:', error);
     return [];
@@ -71,3 +101,6 @@ export const getRandomCardForAction = (action: string): CardType => {
   const randomIndex = Math.floor(Math.random() * cardTypes.length);
   return cardTypes[randomIndex];
 };
+
+// Export the CardRule interface
+export type { CardRule };

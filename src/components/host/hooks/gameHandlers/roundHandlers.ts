@@ -48,32 +48,57 @@ export function useRoundHandlers() {
     });
 
     // Auto-award cards based on points or position if starting a new round
-    if (roundType === 'speed' && cardRules.topPoints !== false) {
+    if (roundType === 'speed') {
+      // Find the rule for top points
+      const topPointsRule = cardRules.find(rule => 
+        rule.name.toLowerCase().includes('top') || 
+        rule.condition === 'top_player' || 
+        rule.id === 'topPoints'
+      );
+      
       // Auto-award cards to top players after Round 1
-      const sortedPlayers = [...state.players].sort((a, b) => b.points - a.points);
-      
-      // Top player gets a card if the rule is enabled
-      if (sortedPlayers.length > 0) {
-        const randomCard = getRandomCardForAction('correctAnswer');
-        dispatch({ type: 'AWARD_CARD', playerId: sortedPlayers[0].id, cardType: randomCard });
-        addEvent(`${sortedPlayers[0].name} otrzymuje kartę za najlepszy wynik w Rundzie 1`);
-      }
-      
-      // Player with lowest points gets a "Na Ratunek" card if the rule is enabled
-      if (sortedPlayers.length > 1 && cardRules.lowestPoints !== false) {
-        const rescueCard = getRandomCardForAction('wrongAnswer');
-        dispatch({ type: 'AWARD_CARD', playerId: sortedPlayers[sortedPlayers.length - 1].id, cardType: rescueCard });
-        addEvent(`${sortedPlayers[sortedPlayers.length - 1].name} otrzymuje kartę pomocy`);
+      if (topPointsRule && topPointsRule.isEnabled) {
+        const sortedPlayers = [...state.players].sort((a, b) => b.points - a.points);
+        
+        // Top player gets a card if the rule is enabled
+        if (sortedPlayers.length > 0) {
+          const randomCard = getRandomCardForAction('correctAnswer');
+          dispatch({ type: 'AWARD_CARD', playerId: sortedPlayers[0].id, cardType: randomCard });
+          addEvent(`${sortedPlayers[0].name} otrzymuje kartę za najlepszy wynik w Rundzie 1`);
+        }
+        
+        // Find the rule for lowest points
+        const lowestPointsRule = cardRules.find(rule => 
+          rule.name.toLowerCase().includes('lowest') || 
+          rule.condition === 'lowest_points' || 
+          rule.id === 'lowestPoints'
+        );
+        
+        // Player with lowest points gets a "Na Ratunek" card if the rule is enabled
+        if (sortedPlayers.length > 1 && lowestPointsRule && lowestPointsRule.isEnabled) {
+          const rescueCard = getRandomCardForAction('wrongAnswer');
+          dispatch({ type: 'AWARD_CARD', playerId: sortedPlayers[sortedPlayers.length - 1].id, cardType: rescueCard });
+          addEvent(`${sortedPlayers[sortedPlayers.length - 1].name} otrzymuje kartę pomocy`);
+        }
       }
     }
     
-    if (roundType === 'wheel' && cardRules.advanceRound !== false) {
+    if (roundType === 'wheel') {
+      // Find the rule for advancing rounds
+      const advanceRoundRule = cardRules.find(rule => 
+        rule.name.toLowerCase().includes('advance') || 
+        rule.condition === 'advance_round' || 
+        rule.id === 'advanceRound'
+      );
+      
       // Award cards to players who advanced from Round 2
-      state.players.filter(p => !p.eliminated).forEach(player => {
-        const randomCard = getRandomCardForAction('roundComplete');
-        dispatch({ type: 'AWARD_CARD', playerId: player.id, cardType: randomCard });
-        addEvent(`${player.name} otrzymuje kartę za awans do Rundy 3`);
-      });
+      if (advanceRoundRule && advanceRoundRule.isEnabled) {
+        state.players.filter(p => !p.eliminated).forEach(player => {
+          const randomCard = getRandomCardForAction('roundComplete');
+          dispatch({ type: 'AWARD_CARD', playerId: player.id, cardType: randomCard });
+          addEvent(`${player.name} otrzymuje kartę za awans do Rundy 3`);
+        });
+      }
     }
   };
   
@@ -159,3 +184,4 @@ export function useRoundHandlers() {
     setShowResults
   };
 }
+
