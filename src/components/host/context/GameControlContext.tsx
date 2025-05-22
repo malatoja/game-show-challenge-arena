@@ -22,6 +22,7 @@ export interface GameControlContextType {
   handleSelectCategory: (category: string) => void;
   handlePause: () => void;
   handleResetGame: () => void;
+  handleResetRound: () => void; // Add the reset round handler
   handleUseCard: (playerId: string, cardType: CardType) => void;
   handleAddPlayer: () => void;
   handleAddTestCards: (playerId: string) => void;

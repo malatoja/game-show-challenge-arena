@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useGame } from '@/context/GameContext';
 import { RoundType } from '@/types/gameTypes';
@@ -105,6 +104,30 @@ export function useRoundHandlers() {
     addEvent("Gra zakończona! Wyświetlanie końcowych wyników...");
     toast.success('Gra zakończona! Wyświetlanie końcowych wyników...');
   };
+  
+  // Add the reset round function
+  const handleResetRound = () => {
+    // First confirm with the user
+    if (confirm('Czy na pewno chcesz zresetować obecną rundę? To przywróci stan rundy bez zmiany punktacji graczy.')) {
+      // Keep the current round type
+      const currentRoundType = state.currentRound;
+      
+      // Reset the timer for this round
+      setTimerForRound(currentRoundType);
+      
+      // Dispatch actions to reset the round state
+      dispatch({ type: 'RESET_ROUND' });
+      
+      // Reset the active player
+      dispatch({ type: 'SET_ACTIVE_PLAYER', playerId: '' });
+      
+      // Emit the round:reset event
+      emit('round:reset', { roundType: currentRoundType });
+      
+      addEvent(`Zresetowano rundę ${ROUND_NAMES[currentRoundType]}`);
+      toast.info(`Runda ${ROUND_NAMES[currentRoundType]} została zresetowana`);
+    }
+  };
 
   const handleResetGame = () => {
     if (confirm('Czy na pewno chcesz zresetować grę? Wszystkie postępy zostaną utracone.')) {
@@ -130,6 +153,7 @@ export function useRoundHandlers() {
     handleEndRound,
     handleEndGame,
     handleResetGame,
+    handleResetRound, // Add the new function to the returned object
     setShowResults
   };
 }

@@ -6,6 +6,7 @@ export type GameAction =
   | { type: 'START_GAME' }
   | { type: 'START_ROUND'; roundType: RoundType }
   | { type: 'END_ROUND' }
+  | { type: 'RESET_ROUND' }
   | { type: 'SET_ACTIVE_PLAYER'; playerId: PlayerId }
   | { type: 'SET_CURRENT_QUESTION'; question: Question }
   | { type: 'ANSWER_QUESTION'; playerId: PlayerId; isCorrect: boolean }

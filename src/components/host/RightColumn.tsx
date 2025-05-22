@@ -1,6 +1,7 @@
+
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { SkipForward, Pause } from 'lucide-react';
+import { SkipForward, Pause, RefreshCw } from 'lucide-react';
 import { ActionHistoryButton } from './components/ActionHistoryButton';
 
 interface RightColumnProps {
@@ -40,6 +41,16 @@ const RightColumn: React.FC<RightColumnProps> = ({
       >
         <Pause size={16} />
         Pauza
+      </Button>
+      
+      <Button 
+        onClick={onResetRound} 
+        variant="outline"
+        className="flex items-center gap-2 bg-yellow-500/10 hover:bg-yellow-500/20 text-yellow-600"
+        size="sm"
+      >
+        <RefreshCw size={16} />
+        Reset rundy
       </Button>
       
       <ActionHistoryButton />

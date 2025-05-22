@@ -35,6 +35,7 @@ const GameLayout: React.FC = () => {
     handleSkipQuestion,
     handlePause,
     handleResetGame,
+    handleResetRound, // Add the reset round handler
     handleUseCard,
     handleAddPlayer,
     handleAddTestCards,
@@ -173,7 +174,7 @@ const GameLayout: React.FC = () => {
         <div className="mt-4">
           <RightColumn 
             onEndRound={handleEndRound}
-            onResetRound={handleResetGame}
+            onResetRound={handleResetRound} // Pass the new handler
             onPause={handlePause}
             onSkipQuestion={handleSkipQuestion}
             onEndGame={handleEndGame}
