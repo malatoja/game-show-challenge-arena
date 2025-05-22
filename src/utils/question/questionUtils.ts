@@ -2,47 +2,21 @@
 import { Question } from '../../types/gameTypes';
 
 /**
+ * Generate a unique ID for a new question
+ */
+export const generateQuestionId = (): string => {
+  return `q-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+};
+
+/**
+ * Sort questions alphabetically by text
+ */
+export const sortQuestionsAlphabetically = (questions: Question[]): Question[] => {
+  return [...questions].sort((a, b) => a.text.localeCompare(b.text));
+};
+
+/**
  * Load questions from localStorage or return an empty array if none exist
- */
-export const loadQuestions = (): Question[] => {
-  const savedQuestions = localStorage.getItem('gameQuestions');
-  if (savedQuestions) {
-    try {
-      return JSON.parse(savedQuestions);
-    } catch (error) {
-      console.error('Error parsing questions from localStorage:', error);
-      return [];
-    }
-  }
-  return [];
-};
-
-/**
- * Save questions to localStorage
- */
-export const saveQuestions = (questions: Question[]): void => {
-  try {
-    localStorage.setItem('gameQuestions', JSON.stringify(questions));
-  } catch (error) {
-    console.error('Error saving questions to localStorage:', error);
-  }
-};
-
-/**
- * Get all unique categories from questions
- */
-export const getUniqueCategories = (questions: Question[]): string[] => {
-  const categories = new Set<string>();
-  questions.forEach(question => {
-    if (question.category) {
-      categories.add(question.category);
-    }
-  });
-  return Array.from(categories);
-};
-
-/**
- * Filter questions by various criteria
  */
 export const filterQuestions = (questions: Question[], filters: {
   round?: string;
@@ -50,6 +24,7 @@ export const filterQuestions = (questions: Question[], filters: {
   difficulty?: string;
   used?: boolean;
   favorite?: boolean;
+  searchTerm?: string;
 }): Question[] => {
   return questions.filter(question => {
     if (filters.round && filters.round !== 'all' && question.round !== filters.round) return false;
@@ -57,6 +32,7 @@ export const filterQuestions = (questions: Question[], filters: {
     if (filters.difficulty && question.difficulty !== filters.difficulty) return false;
     if (filters.used !== undefined && question.used !== filters.used) return false;
     if (filters.favorite !== undefined && question.favorite !== filters.favorite) return false;
+    if (filters.searchTerm && !question.text.toLowerCase().includes(filters.searchTerm.toLowerCase())) return false;
     return true;
   });
 };

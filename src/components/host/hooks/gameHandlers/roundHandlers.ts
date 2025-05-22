@@ -18,10 +18,10 @@ export function useRoundHandlers() {
   const [showResults, setShowResults] = useState<boolean>(false);
   const [resultType, setResultType] = useState<'round' | 'final'>('round');
 
-  // Calculate round state for UI
-  const isRoundActive = state.roundStarted && !state.roundEnded;
-  const canStartRound = !state.roundStarted && !state.roundEnded;
-  const canEndRound = state.roundStarted && !state.roundEnded;
+  // Calculate round state for UI - use roundActive instead of roundStarted/roundEnded
+  const isRoundActive = state.roundActive;
+  const canStartRound = !state.roundActive;
+  const canEndRound = state.roundActive;
   
   const handleStartRound = (roundType: RoundType) => {
     // Load card rules

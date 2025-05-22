@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -189,9 +188,8 @@ export default function SummaryLogTab() {
               <div>
                 <div className="text-sm text-gameshow-muted">Status rundy</div>
                 <div className="font-medium">
-                  {state.roundStarted && !state.roundEnded && 'W trakcie'}
-                  {!state.roundStarted && !state.roundEnded && 'Nie rozpoczęta'}
-                  {state.roundEnded && 'Zakończona'}
+                  {state.roundActive && 'W trakcie'}
+                  {!state.roundActive && 'Nie rozpoczęta lub zakończona'}
                 </div>
               </div>
               <div>

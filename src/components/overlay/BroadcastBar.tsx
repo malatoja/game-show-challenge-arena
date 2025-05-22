@@ -46,42 +46,36 @@ export const BroadcastBar: React.FC<BroadcastBarProps> = ({
     ? { top: 0 } 
     : { bottom: 0 };
   
-  // Get the appropriate animation variant based on animation type
-  const getAnimationVariant = () => {
-    switch (animation) {
-      case 'slide':
-        if (!isOverflowing) {
-          return {}; // No animation if text fits
+  // Get the appropriate motion props based on animation type
+  const getMotionProps = () => {
+    if (animation === 'static') {
+      return {}; // No animation
+    } else if (animation === 'slide' && isOverflowing) {
+      return {
+        animate: {
+          x: [containerWidth, -marqueeWidth],
+          transition: {
+            duration: animationDuration,
+            repeat: Infinity,
+            ease: "linear"
+          }
         }
-        // For slide animation, we need to account for text width
-        return {
-          animate: {
-            x: [containerWidth, -marqueeWidth],
-            transition: {
-              duration: animationDuration,
-              repeat: Infinity,
-              ease: "linear"
-            }
+      };
+    } else if (animation === 'fade') {
+      return {
+        animate: {
+          opacity: [0, 1, 1, 0],
+          transition: {
+            duration: 5,
+            repeat: Infinity,
+            repeatType: "loop" as "loop"
           }
-        };
-      case 'fade':
-        return {
-          animate: {
-            opacity: [0, 1, 1, 0],
-            transition: {
-              duration: 5,
-              repeatType: "loop", // "loop" is a valid value
-              repeat: Infinity,
-            }
-          }
-        };
-      case 'static':
-      default:
-        return {}; // No animation
+        }
+      };
     }
+    
+    return {}; // Default case
   };
-  
-  const animationVariant = getAnimationVariant();
   
   return (
     <div
@@ -99,7 +93,7 @@ export const BroadcastBar: React.FC<BroadcastBarProps> = ({
         ref={textRef}
         className="h-full flex items-center px-4 whitespace-nowrap"
         initial={animation !== 'static' ? { x: isOverflowing ? containerWidth : 0 } : {}}
-        {...animationVariant}
+        {...getMotionProps()}
       >
         <span className="text-lg font-semibold">{text}</span>
       </motion.div>

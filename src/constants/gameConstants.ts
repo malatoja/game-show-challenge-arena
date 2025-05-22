@@ -1,138 +1,213 @@
+import { RoundType, CardType } from '@/types/gameTypes';
 
-import { CardType, RoundType, Question } from '@/types/gameTypes';
+// This is a partial update to fix the error with ROUND_NAMES
 
-// Round names (for display)
-export const ROUND_NAMES: Record<RoundType, string> = {
-  knowledge: 'Runda Wiedzy',
-  speed: 'Szybka Odpowiedź',
-  wheel: 'Koło Fortuny',
-  standard: 'Runda Standardowa',
-  all: 'Wszystkie Rundy'
+export const ROUND_NAMES: Record<RoundType | 'all', string> = {
+  'knowledge': 'Runda Wiedzy',
+  'speed': 'Szybka Odpowiedź',
+  'wheel': 'Koło Fortuny',
+  'standard': 'Standardowa Runda',
+  'all': 'Wszystkie Rundy'
 };
 
-// Initial lives for players
-export const INITIAL_LIVES = 3;
-
-// Maximum points per question
-export const MAX_POINTS_PER_QUESTION = 100;
-
-// Card details with names, descriptions and effects
-export const CARD_DETAILS: Record<CardType, { name: string, description: string, effect: string }> = {
+export const CARD_DETAILS: Record<CardType, { name: string; description: string }> = {
   dejavu: {
-    name: 'Déjà Vu',
-    description: 'Pozwala na ponowną próbę odpowiedzi po błędzie',
-    effect: 'Gracz może odpowiedzieć ponownie na pytanie, na które udzielił błędnej odpowiedzi'
+    name: 'Dejavu',
+    description: 'Powtórz pytanie po błędnej odpowiedzi.'
   },
   kontra: {
     name: 'Kontra',
-    description: 'Przekazuje pytanie innemu graczowi',
-    effect: 'Gracz może przekazać trudne pytanie innemu graczowi'
+    description: 'Przekaż pytanie innemu graczowi.'
   },
   reanimacja: {
     name: 'Reanimacja',
-    description: 'Zapobiega utracie życia w Rundzie 2',
-    effect: 'Gracz nie traci życia po udzieleniu błędnej odpowiedzi'
+    description: 'Zapobiega utracie życia w Rundzie 2.'
   },
   skip: {
-    name: 'Pomiń',
-    description: 'Pozwala pominąć pytanie',
-    effect: 'Gracz może pominąć aktualne pytanie bez konsekwencji'
+    name: 'Skip',
+    description: 'Pomiń pytanie.'
   },
   turbo: {
     name: 'Turbo',
-    description: 'Podwaja zdobyte punkty',
-    effect: 'Gracz otrzymuje podwójną liczbę punktów za poprawną odpowiedź'
+    description: 'Podwój punkty za pytanie.'
   },
   refleks2: {
-    name: 'Refleks x2',
-    description: 'Podwaja czas na odpowiedź',
-    effect: 'Gracz otrzymuje dwa razy więcej czasu na odpowiedź'
+    name: 'Refleks 2x',
+    description: 'Podwój czas na odpowiedź.'
   },
   refleks3: {
-    name: 'Refleks x3',
-    description: 'Potraja czas na odpowiedź',
-    effect: 'Gracz otrzymuje trzy razy więcej czasu na odpowiedź'
+    name: 'Refleks 3x',
+    description: 'Potrój czas na odpowiedź.'
   },
   lustro: {
     name: 'Lustro',
-    description: 'Usuwa jedną błędną odpowiedź',
-    effect: 'Jedna z błędnych odpowiedzi zostaje usunięta z pytania'
+    description: 'Usuwa błędną odpowiedź.'
   },
   oswiecenie: {
-    name: 'Oświecenie',
-    description: 'Daje podpowiedź do pytania',
-    effect: 'Gracz otrzymuje dodatkową wskazówkę do pytania'
+    name: 'Oswiecenie',
+    description: 'Otrzymaj podpowiedź.'
   }
 };
 
-// Function to create a new card object
-export const createCard = (type: CardType, isUsed: boolean = false): import('@/types/gameTypes').Card => {
-  return {
-    id: `card-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
-    type,
-    description: CARD_DETAILS[type].description,
-    isUsed
-  };
-};
-
-// Wheel categories
-export const WHEEL_CATEGORIES = [
-  'Nauka', 
-  'Historia', 
-  'Geografia', 
-  'Film i TV', 
-  'Muzyka', 
-  'Sport', 
-  'Literatura', 
-  'Technologia', 
-  'Gry', 
-  'Sztuka', 
-  'Jedzenie', 
-  'Zwierzęta'
-];
-
-// Sample questions for initial state
-export const SAMPLE_QUESTIONS: Question[] = [
+export const SAMPLE_QUESTIONS = [
   {
     id: '1',
-    text: 'Który z tych języków NIE jest językiem programowania?',
+    text: 'Co to jest JavaScript?',
     category: 'Programowanie',
     answers: [
-      { text: 'Python', isCorrect: false },
-      { text: 'HTML', isCorrect: true },
-      { text: 'JavaScript', isCorrect: false },
-      { text: 'Java', isCorrect: false }
+      { text: 'Język programowania', isCorrect: true },
+      { text: 'Rodzaj kawy', isCorrect: false },
+      { text: 'System operacyjny', isCorrect: false },
+      { text: 'Edytor tekstu', isCorrect: false },
     ],
-    correctAnswerIndex: 1,
+    correctAnswerIndex: 0,
+    difficulty: 'easy',
     round: 'knowledge',
-    hint: 'To język znaczników, a nie programowania'
+    used: false,
+    favorite: false,
   },
   {
     id: '2',
-    text: 'Ile wynosi wynik operacji 5 + 5 * 2?',
-    category: 'Matematyka',
+    text: 'Który operator służy do porównywania dwóch wartości w JavaScript?',
+    category: 'Programowanie',
     answers: [
-      { text: '15', isCorrect: true },
-      { text: '20', isCorrect: false },
-      { text: '25', isCorrect: false },
-      { text: '10', isCorrect: false }
+      { text: '=', isCorrect: false },
+      { text: '==', isCorrect: true },
+      { text: '===', isCorrect: false },
+      { text: '!=', isCorrect: false },
     ],
-    correctAnswerIndex: 0,
-    round: 'speed',
-    hint: 'Pamiętaj o kolejności wykonywania działań'
+    correctAnswerIndex: 1,
+    difficulty: 'medium',
+    round: 'knowledge',
+    used: false,
+    favorite: false,
   },
   {
     id: '3',
-    text: 'Kto jest autorem "Pana Tadeusza"?',
-    category: 'Literatura',
+    text: 'Co oznacza skrót HTML?',
+    category: 'Web Development',
     answers: [
-      { text: 'Juliusz Słowacki', isCorrect: false },
-      { text: 'Henryk Sienkiewicz', isCorrect: false },
-      { text: 'Adam Mickiewicz', isCorrect: true },
-      { text: 'Bolesław Prus', isCorrect: false }
+      { text: 'Hyper Text Markup Language', isCorrect: true },
+      { text: 'Highly Typed Machine Language', isCorrect: false },
+      { text: 'Home Tool Markup Language', isCorrect: false },
+      { text: 'Hyper Transfer Markup Language', isCorrect: false },
+    ],
+    correctAnswerIndex: 0,
+    difficulty: 'easy',
+    round: 'knowledge',
+    used: false,
+    favorite: false,
+  },
+  {
+    id: '4',
+    text: 'Który język jest często używany do stylizacji stron internetowych?',
+    category: 'Web Development',
+    answers: [
+      { text: 'JavaScript', isCorrect: false },
+      { text: 'HTML', isCorrect: false },
+      { text: 'CSS', isCorrect: true },
+      { text: 'Python', isCorrect: false },
     ],
     correctAnswerIndex: 2,
-    round: 'wheel',
-    hint: 'Polski poeta narodowy, żył na emigracji'
-  }
+    difficulty: 'easy',
+    round: 'knowledge',
+    used: false,
+    favorite: false,
+  },
+  {
+    id: '5',
+    text: 'Co to jest React?',
+    category: 'Web Development',
+    answers: [
+      { text: 'Biblioteka JavaScript', isCorrect: true },
+      { text: 'Język programowania', isCorrect: false },
+      { text: 'System operacyjny', isCorrect: false },
+      { text: 'Edytor tekstu', isCorrect: false },
+    ],
+    correctAnswerIndex: 0,
+    difficulty: 'medium',
+    round: 'knowledge',
+    used: false,
+    favorite: false,
+  },
+  {
+    id: '6',
+    text: 'Która firma stworzyła JavaScript?',
+    category: 'Programowanie',
+    answers: [
+      { text: 'Microsoft', isCorrect: false },
+      { text: 'Google', isCorrect: false },
+      { text: 'Netscape', isCorrect: true },
+      { text: 'Apple', isCorrect: false },
+    ],
+    correctAnswerIndex: 2,
+    difficulty: 'hard',
+    round: 'knowledge',
+    used: false,
+    favorite: false,
+  },
+  {
+    id: '7',
+    text: 'Co to jest algorytm?',
+    category: 'Informatyka',
+    answers: [
+      { text: 'Przepis na ciasto', isCorrect: false },
+      { text: 'Sposób na szybkie liczenie', isCorrect: false },
+      { text: 'Uporządkowany sposób rozwiązania problemu', isCorrect: true },
+      { text: 'Nowy model komputera', isCorrect: false },
+    ],
+    correctAnswerIndex: 2,
+    difficulty: 'medium',
+    round: 'knowledge',
+    used: false,
+    favorite: false,
+  },
+  {
+    id: '8',
+    text: 'Który z poniższych NIE jest językiem programowania?',
+    category: 'Programowanie',
+    answers: [
+      { text: 'Python', isCorrect: false },
+      { text: 'JavaScript', isCorrect: false },
+      { text: 'HTML', isCorrect: true },
+      { text: 'Java', isCorrect: false },
+    ],
+    correctAnswerIndex: 2,
+    difficulty: 'easy',
+    round: 'knowledge',
+    used: false,
+    favorite: false,
+  },
+  {
+    id: '9',
+    text: 'Co to jest API?',
+    category: 'Web Development',
+    answers: [
+      { text: 'Application Programming Interface', isCorrect: true },
+      { text: 'Advanced Program Integration', isCorrect: false },
+      { text: 'Automated Processing Instruction', isCorrect: false },
+      { text: 'Application Process Interaction', isCorrect: false },
+    ],
+    correctAnswerIndex: 0,
+    difficulty: 'medium',
+    round: 'knowledge',
+    used: false,
+    favorite: false,
+  },
+  {
+    id: '10',
+    text: 'Który z poniższych jest systemem kontroli wersji?',
+    category: 'Informatyka',
+    answers: [
+      { text: 'Microsoft Word', isCorrect: false },
+      { text: 'Git', isCorrect: true },
+      { text: 'Adobe Photoshop', isCorrect: false },
+      { text: 'Mozilla Firefox', isCorrect: false },
+    ],
+    correctAnswerIndex: 1,
+    difficulty: 'medium',
+    round: 'knowledge',
+    used: false,
+    favorite: false,
+  },
 ];

@@ -67,4 +67,8 @@ export interface GameState {
   selectedCategory: string;
   wheelSpinning: boolean;
   activePlayerId: string | null;
+  // Adding missing properties
+  roundStarted: boolean;
+  roundEnded: boolean;
+  currentPlayerIndex?: number;
 }

@@ -5,7 +5,7 @@ import { CategoryTable } from './CategoryTable';
 import QuestionPanel from './QuestionPanel';
 import { Timer } from './Timer';
 import HostCamera from './HostCamera';
-import { CardAnimation } from '@/components/animations/CardEffectOverlay';
+import CardEffectOverlay from '@/components/animations/CardEffectOverlay';
 import BroadcastBar from './BroadcastBar';
 
 interface GameOverlayProps {

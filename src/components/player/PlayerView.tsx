@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useGame } from '@/context/GameContext';
 import { CardType, Player } from '@/types/gameTypes';
@@ -20,7 +19,7 @@ import { useSocket } from '@/context/SocketContext';
 
 export function PlayerView({ playerId }: { playerId: string }) {
   const { state } = useGame();
-  const { currentRound, players, currentQuestion, wheelSpinning, roundEnded } = state;
+  const { currentRound, players, currentQuestion, wheelSpinning, roundActive } = state;
   const [selectedCard, setSelectedCard] = useState<CardType | null>(null);
   const [showCardAnimation, setShowCardAnimation] = useState(false);
   const [showCardDesc, setShowCardDesc] = useState(false);
@@ -127,7 +126,7 @@ export function PlayerView({ playerId }: { playerId: string }) {
   }
   
   // If the round has ended, show a different view
-  if (roundEnded) {
+  if (!roundActive) {
     return (
       <div className="container mx-auto p-4 bg-gameshow-background min-h-screen flex items-center justify-center">
         <Card className="max-w-lg w-full bg-gameshow-card">

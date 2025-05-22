@@ -19,22 +19,28 @@ export function useGameControlProvider() {
   // Import all handlers from various game operation hooks
   const { handleUseCard, handleAwardCard, handleAddTestCards } = useCardHandlers();
   const { 
-    handleAnswerQuestion,
     handleUpdatePoints,
     handleEliminatePlayer,
     handleRestorePlayer
   } = usePlayerHandlers();
   
-  const { handleSelectQuestion } = useQuestionHandlers();
+  const { handleSelectQuestion, handleSkipQuestion } = useQuestionHandlers();
   const { 
     handleStartRound,
     handleEndRound,
-    handleResetRound,
-    handleRoundResults
+    handleResetRound
   } = useRoundHandlers();
   
   const { handleSpinWheel, handleWheelSpinEnd, handleSelectCategory } = useWheelHandlers();
-  const { handlePause, handleSkipQuestion, handleEndGame, handleResetGame } = useUtilHandlers();
+  const { handlePause, handleEndGame, handleResetGame } = useUtilHandlers();
+  
+  // Handle answer question function
+  const handleAnswerQuestion = useCallback((isCorrect: boolean, answerIndex: number) => {
+    if (activePlayerId) {
+      // Logic for handling answer
+      console.log(`Player ${activePlayerId} answered ${isCorrect ? 'correctly' : 'incorrectly'}`);
+    }
+  }, [activePlayerId]);
   
   // Select a player handler - updated to accept player object
   const handleSelectPlayer = useCallback((player: Player) => {
@@ -80,7 +86,6 @@ export function useGameControlProvider() {
     handleStartRound,
     handleEndRound,
     handleResetRound,
-    handleRoundResults,
     
     // Player handlers
     handleSelectPlayer,

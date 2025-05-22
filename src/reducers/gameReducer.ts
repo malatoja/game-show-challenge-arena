@@ -63,10 +63,10 @@ export function gameReducer(state: GameState, action: Actions.GameAction): GameS
       
       // Category and wheel management
       case 'SET_CATEGORY':
-        return questionHandlers.handleSetCategory(state, action.category);
+        return { ...state, selectedCategory: action.category };
       
       case 'SPIN_WHEEL':
-        return gameHandlers.handleSpinWheel(state, action.spinning);
+        return { ...state, wheelSpinning: action.spinning };
       
       // Card management actions
       case 'USE_CARD':
@@ -75,21 +75,58 @@ export function gameReducer(state: GameState, action: Actions.GameAction): GameS
       case 'AWARD_CARD':
         return cardHandlers.handleAwardCard(state, action.playerId, action.cardType);
       
-      // Point and life management actions
+      // Point and life management actions - new handlers
       case 'UPDATE_POINTS':
-        return playerHandlers.handleUpdatePoints(state, action.playerId, action.points);
+        return {
+          ...state,
+          players: state.players.map(player => 
+            player.id === action.playerId 
+              ? { ...player, points: action.points } 
+              : player
+          )
+        };
       
       case 'UPDATE_LIVES':
-        return playerHandlers.handleUpdateLives(state, action.playerId, action.lives);
+        return {
+          ...state,
+          players: state.players.map(player => 
+            player.id === action.playerId 
+              ? { ...player, lives: action.lives } 
+              : player
+          )
+        };
       
       case 'ELIMINATE_PLAYER':
-        return playerHandlers.handleEliminatePlayer(state, action.playerId);
+        return {
+          ...state,
+          players: state.players.map(player => 
+            player.id === action.playerId 
+              ? { ...player, eliminated: true } 
+              : player
+          )
+        };
       
       case 'RESTORE_PLAYER':
-        return playerHandlers.handleRestorePlayer(state, action.playerId);
+        return {
+          ...state,
+          players: state.players.map(player => 
+            player.id === action.playerId 
+              ? { ...player, eliminated: false } 
+              : player
+          )
+        };
       
       case 'RESET_PLAYERS':
-        return playerHandlers.handleResetPlayers(state);
+        return {
+          ...state,
+          players: state.players.map(player => ({
+            ...player,
+            points: 0,
+            lives: 3,
+            cards: [],
+            eliminated: false
+          }))
+        };
       
       default:
         return state;

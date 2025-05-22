@@ -24,7 +24,7 @@ export function QuestionControls({
   onSkipQuestion
 }: QuestionControlsProps) {
   const { state, dispatch } = useGame();
-  const { currentQuestion } = state;
+  const { currentQuestion, activePlayerId } = state;
   
   const handleAskQuestion = () => {
     onResetTimer();
@@ -38,12 +38,12 @@ export function QuestionControls({
   };
   
   const handleCorrectAnswer = () => {
-    if (!state.currentPlayerIndex && state.currentPlayerIndex !== 0) {
+    if (!activePlayerId) {
       toast.error("Wybierz gracza przed oceną odpowiedzi!");
       return;
     }
     
-    const activePlayer = state.players[state.currentPlayerIndex];
+    const activePlayer = state.players.find(p => p.id === activePlayerId);
     if (activePlayer) {
       dispatch({ 
         type: 'ANSWER_QUESTION', 
@@ -56,12 +56,12 @@ export function QuestionControls({
   };
   
   const handleIncorrectAnswer = () => {
-    if (!state.currentPlayerIndex && state.currentPlayerIndex !== 0) {
+    if (!activePlayerId) {
       toast.error("Wybierz gracza przed oceną odpowiedzi!");
       return;
     }
     
-    const activePlayer = state.players[state.currentPlayerIndex];
+    const activePlayer = state.players.find(p => p.id === activePlayerId);
     if (activePlayer) {
       dispatch({ 
         type: 'ANSWER_QUESTION', 
@@ -74,7 +74,9 @@ export function QuestionControls({
   };
   
   const handleNextPlayer = () => {
-    const nextIndex = (state.currentPlayerIndex + 1) % state.players.length;
+    // Find current player index
+    const currentPlayerIndex = state.players.findIndex(p => p.id === activePlayerId);
+    const nextIndex = (currentPlayerIndex + 1) % state.players.length;
     const nextPlayer = state.players[nextIndex];
     
     if (nextPlayer) {
