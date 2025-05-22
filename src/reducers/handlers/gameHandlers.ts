@@ -1,58 +1,58 @@
-import { initialState } from '../initialState';
-import { GameState, RoundType } from '@/types/gameTypes';
-import * as Actions from '../actions';
+import { GameState } from '../../types/gameTypes';
+import { GameAction } from '../actions';
 
-// Start a new game
-export function handleStartGame(state: GameState): GameState {
+export const handleStartGame = (state: GameState): GameState => {
   return {
     ...state,
-    roundStarted: true,
-    currentRound: 'knowledge' as RoundType,
-    roundEnded: false
+    gameStarted: true
   };
-}
+};
 
-// Start a new round
-export function handleStartRound(
-  state: GameState,
-  action: Extract<Actions.GameAction, { type: 'START_ROUND' }>
-): GameState {
+export const handleStartRound = (state: GameState, action: { roundType: string }): GameState => {
   return {
     ...state,
-    currentRound: action.roundType,
-    roundStarted: true,
-    roundEnded: false,
-    // Reset the current question when starting a new round
-    currentQuestion: null
+    roundActive: true,
+    currentRound: action.roundType
   };
-}
+};
 
-// End the current round
-export function handleEndRound(state: GameState): GameState {
+export const handleEndRound = (state: GameState): GameState => {
   return {
     ...state,
-    roundEnded: true,
-    // Reset current question at the end of the round
-    currentQuestion: null
+    roundActive: false,
   };
-}
+};
 
-// Reset the current round but keep scores
-export function handleResetRound(state: GameState): GameState {
+export const handleResetRound = (state: GameState): GameState => {
   return {
     ...state,
-    roundStarted: true,
-    roundEnded: false,
+    roundActive: false,
     currentQuestion: null,
-    wheelSpinning: false
+    selectedCategory: '',
   };
-}
+};
 
-// Restart the game completely
-export function handleRestartGame(): GameState {
+export const handleRestartGame = (): GameState => {
+  // Reset to initial state but keep questions
+  const questions = [...(JSON.parse(localStorage.getItem('gameQuestions') || '[]'))];
   return {
-    ...initialState,
-    // Preserve some settings if needed
-    questions: initialState.questions
+    gameStarted: false,
+    roundActive: false,
+    currentRound: 'knowledge',
+    players: [],
+    questions: questions,
+    usedQuestions: [],
+    remainingQuestions: [...questions],
+    currentQuestion: null,
+    selectedCategory: '',
+    wheelSpinning: false,
+    activePlayerId: null
   };
-}
+};
+
+export const handleSpinWheel = (state: GameState, spinning: boolean): GameState => {
+  return {
+    ...state,
+    wheelSpinning: spinning
+  };
+};

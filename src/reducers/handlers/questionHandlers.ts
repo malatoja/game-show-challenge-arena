@@ -1,121 +1,115 @@
-
 import { GameState, Question } from '../../types/gameTypes';
 import { toast } from 'sonner';
-import { saveQuestionsToStorage } from '../utils';
 
-// Question management
+// Set the current question
 export const handleSetCurrentQuestion = (state: GameState, question: Question): GameState => {
-  try {
-    // Automatically mark the question as used
-    const updatedQuestions = state.questions.map(q => 
-      q.id === question.id ? { ...q, used: true } : q
-    );
-    
-    // Save the updated questions to localStorage
-    saveQuestionsToStorage(updatedQuestions);
-    
-    // Remove the question from remaining questions
-    return {
-      ...state,
-      currentQuestion: question,
-      questions: updatedQuestions,
-      remainingQuestions: state.remainingQuestions.filter(q => q.id !== question.id)
-    };
-  } catch (error) {
-    console.error('Error setting current question:', error);
-    toast.error('Failed to set current question');
-    return state;
-  }
-};
-
-export const handleAddQuestion = (state: GameState, question: Question): GameState => {
-  try {
-    const updatedQuestions = [...state.questions, question];
-    saveQuestionsToStorage(updatedQuestions);
-    
-    return {
-      ...state,
-      questions: updatedQuestions,
-      remainingQuestions: [...state.remainingQuestions, question],
-    };
-  } catch (error) {
-    console.error('Error adding question:', error);
-    toast.error('Failed to add question');
-    return state;
-  }
-};
-
-export const handleUpdateQuestion = (state: GameState, question: Question): GameState => {
-  try {
-    const updatedQuestions = state.questions.map(q => 
-      q.id === question.id ? question : q
-    );
-    
-    saveQuestionsToStorage(updatedQuestions);
-    
-    return {
-      ...state,
-      questions: updatedQuestions,
-      remainingQuestions: state.remainingQuestions.map(q => 
-        q.id === question.id ? question : q
-      )
-    };
-  } catch (error) {
-    console.error('Error updating question:', error);
-    toast.error('Failed to update question');
-    return state;
-  }
-};
-
-export const handleRemoveQuestion = (state: GameState, questionId: string): GameState => {
-  try {
-    const updatedQuestions = state.questions.filter(q => q.id !== questionId);
-    saveQuestionsToStorage(updatedQuestions);
-    
-    return {
-      ...state,
-      questions: updatedQuestions,
-      remainingQuestions: state.remainingQuestions.filter(q => q.id !== questionId)
-    };
-  } catch (error) {
-    console.error('Error removing question:', error);
-    toast.error('Failed to remove question');
-    return state;
-  }
-};
-
-export const handleRevertQuestion = (state: GameState, questionId: string): GameState => {
-  // Find the question from all questions
-  const question = state.questions.find(q => q.id === questionId);
-  if (!question) return state;
-
-  // Add it back to remaining questions
   return {
     ...state,
-    currentQuestion: undefined,
+    currentQuestion: question
+  };
+};
+
+// Add a new question to the questions list
+export const handleAddQuestion = (state: GameState, question: Question): GameState => {
+  const newQuestions = [...state.questions, question];
+  
+  // Save to localStorage
+  localStorage.setItem('gameQuestions', JSON.stringify(newQuestions));
+  
+  return {
+    ...state,
+    questions: newQuestions,
     remainingQuestions: [...state.remainingQuestions, question]
   };
 };
 
+// Update an existing question
+export const handleUpdateQuestion = (state: GameState, question: Question): GameState => {
+  const updatedQuestions = state.questions.map(q => 
+    q.id === question.id ? question : q
+  );
+  
+  // Save to localStorage
+  localStorage.setItem('gameQuestions', JSON.stringify(updatedQuestions));
+  
+  // Also update in remaining questions if it exists there
+  const updatedRemaining = state.remainingQuestions.map(q => 
+    q.id === question.id ? question : q
+  );
+  
+  return {
+    ...state,
+    questions: updatedQuestions,
+    remainingQuestions: updatedRemaining,
+    // If this is the current question, update it too
+    currentQuestion: state.currentQuestion?.id === question.id ? question : state.currentQuestion
+  };
+};
+
+// Remove a question
+export const handleRemoveQuestion = (state: GameState, questionId: string): GameState => {
+  const filteredQuestions = state.questions.filter(q => q.id !== questionId);
+  
+  // Save to localStorage
+  localStorage.setItem('gameQuestions', JSON.stringify(filteredQuestions));
+  
+  // Also remove from remaining questions
+  const filteredRemaining = state.remainingQuestions.filter(q => q.id !== questionId);
+  
+  return {
+    ...state,
+    questions: filteredQuestions,
+    remainingQuestions: filteredRemaining,
+    // If this is the current question, clear it
+    currentQuestion: state.currentQuestion?.id === questionId ? null : state.currentQuestion
+  };
+};
+
+// Revert a used question back to available
+export const handleRevertQuestion = (state: GameState, questionId: string): GameState => {
+  // Find the question in used questions
+  const questionToRevert = state.usedQuestions.find(q => q.id === questionId);
+  if (!questionToRevert) return state;
+  
+  // Remove from used questions
+  const updatedUsedQuestions = state.usedQuestions.filter(q => q.id !== questionId);
+  
+  // Add back to remaining questions
+  const updatedRemainingQuestions = [...state.remainingQuestions, questionToRevert];
+  
+  toast.success(`Pytanie przywrócone do puli dostępnych pytań`);
+  
+  return {
+    ...state,
+    usedQuestions: updatedUsedQuestions,
+    remainingQuestions: updatedRemainingQuestions
+  };
+};
+
+// Mark a question as used
 export const handleMarkQuestionUsed = (state: GameState, questionId: string): GameState => {
-  try {
-    // Mark a question as used
-    const updatedQuestions = state.questions.map(q => 
-      q.id === questionId 
-        ? { ...q, used: true } 
-        : q
-    );
-    
-    saveQuestionsToStorage(updatedQuestions);
-    
-    return {
-      ...state,
-      questions: updatedQuestions,
-      remainingQuestions: state.remainingQuestions.filter(q => q.id !== questionId)
-    };
-  } catch (error) {
-    console.error('Error marking question as used:', error);
-    toast.error('Failed to mark question as used');
-    return state;
-  }
+  // Find the question in remaining questions
+  const questionToMark = state.remainingQuestions.find(q => q.id === questionId);
+  if (!questionToMark) return state;
+  
+  // Remove from remaining questions
+  const updatedRemainingQuestions = state.remainingQuestions.filter(q => q.id !== questionId);
+  
+  // Add to used questions
+  const updatedUsedQuestions = [...state.usedQuestions, questionToMark];
+  
+  return {
+    ...state,
+    usedQuestions: updatedUsedQuestions,
+    remainingQuestions: updatedRemainingQuestions,
+    currentQuestion: null // Clear current question
+  };
+};
+
+// Add the missing function
+export const handleSetCategory = (state: GameState, category: string): GameState => {
+  return {
+    ...state,
+    selectedCategory: category
+  };
 };

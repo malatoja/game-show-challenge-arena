@@ -55,7 +55,7 @@ export const BroadcastBar: React.FC<BroadcastBarProps> = ({
           animate: { opacity: 1 },
           transition: {
             duration: 1.5,
-            repeatType: 'reverse',
+            repeatType: 'reverse' as const,
             repeat: Infinity
           }
         };

@@ -5,6 +5,7 @@ import { useEvents } from '@/components/host/EventsContext';
 import { useSocket } from '@/context/SocketContext';
 import { CardType } from '@/types/gameTypes';
 import { toast } from 'sonner';
+import { SocketEvent } from '@/lib/socketService';
 
 // Hook for card-related game handlers
 export function useCardHandlers() {
@@ -34,7 +35,7 @@ export function useCardHandlers() {
     
     // If connected to socket, emit the event
     if (connected) {
-      emit('card:use', { cardType, playerId: player.id });
+      emit('card:use' as SocketEvent, { cardType, playerId: player.id });
     }
     
     // Set the active card type for animations
@@ -54,7 +55,7 @@ export function useCardHandlers() {
       
       // If connected to socket, emit the event
       if (connected) {
-        emit('card:awarded', { cardType, playerId });
+        emit('card:awarded' as SocketEvent, { cardType, playerId });
       }
       
       toast.success(`${player.name} otrzymał kartę ${cardType}`);

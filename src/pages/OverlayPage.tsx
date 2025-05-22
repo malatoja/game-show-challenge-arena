@@ -9,13 +9,12 @@ import { toast } from 'sonner';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AlertCircle, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import BroadcastBar from './../components/overlay/BroadcastBar';
 import { SocketEvent } from '@/lib/socketService';
 
 const OverlayPage = () => {
   // Demo mode for testing without WebSocket
   const [demoMode, setDemoMode] = useState(import.meta.env.DEV);
-  const { connected, mockMode, setMockMode, connect, reconnect, lastError } = useSocket();
+  const { connected, mockMode, setMockMode, connect, reconnect, lastError, on } = useSocket();
   const [showConnectionAlert, setShowConnectionAlert] = useState(false);
   const [alertDismissed, setAlertDismissed] = useState(false);
   const [autoReconnectEnabled, setAutoReconnectEnabled] = useState(true);
@@ -227,14 +226,14 @@ const OverlayPage = () => {
                 <Button 
                   variant={autoReconnectEnabled ? "secondary" : "outline"}
                   size="sm" 
-                  onClick={handleToggleAutoReconnect}
+                  onClick={() => setAutoReconnectEnabled(prev => !prev)}
                 >
                   {autoReconnectEnabled ? 'Auto-reconnect: Włączony' : 'Auto-reconnect: Wyłączony'}
                 </Button>
                 <Button 
                   variant="outline" 
                   size="sm" 
-                  onClick={handleReconnect}
+                  onClick={reconnect}
                   className="flex items-center gap-1"
                 >
                   <RefreshCw className="h-3 w-3" /> Połącz ponownie
@@ -242,7 +241,7 @@ const OverlayPage = () => {
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={handleDismissAlert}
+                  onClick={() => setAlertDismissed(true)}
                 >
                   Zamknij
                 </Button>

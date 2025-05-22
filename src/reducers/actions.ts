@@ -22,4 +22,9 @@ export type GameAction =
   | { type: 'REMOVE_QUESTION'; questionId: string }
   | { type: 'RESTART_GAME' }
   | { type: 'REVERT_QUESTION'; questionId: string }
-  | { type: 'MARK_QUESTION_USED'; questionId: string };
+  | { type: 'MARK_QUESTION_USED'; questionId: string }
+  | { type: 'UPDATE_POINTS'; playerId: PlayerId; points: number }
+  | { type: 'UPDATE_LIVES'; playerId: PlayerId; lives: number }
+  | { type: 'ELIMINATE_PLAYER'; playerId: PlayerId }
+  | { type: 'RESTORE_PLAYER'; playerId: PlayerId }
+  | { type: 'RESET_PLAYERS' };

@@ -1,175 +1,79 @@
-import { GameState, Player, PlayerId } from '@/types/gameTypes';
-import { toast } from 'sonner';
+import { GameState, Player, PlayerId } from '../../types/gameTypes';
 
-// Add a player to the game
-export function handleAddPlayer(state: GameState, player: Player): GameState {
-  return {
-    ...state,
-    players: [...state.players, player]
-  };
-}
-
-// Update player data
-export function handleUpdatePlayer(state: GameState, player: Player): GameState {
-  const updatedPlayers = state.players.map(p => 
-    p.id === player.id ? { ...p, ...player } : p
-  );
-  
-  return {
-    ...state,
-    players: updatedPlayers
-  };
-}
-
-// Remove a player from the game
-export function handleRemovePlayer(state: GameState, playerId: string): GameState {
-  return {
-    ...state,
-    players: state.players.filter(p => p.id !== playerId)
-  };
-}
-
-// Set the active player
-export function handleSetActivePlayer(state: GameState, playerId: string): GameState {
-  const updatedPlayers = state.players.map(p => ({
-    ...p,
-    isActive: p.id === playerId
-  }));
-  
-  return {
-    ...state,
-    players: updatedPlayers,
-    currentPlayerIndex: state.players.findIndex(p => p.id === playerId)
-  };
-}
-
-// Handle answering a question - Add this missing handler
-export function handleAnswerQuestion(state: GameState, playerId: string, isCorrect: boolean): GameState {
+// Add the handleAnswerQuestion function to fix errors
+export const handleAnswerQuestion = (state: GameState, playerId: PlayerId, isCorrect: boolean): GameState => {
+  // Find the player
   const playerIndex = state.players.findIndex(p => p.id === playerId);
   if (playerIndex === -1) return state;
-
-  const player = state.players[playerIndex];
-  let updatedPlayer = { ...player };
-
-  // Update player based on answer correctness
-  if (isCorrect) {
-    // Increase points for correct answer
-    updatedPlayer.points += state.currentQuestion?.points || 10;
-    
-    // Track consecutive correct answers if property exists
-    if (updatedPlayer.consecutiveCorrect !== undefined) {
-      updatedPlayer.consecutiveCorrect += 1;
-    }
-  } else {
-    // Decrease lives for incorrect answer
-    updatedPlayer.lives = Math.max(0, updatedPlayer.lives - 1);
-    
-    // Reset consecutive correct answers if property exists
-    if (updatedPlayer.consecutiveCorrect !== undefined) {
-      updatedPlayer.consecutiveCorrect = 0;
-    }
-    
-    // Check if player is eliminated
-    if (updatedPlayer.lives === 0) {
-      updatedPlayer.eliminated = true;
-    }
-  }
-
-  // Update players array with the modified player
+  
+  // Update player based on correct/incorrect answer
   const updatedPlayers = [...state.players];
-  updatedPlayers[playerIndex] = updatedPlayer;
+  const player = { ...updatedPlayers[playerIndex] };
   
-  // Mark the current question as used
-  let updatedQuestion = state.currentQuestion;
-  if (updatedQuestion) {
-    updatedQuestion = { ...updatedQuestion, used: true };
+  if (isCorrect) {
+    // Calculate points based on difficulty
+    const difficulty = state.currentQuestion?.difficulty || 1;
+    const pointsToAdd = difficulty * 10;
+    player.points += pointsToAdd;
+  } else {
+    // Wrong answer decreases lives
+    player.lives = Math.max(0, player.lives - 1);
   }
   
-  // Update remaining questions to exclude the current one
-  const updatedRemainingQuestions = state.remainingQuestions.filter(
-    q => q.id !== updatedQuestion?.id
-  );
-
-  return {
-    ...state,
-    players: updatedPlayers,
-    currentQuestion: null,
-    remainingQuestions: updatedRemainingQuestions
-  };
-}
-
-// Update player points
-export function handleUpdatePoints(state: GameState, playerId: string, points: number): GameState {
-  const updatedPlayers = state.players.map(p => 
-    p.id === playerId ? { ...p, points: p.points + points } : p
-  );
+  updatedPlayers[playerIndex] = player;
   
   return {
     ...state,
     players: updatedPlayers
   };
-}
+};
 
-// Update player lives
-export function handleUpdateLives(state: GameState, playerId: string, lives: number): GameState {
-  const player = state.players.find(p => p.id === playerId);
-  if (!player) return state;
-  
-  const newLives = Math.max(0, player.lives + lives);
-  const isEliminated = newLives <= 0;
-  
-  const updatedPlayers = state.players.map(p => 
-    p.id === playerId ? { 
-      ...p, 
-      lives: newLives,
-      eliminated: isEliminated
-    } : p
-  );
-  
+// Add other missing player handlers
+export const handleUpdatePoints = (state: GameState, playerId: PlayerId, points: number): GameState => {
   return {
     ...state,
-    players: updatedPlayers
+    players: state.players.map(player => 
+      player.id === playerId ? { ...player, points: points } : player
+    )
   };
-}
+};
 
-// Eliminate a player
-export function handleEliminatePlayer(state: GameState, playerId: string): GameState {
-  const updatedPlayers = state.players.map(p => 
-    p.id === playerId ? { ...p, eliminated: true, lives: 0 } : p
-  );
-  
+export const handleUpdateLives = (state: GameState, playerId: PlayerId, lives: number): GameState => {
   return {
     ...state,
-    players: updatedPlayers
+    players: state.players.map(player => 
+      player.id === playerId ? { ...player, lives: lives } : player
+    )
   };
-}
+};
 
-// Restore an eliminated player
-export function handleRestorePlayer(state: GameState, playerId: string): GameState {
-  const updatedPlayers = state.players.map(p => 
-    p.id === playerId ? { ...p, eliminated: false, lives: 1 } : p
-  );
-  
+export const handleEliminatePlayer = (state: GameState, playerId: PlayerId): GameState => {
   return {
     ...state,
-    players: updatedPlayers
+    players: state.players.map(player => 
+      player.id === playerId ? { ...player, eliminated: true, lives: 0 } : player
+    )
   };
-}
+};
 
-// Reset all players (keep names but reset points, lives, etc.)
-export function handleResetPlayers(state: GameState): GameState {
-  const resetPlayers = state.players.map(p => ({
-    ...p,
-    points: 0,
-    lives: 3, // Reset to starting lives
-    eliminated: false,
-    cards: [], // Remove all cards
-    isActive: false, // Reset active state
-    consecutiveCorrect: 0 // Reset streak if it exists
-  }));
-  
+export const handleRestorePlayer = (state: GameState, playerId: PlayerId): GameState => {
   return {
     ...state,
-    players: resetPlayers
+    players: state.players.map(player => 
+      player.id === playerId ? { ...player, eliminated: false, lives: 1 } : player
+    )
   };
-}
+};
+
+export const handleResetPlayers = (state: GameState): GameState => {
+  return {
+    ...state,
+    players: state.players.map(player => ({
+      ...player,
+      points: 0,
+      lives: 3,
+      eliminated: false,
+      cards: []
+    }))
+  };
+};

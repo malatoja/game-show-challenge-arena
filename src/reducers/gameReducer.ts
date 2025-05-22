@@ -40,7 +40,7 @@ export function gameReducer(state: GameState, action: Actions.GameAction): GameS
         return playerHandlers.handleSetActivePlayer(state, action.playerId);
       
       case 'ANSWER_QUESTION':
-        return playerHandlers.handleAnswerQuestion(state, action.playerId, action.isCorrect);
+        return answerHandlers.handleAnswerQuestion(state, action.playerId, action.isCorrect);
       
       // Question management actions
       case 'SET_CURRENT_QUESTION':

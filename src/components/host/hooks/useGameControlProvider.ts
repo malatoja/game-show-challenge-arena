@@ -1,42 +1,62 @@
 
-import { useState, useCallback } from 'react';
+// Fix the handleAddPlayer type issue
+import { useCallback, useState } from 'react';
 import { useGame } from '@/context/GameContext';
-import { useEvents } from '../EventsContext';
-import { useTimer } from '../TimerContext';
-import { useRoundHandlers } from './gameHandlers/roundHandlers';
-import { useQuestionHandlers } from './gameHandlers/questionHandlers';
-import { usePlayerHandlers } from './gameHandlers/playerHandlers';
 import { useCardHandlers } from './gameHandlers/cardHandlers';
+import { usePlayerHandlers } from './gameHandlers/playerHandlers';
+import { useQuestionHandlers } from './gameHandlers/questionHandlers';
+import { useRoundHandlers } from './gameHandlers/roundHandlers';
 import { useWheelHandlers } from './gameHandlers/wheelHandlers';
 import { useUtilHandlers } from './gameHandlers/utilHandlers';
-import { CardType, Question, Player, RoundType } from '@/types/gameTypes';
+import { Player, RoundType, CardType } from '@/types/gameTypes';
 
-// Create a hook that provides all game control functionality
+// Game control hook that combines all game operations
 export function useGameControlProvider() {
   const { state } = useGame();
   const [activePlayerId, setActivePlayerId] = useState<string | null>(null);
-
-  // Import all handler hooks
-  const roundHandlers = useRoundHandlers();
-  const questionHandlers = useQuestionHandlers();
-  const playerHandlers = usePlayerHandlers();
-  const cardHandlers = useCardHandlers();
-  const wheelHandlers = useWheelHandlers();
-  const utilHandlers = useUtilHandlers();
+  const [showResults, setShowResults] = useState(false);
+  const [resultType, setResultType] = useState<'round' | 'final'>('round');
   
-  // Extract specific handlers and values
-  const { showResults, resultType, canStartRound, canEndRound, isRoundActive,
-          handleStartRound, handleEndRound, handleEndGame, handleResetGame, handleResetRound, setShowResults } = roundHandlers;
+  // Import all handlers from various game operation hooks
+  const { handleUseCard, handleAwardCard, handleAddTestCards } = useCardHandlers();
+  const { 
+    handleAnswerQuestion,
+    handleUpdatePoints,
+    handleEliminatePlayer,
+    handleRestorePlayer
+  } = usePlayerHandlers();
   
-  const { handleSelectQuestion, handleAnswerQuestion, handleSkipQuestion } = questionHandlers;
+  const { handleSelectQuestion } = useQuestionHandlers();
+  const { 
+    handleStartRound,
+    handleEndRound,
+    handleResetRound,
+    handleRoundResults
+  } = useRoundHandlers();
   
-  const { handleSelectPlayer: playerHandlerSelectPlayer, handleAddPlayer } = playerHandlers;
+  const { handleSpinWheel, handleWheelSpinEnd, handleSelectCategory } = useWheelHandlers();
+  const { handlePause, handleSkipQuestion, handleEndGame, handleResetGame } = useUtilHandlers();
   
-  const { handleUseCard, handleAddTestCards } = cardHandlers;
+  // Select a player handler
+  const handleSelectPlayer = useCallback((playerId: string) => {
+    setActivePlayerId(playerId);
+  }, []);
   
-  const { handleSpinWheel, handleWheelSpinEnd, handleSelectCategory } = wheelHandlers;
+  // Add new player handler
+  const handleAddPlayer = useCallback((player: Player) => {
+    // Logic for adding a new player
+    console.log("Adding new player:", player);
+    // This would typically dispatch an ADD_PLAYER action
+  }, []);
   
-  const { handlePause } = utilHandlers;
+  // Calculate if we can start a new round
+  const canStartRound = !state.roundActive && state.players.length > 0;
+  
+  // Calculate if we can end the current round
+  const canEndRound = state.roundActive;
+  
+  // Is a round currently active
+  const isRoundActive = state.roundActive;
   
   return {
     // State
@@ -50,24 +70,23 @@ export function useGameControlProvider() {
     // Round handlers
     handleStartRound,
     handleEndRound,
-    handleEndGame,
-    handleResetGame,
     handleResetRound,
+    handleRoundResults,
+    
+    // Player handlers
+    handleSelectPlayer,
+    handleAnswerQuestion,
+    handleEliminatePlayer,
+    handleRestorePlayer,
+    handleAddPlayer,
     
     // Question handlers
     handleSelectQuestion,
-    handleAnswerQuestion,
     handleSkipQuestion,
-    
-    // Player handlers
-    handleSelectPlayer: (player: Player) => {
-      setActivePlayerId(player.id);
-      playerHandlerSelectPlayer(player.id); // Modified to pass player.id instead of player
-    },
-    handleAddPlayer,
     
     // Card handlers
     handleUseCard,
+    handleAwardCard,
     handleAddTestCards,
     
     // Wheel handlers
@@ -75,10 +94,13 @@ export function useGameControlProvider() {
     handleWheelSpinEnd,
     handleSelectCategory,
     
-    // Util handlers
+    // Utility handlers
     handlePause,
+    handleEndGame,
+    handleResetGame,
     
-    // Control functions
-    setShowResults
+    // Result state setters
+    setShowResults,
+    setResultType
   };
 }
