@@ -1,125 +1,100 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { Player } from '@/types/gameTypes';
-import { Timer } from './Timer';
-import { PlayerCamera } from './PlayerCamera';
-import { QuestionDisplay } from './QuestionDisplay';
-import { CategoryTable } from './CategoryTable';
-import { Logo } from './Logo';
-import './overlay.css';
+import CategoryTable from './CategoryTable';
+import QuestionPanel from './QuestionPanel';
+import Timer from './Timer';
+import HostCamera from './HostCamera';
+import CardAnimation from './CardAnimation';
+import BroadcastBar from './BroadcastBar';
 
 interface GameOverlayProps {
-  roundTitle?: string;
-  currentTime?: number;
-  maxTime?: number;
-  players?: Player[];
-  question?: string;
-  hint?: string;
-  showHint?: boolean;
-  showCategoryTable?: boolean;
-  categories?: string[];
-  difficulties?: number[];
-  selectedCategory?: string;
-  selectedDifficulty?: number;
-  timerPulsing?: boolean;
-  hostCameraUrl?: string;
-  showHostCamera?: boolean;
+  roundTitle: string;
+  currentTime: number;
+  maxTime: number;
+  question: string;
+  hint: string;
+  showHint: boolean;
+  showCategoryTable: boolean;
+  timerPulsing: boolean;
+  players: Player[];
+  categories: string[];
+  difficulties: number[];
+  selectedCategory: string;
+  selectedDifficulty: number;
+  hostCameraUrl: string;
+  showHostCamera: boolean;
+  broadcastBarText?: string;
+  broadcastBarEnabled?: boolean;
+  broadcastBarPosition?: 'top' | 'bottom';
+  broadcastBarColor?: string;
+  broadcastBarTextColor?: string;
+  broadcastBarAnimation?: 'slide' | 'fade' | 'static';
+  broadcastBarSpeed?: number;
 }
 
 export const GameOverlay: React.FC<GameOverlayProps> = ({
-  roundTitle = "RUNDA 1 – ZRÓŻNICOWANA WIEDZA",
-  currentTime = 30,
-  maxTime = 30,
-  players = [],
-  question = "",
-  hint = "",
-  showHint = false,
-  showCategoryTable = true,
-  categories = ["MEMY", "TRENDY", "TWITCH", "INTERNET", "CIEKAWOSTKI"],
-  difficulties = [10, 20, 30],
-  selectedCategory = "",
-  selectedDifficulty = 0,
-  timerPulsing = false,
-  hostCameraUrl = "",
-  showHostCamera = false,
+  roundTitle,
+  currentTime,
+  maxTime,
+  question,
+  hint,
+  showHint,
+  showCategoryTable,
+  timerPulsing,
+  players,
+  categories,
+  difficulties,
+  selectedCategory,
+  selectedDifficulty,
+  hostCameraUrl,
+  showHostCamera,
+  broadcastBarText = 'Witamy w Quiz Show! Trwa runda wiedzy',
+  broadcastBarEnabled = true,
+  broadcastBarPosition = 'bottom',
+  broadcastBarColor = '#000000',
+  broadcastBarTextColor = '#ffffff',
+  broadcastBarAnimation = 'slide',
+  broadcastBarSpeed = 5
 }) => {
-  const [time, setTime] = useState(currentTime);
-  
-  // Split players into top and bottom rows
-  const topRowPlayers = players.slice(0, 5);
-  const bottomRowPlayers = players.slice(5, 10);
-  
-  useEffect(() => {
-    setTime(currentTime);
-  }, [currentTime]);
-
-  // Check for host camera settings from localStorage
-  useEffect(() => {
-    const storedHostCamera = localStorage.getItem('hostCameraUrl');
-    const storedHostCameraActive = localStorage.getItem('hostCameraActive');
-    
-    if (storedHostCamera && storedHostCameraActive === 'true') {
-      // Set host camera URL and activate it in the overlay
-      // (This would be implemented in the actual render components)
-    }
-  }, []);
-
-  // Check for player camera settings from localStorage
-  useEffect(() => {
-    const storedPlayerCameras = localStorage.getItem('playerCameras');
-    
-    if (storedPlayerCameras) {
-      try {
-        const camerasConfig = JSON.parse(storedPlayerCameras);
-        // Here you would update the player camera sources
-        // This would integrate with the PlayerCamera component
-      } catch (error) {
-        console.error('Error parsing player cameras:', error);
-      }
-    }
-  }, []);
-
   return (
     <div className="game-overlay">
       {/* Round Title */}
-      <div className="round-title neon-text">
+      <div className="absolute top-4 left-4 text-4xl font-bold text-white drop-shadow-lg">
         {roundTitle}
       </div>
       
-      {/* Logo */}
-      <Logo />
-      
       {/* Timer */}
-      <Timer 
-        currentTime={time} 
-        maxTime={maxTime} 
-        isPulsing={timerPulsing}
-      />
-      
-      {/* Host Camera (if active) */}
-      {showHostCamera && hostCameraUrl && (
-        <div className="host-camera">
-          <iframe 
-            src={hostCameraUrl}
-            title="Host Camera"
-            className="host-camera-frame"
-            allow="camera; microphone; fullscreen; display-capture; autoplay"
-          />
-        </div>
-      )}
-      
-      {/* Top Row Players */}
-      <div className="player-row top-row">
-        {topRowPlayers.map((player, index) => (
-          <PlayerCamera 
-            key={player.id || index}
-            player={player}
-            position="top"
-          />
-        ))}
+      <div className="absolute top-4 right-4">
+        <Timer 
+          currentTime={currentTime} 
+          maxTime={maxTime} 
+          pulsing={timerPulsing} 
+        />
       </div>
       
-      {/* Center Content */}
-      <div className="center-content">
+      {/* Players List */}
+      <div className="absolute bottom-4 left-4 text-white drop-shadow-lg">
+        <div className="flex items-center space-x-4">
+          {players.map((player) => (
+            <div key={player.id} className="flex items-center">
+              <img
+                src={player.avatarUrl || '/avatars/player-1.png'}
+                alt={player.name}
+                className="w-10 h-10 rounded-full mr-2"
+              />
+              <div>
+                <div className="font-bold">{player.name}</div>
+                <div>
+                  {player.points} pkt | {player.lives} życia
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+      
+      {/* Question Area */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full px-8">
         {showCategoryTable ? (
           <CategoryTable 
             categories={categories}
@@ -128,24 +103,28 @@ export const GameOverlay: React.FC<GameOverlayProps> = ({
             selectedDifficulty={selectedDifficulty}
           />
         ) : (
-          <QuestionDisplay 
-            question={question} 
-            hint={hint}
-            showHint={showHint}
-          />
+          <QuestionPanel question={question} hint={hint} showHint={showHint} />
         )}
       </div>
       
-      {/* Bottom Row Players */}
-      <div className="player-row bottom-row">
-        {bottomRowPlayers.map((player, index) => (
-          <PlayerCamera 
-            key={player.id || index}
-            player={player}
-            position="bottom"
-          />
-        ))}
-      </div>
+      {/* Host Camera */}
+      {showHostCamera && (
+        <div className="absolute bottom-4 right-4 w-64 h-48 rounded-md overflow-hidden shadow-lg">
+          <HostCamera url={hostCameraUrl} />
+        </div>
+      )}
+      
+      {/* Add BroadcastBar at the end */}
+      {broadcastBarEnabled && (
+        <BroadcastBar 
+          text={broadcastBarText}
+          backgroundColor={broadcastBarColor}
+          textColor={broadcastBarTextColor}
+          animation={broadcastBarAnimation}
+          scrollSpeed={broadcastBarSpeed}
+          position={broadcastBarPosition}
+        />
+      )}
     </div>
   );
 };

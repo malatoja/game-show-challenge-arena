@@ -1,61 +1,68 @@
 
-import { useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import { useGame } from '@/context/GameContext';
+import { useEvents } from '@/components/host/EventsContext';
 import { useSocket } from '@/context/SocketContext';
 import { CardType } from '@/types/gameTypes';
 import { toast } from 'sonner';
-import { useGameHistory } from '@/components/host/context/GameHistoryContext';
 
-export const useCardHandlers = () => {
+// Hook for card-related game handlers
+export function useCardHandlers() {
   const { state, dispatch } = useGame();
-  const { emit } = useSocket();
-  const { addAction } = useGameHistory();
-  
+  const { addEvent } = useEvents();
+  const { emit, connected } = useSocket();
+  const [activeCardType, setActiveCardType] = useState<CardType | null>(null);
+
+  // Handle using a card by a player
   const handleUseCard = useCallback((playerId: string, cardType: CardType) => {
+    const player = state.players.find(p => p.id === playerId);
+    if (!player) return;
+    
+    // Find the card in the player's inventory
+    const cardToUse = player.cards.find(card => card.type === cardType && !card.isUsed);
+    
+    if (!cardToUse) {
+      toast.error(`${player.name} nie posiada karty ${cardType} lub została już użyta`);
+      return;
+    }
+    
+    // Dispatch the use card action
     dispatch({ type: 'USE_CARD', playerId, cardType });
     
-    const player = state.players.find(p => p.id === playerId);
-    if (player) {
-      addAction(
-        'USE_CARD',
-        `${player.name} używa karty: ${cardType}`,
-        [playerId],
-        { cardType },
-        null
-      );
-      
-      toast.info(`${player.name} użył karty: ${cardType}`);
-      
-      // Emit card use event
-      emit('card:use', { playerId, cardType });
+    // Log the event
+    addEvent(`${player.name} użył kartę ${cardType}`);
+    
+    // If connected to socket, emit the event
+    if (connected) {
+      emit('card:use', { cardType, playerId: player.id });
     }
-  }, [state.players, dispatch, emit, addAction]);
+    
+    // Set the active card type for animations
+    setActiveCardType(cardType);
+    
+    // Show toast notification
+    toast.success(`${player.name} użył kartę ${cardType}`);
+  }, [state.players, dispatch, addEvent, emit, connected]);
   
+  // Handle awarding a card to a player
   const handleAwardCard = useCallback((playerId: string, cardType: CardType) => {
     dispatch({ type: 'AWARD_CARD', playerId, cardType });
     
     const player = state.players.find(p => p.id === playerId);
     if (player) {
-      addAction(
-        'AWARD_CARD',
-        `${player.name} otrzymał kartę: ${cardType}`,
-        [playerId],
-        { cardType },
-        null
-      );
+      addEvent(`${player.name} otrzymał kartę ${cardType}`);
       
-      toast.success(`${player.name} otrzymał kartę: ${cardType}`);
+      // If connected to socket, emit the event
+      if (connected) {
+        emit('card:awarded', { cardType, playerId });
+      }
       
-      // Emit card award event
-      emit('card:award', { playerId, cardType });
+      toast.success(`${player.name} otrzymał kartę ${cardType}`);
     }
-  }, [state.players, dispatch, emit, addAction]);
-
-  // Add handleAddTestCards function to match the expected signature
+  }, [state.players, dispatch, addEvent, emit, connected]);
+  
+  // Add test cards for testing purposes
   const handleAddTestCards = useCallback((playerId: string) => {
-    const player = state.players.find(p => p.id === playerId);
-    if (!player) return;
-    
     // Add one of each card type for testing
     const cardTypes: CardType[] = [
       'dejavu', 'kontra', 'reanimacja', 'skip', 
@@ -66,12 +73,13 @@ export const useCardHandlers = () => {
       handleAwardCard(playerId, cardType);
     });
     
-    toast.info(`Dodano testowe karty dla gracza ${player.name}`);
-  }, [state.players, handleAwardCard]);
-  
+    toast.success('Dodano testowe karty');
+  }, [handleAwardCard]);
+
   return {
+    activeCardType,
     handleUseCard,
     handleAwardCard,
     handleAddTestCards
   };
-};
+}

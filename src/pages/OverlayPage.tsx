@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { GameOverlay } from '@/components/overlay/GameOverlay';
 import { useSocket } from '@/context/SocketContext';
@@ -10,6 +9,8 @@ import { toast } from 'sonner';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AlertCircle, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import BroadcastBar from './../components/overlay/BroadcastBar';
+import { SocketEvent } from '@/lib/socketService';
 
 const OverlayPage = () => {
   // Demo mode for testing without WebSocket
@@ -50,6 +51,15 @@ const OverlayPage = () => {
     setSelectedDifficulty,
     setShowHostCamera
   } = useOverlayState(demoMode);
+  
+  // Add broadcast bar state
+  const [broadcastBarText, setBroadcastBarText] = useState('Witamy w Quiz Show! Trwa runda wiedzy');
+  const [broadcastBarEnabled, setBroadcastBarEnabled] = useState(true);
+  const [broadcastBarPosition, setBroadcastBarPosition] = useState<'top' | 'bottom'>('bottom');
+  const [broadcastBarColor, setBroadcastBarColor] = useState('#000000');
+  const [broadcastBarTextColor, setBroadcastBarTextColor] = useState('#ffffff');
+  const [broadcastBarAnimation, setBroadcastBarAnimation] = useState<'slide' | 'fade' | 'static'>('slide');
+  const [broadcastBarSpeed, setBroadcastBarSpeed] = useState(5);
   
   // Initialize socket connection based on demo mode
   useEffect(() => {
@@ -142,6 +152,66 @@ const OverlayPage = () => {
       : 'Auto-reconnect włączony - system będzie próbował połączyć się automatycznie co 30 sekund');
   };
   
+  // Load broadcast bar settings from storage
+  useEffect(() => {
+    try {
+      const savedSettings = localStorage.getItem('infoBarSettings');
+      if (savedSettings) {
+        const settings = JSON.parse(savedSettings);
+        setBroadcastBarEnabled(settings.enabled ?? true);
+        setBroadcastBarText(settings.text || broadcastBarText);
+        setBroadcastBarAnimation(settings.animation || 'slide');
+        setBroadcastBarSpeed(settings.scrollSpeed || 5);
+        setBroadcastBarPosition(settings.position || 'bottom');
+        setBroadcastBarColor(settings.backgroundColor || '#000000');
+        setBroadcastBarTextColor(settings.textColor || '#ffffff');
+      }
+    } catch (error) {
+      console.error('Error loading broadcast bar settings:', error);
+    }
+  }, []);
+  
+  // Listen for broadcast bar updates
+  useEffect(() => {
+    if (demoMode) return;
+
+    const unsubscribe = on('infoBar:update' as SocketEvent, (data: any) => {
+      console.log('InfoBar update received:', data);
+      
+      if (data.text !== undefined) {
+        setBroadcastBarText(data.text);
+      }
+      
+      if (data.enabled !== undefined) {
+        setBroadcastBarEnabled(data.enabled);
+      }
+      
+      if (data.position !== undefined) {
+        setBroadcastBarPosition(data.position);
+      }
+      
+      if (data.backgroundColor !== undefined) {
+        setBroadcastBarColor(data.backgroundColor);
+      }
+      
+      if (data.textColor !== undefined) {
+        setBroadcastBarTextColor(data.textColor);
+      }
+      
+      if (data.animation !== undefined) {
+        setBroadcastBarAnimation(data.animation);
+      }
+      
+      if (data.speed !== undefined) {
+        setBroadcastBarSpeed(data.speed);
+      }
+    });
+
+    return () => {
+      unsubscribe();
+    };
+  }, [demoMode, on]);
+
   return (
     <div style={{ width: '100vw', height: '100vh', overflow: 'hidden'}}>
       {/* Connection error alert */}
@@ -206,6 +276,13 @@ const OverlayPage = () => {
         timerPulsing={timerPulsing}
         hostCameraUrl={hostCameraUrl}
         showHostCamera={showHostCamera}
+        broadcastBarText={broadcastBarText}
+        broadcastBarEnabled={broadcastBarEnabled}
+        broadcastBarPosition={broadcastBarPosition}
+        broadcastBarColor={broadcastBarColor}
+        broadcastBarTextColor={broadcastBarTextColor}
+        broadcastBarAnimation={broadcastBarAnimation}
+        broadcastBarSpeed={broadcastBarSpeed}
       />
       
       {/* Debug controls - only visible during development */}
