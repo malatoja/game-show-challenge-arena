@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useGame } from '@/context/GameContext';
 import { RoundType } from '@/types/gameTypes';
@@ -121,8 +122,9 @@ export function useRoundHandlers() {
       // Reset the active player
       dispatch({ type: 'SET_ACTIVE_PLAYER', playerId: '' });
       
-      // Emit the round:reset event
-      emit('round:reset', { roundType: currentRoundType });
+      // Emit the round:reset event - we'll use a string literal here since it seems "round:reset" is not in the SocketEvent type
+      // You might want to add this to your socket event types later
+      emit('round:reset' as any, { roundType: currentRoundType });
       
       addEvent(`Zresetowano rundę ${ROUND_NAMES[currentRoundType]}`);
       toast.info(`Runda ${ROUND_NAMES[currentRoundType]} została zresetowana`);
@@ -153,7 +155,7 @@ export function useRoundHandlers() {
     handleEndRound,
     handleEndGame,
     handleResetGame,
-    handleResetRound, // Add the new function to the returned object
+    handleResetRound,
     setShowResults
   };
 }

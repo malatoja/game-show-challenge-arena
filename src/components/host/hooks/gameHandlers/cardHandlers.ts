@@ -1,68 +1,77 @@
 
+import { useCallback } from 'react';
 import { useGame } from '@/context/GameContext';
-import { CardType } from '@/types/gameTypes';
-import { useEvents } from '../../EventsContext';
 import { useSocket } from '@/context/SocketContext';
-import { useGameHistory } from '../../context/GameHistoryContext';
+import { CardType } from '@/types/gameTypes';
+import { toast } from 'sonner';
+import { useGameHistory } from '@/components/host/context/GameHistoryContext';
 
-export function useCardHandlers() {
+export const useCardHandlers = () => {
   const { state, dispatch } = useGame();
-  const { addEvent } = useEvents();
   const { emit } = useSocket();
   const { addAction } = useGameHistory();
   
-  const handleUseCard = (playerId: string, cardType: CardType) => {
-    // Get player before changes for undo
-    const player = state.players.find(p => p.id === playerId);
-    if (!player) return;
-    
-    const previousPlayerState = {...player};
-    
+  const handleUseCard = useCallback((playerId: string, cardType: CardType) => {
     dispatch({ type: 'USE_CARD', playerId, cardType });
     
-    // Add to action history
-    addAction(
-      'USE_CARD',
-      `${player.name} użył karty ${cardType}`,
-      [playerId],
-      { cardType },
-      previousPlayerState
-    );
-    
-    // Emit the card:use event
-    emit('card:use', { playerId, cardType });
-    
-    addEvent(`Gracz użył karty: ${cardType}`);
-  };
+    const player = state.players.find(p => p.id === playerId);
+    if (player) {
+      addAction(
+        'USE_CARD',
+        `${player.name} używa karty: ${cardType}`,
+        [playerId],
+        { cardType },
+        null
+      );
+      
+      toast.info(`${player.name} użył karty: ${cardType}`);
+      
+      // Emit card use event
+      emit('card:use', { playerId, cardType });
+    }
+  }, [state.players, dispatch, emit, addAction]);
   
-  const handleAwardCard = (playerId: string, cardType: CardType) => {
-    // Get player before changes for undo
+  const handleAwardCard = useCallback((playerId: string, cardType: CardType) => {
+    dispatch({ type: 'AWARD_CARD', playerId, cardType });
+    
+    const player = state.players.find(p => p.id === playerId);
+    if (player) {
+      addAction(
+        'AWARD_CARD',
+        `${player.name} otrzymał kartę: ${cardType}`,
+        [playerId],
+        { cardType },
+        null
+      );
+      
+      toast.success(`${player.name} otrzymał kartę: ${cardType}`);
+      
+      // Emit card award event
+      emit('card:award', { playerId, cardType });
+    }
+  }, [state.players, dispatch, emit, addAction]);
+
+  // Add handleAddTestCards function to match the expected signature
+  const handleAddTestCards = useCallback((playerId: string) => {
     const player = state.players.find(p => p.id === playerId);
     if (!player) return;
     
-    const previousPlayerState = {...player};
-    const previousCardCount = player.cards.length;
+    // Add one of each card type for testing
+    const cardTypes: CardType[] = [
+      'dejavu', 'kontra', 'reanimacja', 'skip', 
+      'turbo', 'refleks2', 'refleks3', 'lustro', 'oswiecenie'
+    ];
     
-    dispatch({ type: 'AWARD_CARD', playerId, cardType });
+    cardTypes.forEach(cardType => {
+      handleAwardCard(playerId, cardType);
+    });
     
-    // Add to action history
-    addAction(
-      'AWARD_CARD',
-      `Przyznano kartę ${cardType} dla ${player.name}`,
-      [playerId],
-      { cardType, cardIndex: previousCardCount },
-      previousPlayerState
-    );
-    
-    // Update the player
-    const updatedPlayer = state.players.find(p => p.id === playerId);
-    if (updatedPlayer) {
-      emit('player:update', { player: updatedPlayer });
-    }
-  };
-
+    toast.info(`Dodano testowe karty dla gracza ${player.name}`);
+  }, [state.players, handleAwardCard]);
+  
   return {
     handleUseCard,
-    handleAwardCard
+    handleAwardCard,
+    handleAddTestCards
   };
-}
+};

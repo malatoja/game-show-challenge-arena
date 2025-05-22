@@ -54,6 +54,7 @@ export const usePlayerHandlers = () => {
     emit('player:update', { player: updatedPlayer });
   }, [state.players, dispatch, addAction, emit]);
 
+  // Changed signature to match the context
   const handleSelectPlayer = useCallback((playerId: string) => {
     setActivePlayerId(playerId);
     handleSetActivePlayer(playerId);
@@ -136,13 +137,25 @@ export const usePlayerHandlers = () => {
     emit('player:reset', {});
   }, [dispatch, addAction, state.players, emit]);
 
-  const handleAddPlayer = useCallback((player: Player) => {
-    dispatch({ type: 'ADD_PLAYER', player });
-    toast.success(`Dodano gracza: ${player.name}`);
+  // Changed to match the expected signature in GameControlContext
+  const handleAddPlayer = useCallback(() => {
+    const playerNumber = state.players.length + 1;
+    const newPlayer: Player = {
+      id: `player-${Date.now()}`,
+      name: `Gracz ${playerNumber}`,
+      lives: 3,
+      points: 0,
+      cards: [],
+      isActive: state.players.length === 0,
+      eliminated: false
+    };
+    
+    dispatch({ type: 'ADD_PLAYER', player: newPlayer });
+    toast.success(`Dodano gracza: ${newPlayer.name}`);
     
     // Emit player update to socket
-    emit('player:update', { player });
-  }, [dispatch, emit]);
+    emit('player:update', { player: newPlayer });
+  }, [state.players, dispatch, emit]);
 
   const handleAddTestCards = useCallback((playerId: string) => {
     const player = state.players.find(p => p.id === playerId);

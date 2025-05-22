@@ -30,7 +30,7 @@ export function useGameControlProvider() {
   
   const { handleSelectQuestion, handleAnswerQuestion, handleSkipQuestion } = questionHandlers;
   
-  const { handleSelectPlayer, handleAddPlayer } = playerHandlers;
+  const { handleSelectPlayer: playerHandlerSelectPlayer, handleAddPlayer } = playerHandlers;
   
   const { handleUseCard, handleAddTestCards } = cardHandlers;
   
@@ -52,7 +52,7 @@ export function useGameControlProvider() {
     handleEndRound,
     handleEndGame,
     handleResetGame,
-    handleResetRound, // Add the reset round handler
+    handleResetRound,
     
     // Question handlers
     handleSelectQuestion,
@@ -62,7 +62,7 @@ export function useGameControlProvider() {
     // Player handlers
     handleSelectPlayer: (player: Player) => {
       setActivePlayerId(player.id);
-      handleSelectPlayer(player);
+      playerHandlerSelectPlayer(player.id); // Modified to pass player.id instead of player
     },
     handleAddPlayer,
     

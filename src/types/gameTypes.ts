@@ -59,7 +59,7 @@ export interface GameState {
   currentRound: RoundType;
   players: Player[];
   currentPlayerIndex: number;
-  currentQuestion?: Question;
+  currentQuestion: Question | null;
   questions: Question[];
   remainingQuestions: Question[];
   roundStarted: boolean;

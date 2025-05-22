@@ -23,6 +23,7 @@ export const initialState: GameState = {
   currentRound: 'knowledge',
   players: [],
   currentPlayerIndex: 0,
+  currentQuestion: null,
   questions: SAMPLE_QUESTIONS,
   remainingQuestions: [...SAMPLE_QUESTIONS],
   roundStarted: false,

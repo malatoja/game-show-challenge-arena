@@ -22,9 +22,9 @@ export interface GameControlContextType {
   handleSelectCategory: (category: string) => void;
   handlePause: () => void;
   handleResetGame: () => void;
-  handleResetRound: () => void; // Add the reset round handler
+  handleResetRound: () => void;
   handleUseCard: (playerId: string, cardType: CardType) => void;
-  handleAddPlayer: () => void;
+  handleAddPlayer: () => void; // Changed from (player: Player) => void to match implementation
   handleAddTestCards: (playerId: string) => void;
   setShowResults: React.Dispatch<React.SetStateAction<boolean>>;
 }

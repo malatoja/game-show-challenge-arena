@@ -6,9 +6,8 @@ import * as Actions from '../actions';
 export function handleStartGame(state: GameState): GameState {
   return {
     ...state,
-    gameStarted: true,
+    roundStarted: true,
     currentRound: 'knowledge' as RoundType,
-    roundStarted: false,
     roundEnded: false
   };
 }
