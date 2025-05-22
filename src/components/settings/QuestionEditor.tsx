@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useGame } from '@/context/GameContext';
 import { Question, RoundType } from '@/types/gameTypes';
@@ -34,8 +33,8 @@ export function QuestionEditor({ activeRoundFilter = 'all' }: QuestionEditorProp
     searchTerm,
     round: filteredRound,
     category: filteredCategory === 'all' ? '' : filteredCategory,
-    showUsed,
-    showFavorites
+    showUsed: showUsed,
+    showFavorites: showFavorites
   });
   
   const handleEditQuestion = (question: Question) => {

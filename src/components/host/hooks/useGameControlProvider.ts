@@ -1,4 +1,3 @@
-
 import { useCallback, useState } from 'react';
 import { useGame } from '@/context/GameContext';
 import { useCardHandlers } from './gameHandlers/cardHandlers';
@@ -24,7 +23,7 @@ export function useGameControlProvider() {
     handleRestorePlayer
   } = usePlayerHandlers();
   
-  const { handleSelectQuestion, handleSkipQuestion } = useQuestionHandlers();
+  const { handleSelectQuestion, handleAnswerQuestion, handleSkipQuestion } = useQuestionHandlers();
   const { 
     handleStartRound,
     handleEndRound,
@@ -34,13 +33,11 @@ export function useGameControlProvider() {
   const { handleSpinWheel, handleWheelSpinEnd, handleSelectCategory } = useWheelHandlers();
   const { handlePause, handleEndGame, handleResetGame } = useUtilHandlers();
   
-  // Handle answer question function
-  const handleAnswerQuestion = useCallback((isCorrect: boolean, answerIndex: number) => {
-    if (activePlayerId) {
-      // Logic for handling answer
-      console.log(`Player ${activePlayerId} answered ${isCorrect ? 'correctly' : 'incorrectly'}`);
-    }
-  }, [activePlayerId]);
+  // Handle answer question function - updated to use the imported handler
+  const handleRoundResults = useCallback(() => {
+    setShowResults(true);
+    setResultType('round');
+  }, []);
   
   // Select a player handler - updated to accept player object
   const handleSelectPlayer = useCallback((player: Player) => {
@@ -86,6 +83,7 @@ export function useGameControlProvider() {
     handleStartRound,
     handleEndRound,
     handleResetRound,
+    handleRoundResults,
     
     // Player handlers
     handleSelectPlayer,

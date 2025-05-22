@@ -6,6 +6,8 @@ import { loadQuestions } from '../utils/question/questionUtils';
 const initialGameState: GameState = {
   gameStarted: false,
   roundActive: false,
+  roundStarted: false,
+  roundEnded: false,
   currentRound: 'knowledge',
   players: [],
   questions: [],
@@ -14,7 +16,8 @@ const initialGameState: GameState = {
   currentQuestion: null,
   selectedCategory: '',
   wheelSpinning: false,
-  activePlayerId: null
+  activePlayerId: null,
+  currentPlayerIndex: 0
 };
 
 // Function to load the initial state with saved questions from localStorage
