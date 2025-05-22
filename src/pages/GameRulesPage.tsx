@@ -1,152 +1,123 @@
 
 import React from 'react';
-import { Link } from 'react-router-dom';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { CARD_DETAILS, ROUND_NAMES } from '@/constants/gameConstants';
-import { TabsContent, Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import SpecialCard from '@/components/cards/SpecialCard';
-import { motion } from 'framer-motion';
+import { Card } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { CardType } from '@/types/gameTypes';
+import { CARD_DETAILS } from '@/constants/gameConstants';
 
-export default function GameRulesPage() {
-  // Create card objects from CARD_DETAILS for display purposes
-  const cardExamples = Object.entries(CARD_DETAILS).map(([type, details]) => ({
-    type: type as any,
-    name: details.name,
-    description: details.description,
-    isUsed: false
+const GameRulesPage: React.FC = () => {
+  // Convert CARD_DETAILS to array for easier mapping
+  const cardDetailsArray = Object.entries(CARD_DETAILS).map(([type, details]) => ({
+    type: type as CardType,
+    ...details
   }));
 
   return (
-    <div className="container mx-auto p-4 bg-gameshow-background min-h-screen">
-      <motion.div 
-        className="max-w-4xl mx-auto"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-      >
-        <Card className="mb-8 bg-gameshow-card">
-          <CardHeader className="bg-gradient-to-r from-gameshow-primary/30 to-gameshow-secondary/30">
-            <CardTitle className="text-3xl text-center">Zasady Gry</CardTitle>
-            <CardDescription className="text-center">
-              Wszystko, co musisz wiedzieć o teleturnieju
-            </CardDescription>
-          </CardHeader>
-          
-          <CardContent className="pt-6">
-            <Tabs defaultValue="rounds" className="w-full">
-              <TabsList className="grid grid-cols-3 mb-6">
-                <TabsTrigger value="rounds">Rundy</TabsTrigger>
-                <TabsTrigger value="cards">Karty Specjalne</TabsTrigger>
-                <TabsTrigger value="mechanics">Mechanika</TabsTrigger>
-              </TabsList>
+    <div className="container mx-auto p-6">
+      <h1 className="text-3xl font-bold mb-8">Zasady Gry</h1>
+      
+      <Tabs defaultValue="general">
+        <TabsList className="grid w-full grid-cols-4 mb-8">
+          <TabsTrigger value="general">Ogólne</TabsTrigger>
+          <TabsTrigger value="rounds">Rundy</TabsTrigger>
+          <TabsTrigger value="cards">Karty Specjalne</TabsTrigger>
+          <TabsTrigger value="points">Punktacja</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="general">
+          <Card className="p-6">
+            <h2 className="text-2xl font-bold mb-4">Ogólne zasady gry</h2>
+            <p className="mb-4">
+              GameShow to interaktywny teleturniej wiedzy, gdzie uczestnicy rywalizują odpowiadając na pytania
+              z różnych dziedzin. Gra składa się z trzech rund o różnym charakterze.
+            </p>
+            <ul className="list-disc list-inside space-y-2">
+              <li>Każdy gracz zaczyna z 3 życiami</li>
+              <li>Za poprawną odpowiedź zdobywa się punkty</li>
+              <li>Błędna odpowiedź może kosztować utratę życia (zależnie od rundy)</li>
+              <li>Gracze mogą zdobywać i używać kart specjalnych</li>
+              <li>Wygrywa osoba z największą liczbą punktów po ostatniej rundzie</li>
+            </ul>
+          </Card>
+        </TabsContent>
+        
+        <TabsContent value="rounds">
+          <Card className="p-6">
+            <h2 className="text-2xl font-bold mb-4">Rundy</h2>
+            <div className="space-y-6">
+              <div>
+                <h3 className="text-xl font-bold">Runda 1: Wiedzy</h3>
+                <p>Każdy gracz odpowiada na pytania po kolei. Poprawna odpowiedź dodaje punkty, błędna kosztuje życie.</p>
+              </div>
               
-              <TabsContent value="rounds">
-                <div className="space-y-6">
-                  <div className="bg-gameshow-card p-4 rounded-lg border border-gameshow-primary/30">
-                    <h3 className="text-xl font-bold mb-3">Runda 1: {ROUND_NAMES.knowledge}</h3>
-                    <p className="mb-3">
-                      W pierwszej rundzie gracze odpowiadają na pytania z różnych kategorii związanych z polskim internetem.
-                      Każda poprawna odpowiedź to 10 punktów. Na odpowiedź masz 30 sekund.
-                    </p>
-                    <ul className="list-disc pl-5 space-y-2">
-                      <li>Top 5 graczy z najwyższą punktacją przechodzi do Rundy 2.</li>
-                      <li>Dodatkowy gracz z najwyższą punktacją wśród przegranych dostaje szansę jako "Lucky Loser".</li>
-                      <li>Gracze, którzy odpowiedzą poprawnie 3 razy z rzędu, otrzymują losową Kartę Specjalną.</li>
-                    </ul>
-                  </div>
-                  
-                  <div className="bg-gameshow-card p-4 rounded-lg border border-gameshow-secondary/30">
-                    <h3 className="text-xl font-bold mb-3">Runda 2: {ROUND_NAMES.speed}</h3>
-                    <p className="mb-3">
-                      W drugiej rundzie wszyscy gracze zaczynają z pełnymi życiami. Pytania są prostsze, ale czas na odpowiedź to tylko 5 sekund!
-                    </p>
-                    <ul className="list-disc pl-5 space-y-2">
-                      <li>Błędna odpowiedź oznacza utratę jednego życia.</li>
-                      <li>Gdy gracz straci wszystkie życia, zostaje wyeliminowany.</li>
-                      <li>Gracze z życiem na koniec rundy przechodzą do finału.</li>
-                    </ul>
-                  </div>
-                  
-                  <div className="bg-gameshow-card p-4 rounded-lg border border-gameshow-accent/30">
-                    <h3 className="text-xl font-bold mb-3">Runda 3: {ROUND_NAMES.wheel}</h3>
-                    <p className="mb-3">
-                      W finałowej rundzie kategorie pytań są wybierane przez Koło Fortuny. Punkty zdobywane w tej rundzie są podwojone!
-                    </p>
-                    <ul className="list-disc pl-5 space-y-2">
-                      <li>Koło Fortuny wybiera kategorię dla każdego pytania.</li>
-                      <li>Błędne odpowiedzi oznaczają utratę życia.</li>
-                      <li>Gracze mogą używać Kart Specjalnych dla strategicznej przewagi.</li>
-                      <li>Zwycięzcą zostaje gracz z najwyższą liczbą punktów na koniec rundy, który nie został wyeliminowany.</li>
-                    </ul>
-                  </div>
-                </div>
-              </TabsContent>
+              <div>
+                <h3 className="text-xl font-bold">Runda 2: Szybka</h3>
+                <p>Ograniczony czas na odpowiedź. Tempo jest szybsze, a punktacja wyższa.</p>
+              </div>
               
-              <TabsContent value="cards">
-                <div className="space-y-6">
-                  <p className="mb-4">
-                    Karty Specjalne dają graczom unikalne możliwości, które mogą zmienić przebieg gry. Można je zdobyć za serie poprawnych odpowiedzi, wysokie wyniki w rundach lub inne osiągnięcia.
-                  </p>
-                  
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-                    {cardExamples.map((card) => (
-                      <div key={card.type} className="flex flex-col items-center">
-                        <SpecialCard card={card} showAnimation={true} />
-                        <p className="mt-2 text-center text-sm">{card.description}</p>
-                      </div>
-                    ))}
-                  </div>
+              <div>
+                <h3 className="text-xl font-bold">Runda 3: Koło Fortuny</h3>
+                <p>Gracze kręcą kołem by wylosować kategorię pytania. Specjalna punktacja i zasady.</p>
+              </div>
+            </div>
+          </Card>
+        </TabsContent>
+        
+        <TabsContent value="cards">
+          <Card className="p-6">
+            <h2 className="text-2xl font-bold mb-4">Karty Specjalne</h2>
+            <p className="mb-4">
+              W trakcie rozgrywki gracze mogą zdobywać i używać specjalnych kart, które dają im różne korzyści.
+            </p>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+              {cardDetailsArray.map((card) => (
+                <div 
+                  key={card.type} 
+                  className="border rounded-lg p-4 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                >
+                  <h3 className="text-lg font-bold">{card.name}</h3>
+                  <p className="text-sm text-gray-600 dark:text-gray-300">{card.description}</p>
                 </div>
-              </TabsContent>
+              ))}
+            </div>
+          </Card>
+        </TabsContent>
+        
+        <TabsContent value="points">
+          <Card className="p-6">
+            <h2 className="text-2xl font-bold mb-4">System punktacji</h2>
+            <div className="space-y-4">
+              <div>
+                <h3 className="text-xl font-bold">Punkty za pytania</h3>
+                <ul className="list-disc list-inside">
+                  <li>Pytanie łatwe: 5-10 punktów</li>
+                  <li>Pytanie średnie: 10-15 punktów</li>
+                  <li>Pytanie trudne: 15-20 punktów</li>
+                </ul>
+              </div>
               
-              <TabsContent value="mechanics">
-                <div className="space-y-6">
-                  <h3 className="text-xl font-bold">Podstawowe mechaniki gry</h3>
-                  
-                  <div className="bg-gameshow-card p-4 rounded-lg border border-gameshow-primary/30">
-                    <h4 className="font-bold mb-2">Życia graczy</h4>
-                    <p>
-                      Każdy gracz rozpoczyna z 3 życiami. W Rundzie 2 i 3, błędna odpowiedź oznacza utratę jednego życia.
-                      Gdy gracz straci wszystkie życia, zostaje wyeliminowany z gry.
-                    </p>
-                  </div>
-                  
-                  <div className="bg-gameshow-card p-4 rounded-lg border border-gameshow-primary/30">
-                    <h4 className="font-bold mb-2">Punktacja</h4>
-                    <ul className="list-disc pl-5 space-y-2">
-                      <li>Runda 1: 10 punktów za poprawną odpowiedź</li>
-                      <li>Runda 2: Brak punktów, liczy się tylko przetrwanie</li>
-                      <li>Runda 3: 20 punktów za poprawną odpowiedź</li>
-                      <li>Karta Turbo podwaja zdobywane punkty</li>
-                    </ul>
-                  </div>
-                  
-                  <div className="bg-gameshow-card p-4 rounded-lg border border-gameshow-primary/30">
-                    <h4 className="font-bold mb-2">Lucky Loser</h4>
-                    <p>
-                      Po Rundzie 1, gracz z najwyższym wynikiem poza Top 5 otrzymuje szansę jako "Lucky Loser" i przechodzi do Rundy 2.
-                      Otrzymuje również specjalną kartę "Na Ratunek".
-                    </p>
-                  </div>
-                  
-                  <div className="bg-gameshow-card p-4 rounded-lg border border-gameshow-primary/30">
-                    <h4 className="font-bold mb-2">Zwycięstwo</h4>
-                    <p>
-                      Zwycięzcą zostaje gracz, który na koniec Rundy 3 ma najwyższą łączną liczbę punktów ze wszystkich rund i nie został wyeliminowany.
-                    </p>
-                  </div>
-                </div>
-              </TabsContent>
-            </Tabs>
-          </CardContent>
-          
-          <CardFooter className="flex justify-center">
-            <Link to="/" className="game-btn">
-              Powrót do strony głównej
-            </Link>
-          </CardFooter>
-        </Card>
-      </motion.div>
+              <div>
+                <h3 className="text-xl font-bold">Bonusy punktowe</h3>
+                <ul className="list-disc list-inside">
+                  <li>Szybka odpowiedź: +5 punktów</li>
+                  <li>Seria poprawnych odpowiedzi: rosnący bonus</li>
+                  <li>Bonus za ostatnie życie: +10 punktów</li>
+                </ul>
+              </div>
+              
+              <div>
+                <h3 className="text-xl font-bold">Karty wpływające na punkty</h3>
+                <ul className="list-disc list-inside">
+                  <li>Turbo: podwaja zdobyte punkty</li>
+                </ul>
+              </div>
+            </div>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
-}
+};
+
+export default GameRulesPage;

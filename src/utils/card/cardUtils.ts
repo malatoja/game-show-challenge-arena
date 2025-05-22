@@ -1,52 +1,73 @@
 
 import { CardType, Player } from '@/types/gameTypes';
 
-export const loadCardRules = () => {
+interface CardRule {
+  id: string;
+  name: string;
+  description: string;
+  isEnabled: boolean;
+  condition: string;
+  cardType: CardType;
+}
+
+/**
+ * Load card rules from localStorage
+ */
+export const loadCardRules = (): CardRule[] => {
   try {
-    const storedRules = localStorage.getItem('customCardRules');
-    if (storedRules) {
-      return JSON.parse(storedRules);
-    }
-    return [];
+    const savedRules = localStorage.getItem('customCardRules');
+    return savedRules ? JSON.parse(savedRules) : [];
   } catch (error) {
     console.error('Error loading card rules:', error);
     return [];
   }
 };
 
-export const shouldAwardBonusCard = (player: Player, action: 'correctAnswer' | 'wrongAnswer' | 'roundComplete') => {
-  // Default logic for awarding bonus cards
-  switch (action) {
-    case 'correctAnswer':
-      // Award a card after 3 consecutive correct answers
-      return player.consecutiveCorrect && player.consecutiveCorrect >= 3;
-    
-    case 'wrongAnswer':
-      // Possible logic for wrong answers
-      return false;
-    
-    case 'roundComplete':
-      // Possible logic for round completion
-      return false;
-    
-    default:
-      return false;
+/**
+ * Save card rules to localStorage
+ */
+export const saveCardRules = (rules: CardRule[]): void => {
+  try {
+    localStorage.setItem('customCardRules', JSON.stringify(rules));
+  } catch (error) {
+    console.error('Error saving card rules:', error);
   }
 };
 
-export const getRandomCardForAction = (action: 'correctAnswer' | 'wrongAnswer' | 'roundComplete'): CardType => {
-  // Different sets of cards based on the triggering action
-  const cardSets = {
-    correctAnswer: ['turbo', 'refleks2', 'lustro', 'oswiecenie'],
-    wrongAnswer: ['dejavu', 'reanimacja'],
-    roundComplete: ['kontra', 'skip', 'refleks3'],
-    all: ['dejavu', 'kontra', 'reanimacja', 'skip', 'turbo', 'refleks2', 'refleks3', 'lustro', 'oswiecenie']
-  };
+/**
+ * Check if a player should be awarded a bonus card based on their performance
+ */
+export const shouldAwardBonusCard = (player: Player): boolean => {
+  // This is a simplified implementation
+  // In a real implementation, you would check various conditions
   
-  // Get the appropriate set of cards
-  const cardSet = cardSets[action] || cardSets.all;
+  // Example: Award a card for every 50 points
+  if (player.points % 50 === 0 && player.points > 0) {
+    return true;
+  }
   
-  // Return a random card from the set
-  const randomIndex = Math.floor(Math.random() * cardSet.length);
-  return cardSet[randomIndex] as CardType;
+  // Example: Award a card for 3 consecutive correct answers
+  if (player.consecutiveCorrect && player.consecutiveCorrect >= 3) {
+    return true;
+  }
+  
+  return false;
+};
+
+/**
+ * Get a random card type based on an action or condition
+ */
+export const getRandomCardForAction = (action: string): CardType => {
+  const cardTypes: CardType[] = [
+    'dejavu', 'kontra', 'reanimacja', 'skip', 'turbo', 
+    'refleks2', 'refleks3', 'lustro', 'oswiecenie'
+  ];
+  
+  // This is a simplified implementation
+  // In a real implementation, you might have weighted probabilities
+  // or specific cards for different actions
+  
+  // For now, just return a random card type
+  const randomIndex = Math.floor(Math.random() * cardTypes.length);
+  return cardTypes[randomIndex];
 };

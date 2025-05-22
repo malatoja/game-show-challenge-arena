@@ -31,7 +31,7 @@ export const handleUseCard = (state: GameState, playerId: PlayerId, cardType: Ca
       cards: updatedCards
     };
     
-    toast(`${updatedPlayers[playerIndex].name} użył karty ${updatedCards[cardIndex].name}!`);
+    toast(`${updatedPlayers[playerIndex].name} użył karty ${cardType}!`);
     
     return {
       ...state,
@@ -49,9 +49,9 @@ export const handleAwardCard = (state: GameState, playerId: PlayerId, cardType: 
   if (!player) return state;
   
   try {
-    const newCard = createCard(cardType);
+    const newCard = createCard(cardType, `Karta ${cardType}`);
     
-    toast.success(`${player.name} otrzymuje kartę ${newCard.name}!`);
+    toast.success(`${player.name} otrzymuje kartę ${cardType}!`);
     
     return {
       ...state,

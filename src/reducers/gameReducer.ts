@@ -15,7 +15,7 @@ export function gameReducer(state: GameState, action: Actions.GameAction): GameS
         return gameHandlers.handleStartGame(state);
       
       case 'START_ROUND':
-        return gameHandlers.handleStartRound(state, action);
+        return gameHandlers.handleStartRound(state, { round: action.roundType });
       
       case 'END_ROUND':
         return gameHandlers.handleEndRound(state);
