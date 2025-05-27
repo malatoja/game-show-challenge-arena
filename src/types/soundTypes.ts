@@ -1,29 +1,15 @@
 
-// Define allowed sound types for the application
 export type SoundType = 
-  | 'correct'
-  | 'incorrect'
-  | 'buzzer'
-  | 'countdown'
-  | 'elimination'
-  | 'timer-end'
-  | 'wheel-spin'
-  | 'card-activate'
-  | 'round-start'
+  | 'round-start' 
+  | 'card-activate' 
+  | 'correct-answer' 
+  | 'wrong-answer' 
+  | 'timer-warning' 
   | 'game-over'
-  | 'winner'
-  | 'hint'
-  | 'hint-sound'
-  | 'card-use'
-  | 'correct-answer'
-  | 'wrong-answer'
-  | 'timeout'
-  | 'round-end'
-  | 'reward';
+  | 'hint';
 
-export interface SoundOptions {
-  volume?: number;
-  loop?: boolean;
-  fadeIn?: boolean;
-  fadeOut?: boolean;
+export interface SoundSettings {
+  volume: number;
+  muted: boolean;
+  enabledSounds: SoundType[];
 }
