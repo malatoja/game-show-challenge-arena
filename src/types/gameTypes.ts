@@ -17,14 +17,17 @@ export interface Player {
   id: PlayerId;
   name: string;
   avatarUrl?: string;
+  avatar?: string; // Added for compatibility
   lives: number;
   points: number;
   cards: Card[];
   isActive: boolean;
   streamUrl?: string; // URL to Twitch stream
+  cameraUrl?: string; // Added for camera URL
   eliminated: boolean;
   color?: string; // Adding color property
   consecutiveCorrect?: number; // Track consecutive correct answers
+  token?: string; // Added for player token
 }
 
 export interface Card {
@@ -48,6 +51,7 @@ export interface Question {
   favorite?: boolean;
   points?: number;
   hint?: string;
+  imageUrl?: string; // Added for question images
 }
 
 export interface Answer {
@@ -67,6 +71,7 @@ export interface GameState {
   selectedCategory: string;
   wheelSpinning: boolean;
   activePlayerId: string | null;
+  timeRemaining?: number; // Added for timer functionality
   // Adding missing properties
   roundStarted: boolean;
   roundEnded: boolean;

@@ -9,6 +9,7 @@ export class GameService {
       .from('players')
       .insert({
         nickname: playerData.name,
+        token: `player-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
         life_percent: 100,
         points: 0,
         cards: [],
@@ -38,9 +39,9 @@ export class GameService {
       .from('players')
       .update({
         nickname: updates.name,
-        life_percent: updates.lives ? updates.lives * 33.33 : undefined, // Convert lives to percentage
+        life_percent: updates.lives ? updates.lives * 33.33 : undefined,
         points: updates.points,
-        cards: updates.cards,
+        cards: updates.cards || [],
         is_active: updates.isActive
       })
       .eq('id', playerId)
@@ -83,7 +84,7 @@ export class GameService {
     const { error } = await supabase
       .from('game_state')
       .upsert({
-        current_question: gameState.currentQuestion,
+        current_question: gameState.currentQuestion ? JSON.stringify(gameState.currentQuestion) : null,
         active_player_id: gameState.activePlayerId,
         current_round: this.mapRoundToNumber(gameState.currentRound),
         timer_running: false,
@@ -107,8 +108,17 @@ export class GameService {
     
     if (!data) return null;
 
+    let currentQuestion = null;
+    if (data.current_question) {
+      try {
+        currentQuestion = JSON.parse(data.current_question as string);
+      } catch (e) {
+        console.error('Error parsing current question:', e);
+      }
+    }
+
     return {
-      currentQuestion: data.current_question,
+      currentQuestion,
       activePlayerId: data.active_player_id,
       currentRound: this.mapNumberToRound(data.current_round),
       selectedCategory: data.wheel_category,
@@ -131,11 +141,12 @@ export class GameService {
     return {
       id: dbPlayer.id,
       name: dbPlayer.nickname,
-      lives: Math.floor((dbPlayer.life_percent || 100) / 33.33), // Convert percentage to lives (0-3)
+      lives: Math.floor((dbPlayer.life_percent || 100) / 33.33),
       points: dbPlayer.points || 0,
       cards: dbPlayer.cards || [],
       isActive: dbPlayer.is_active || false,
       eliminated: (dbPlayer.life_percent || 100) <= 0,
+      avatarUrl: dbPlayer.avatar_url,
       avatar: dbPlayer.avatar_url,
       color: dbPlayer.color,
       cameraUrl: dbPlayer.camera_url,

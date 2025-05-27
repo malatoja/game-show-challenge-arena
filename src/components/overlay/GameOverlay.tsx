@@ -14,12 +14,16 @@ export function GameOverlay() {
   const { state } = useGame();
   const { connected } = useSocket();
   const [currentLayout, setCurrentLayout] = useState<RoundType>('knowledge');
+  const [timeRemaining, setTimeRemaining] = useState(30);
 
   useEffect(() => {
     if (state.currentRound) {
       setCurrentLayout(state.currentRound);
     }
   }, [state.currentRound]);
+
+  // Use timeRemaining from state if available, otherwise use local state
+  const displayTime = state.timeRemaining !== undefined ? state.timeRemaining : timeRemaining;
 
   const activePlayers = state.players.filter(p => !p.eliminated);
   const topPlayers = activePlayers.slice(0, Math.ceil(activePlayers.length / 2));
@@ -109,15 +113,15 @@ export function GameOverlay() {
         </div>
 
         {/* Timer display (if active) */}
-        {state.timeRemaining && state.timeRemaining > 0 && (
+        {displayTime && displayTime > 0 && (
           <div className="absolute top-8 left-1/2 transform -translate-x-1/2">
             <motion.div
               className="bg-red-500/20 backdrop-blur-sm px-6 py-3 rounded-lg border border-red-500"
-              animate={{ scale: state.timeRemaining <= 5 ? [1, 1.1, 1] : 1 }}
-              transition={{ duration: 0.5, repeat: state.timeRemaining <= 5 ? Infinity : 0 }}
+              animate={{ scale: displayTime <= 5 ? [1, 1.1, 1] : 1 }}
+              transition={{ duration: 0.5, repeat: displayTime <= 5 ? Infinity : 0 }}
             >
               <span className="text-red-400 font-bold text-2xl">
-                {Math.ceil(state.timeRemaining)}
+                {Math.ceil(displayTime)}
               </span>
             </motion.div>
           </div>

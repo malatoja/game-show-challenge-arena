@@ -50,18 +50,18 @@ function PlayerCameraWindow({ player }: { player: Player }) {
     `}>
       {/* Camera/Video area */}
       <div className="w-full h-full bg-gradient-to-br from-gameshow-background to-gameshow-card relative">
-        {player.cameraUrl ? (
+        {player.cameraUrl || player.streamUrl ? (
           <video
-            src={player.cameraUrl}
+            src={player.cameraUrl || player.streamUrl}
             className="w-full h-full object-cover"
             autoPlay
             muted
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center">
-            {player.avatar ? (
+            {player.avatarUrl || player.avatar ? (
               <img 
-                src={player.avatar} 
+                src={player.avatarUrl || player.avatar} 
                 alt={player.name}
                 className="w-32 h-32 rounded-full object-cover"
               />
