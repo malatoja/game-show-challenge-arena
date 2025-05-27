@@ -1,133 +1,130 @@
 
-import React from 'react';
-import { Player } from '@/types/gameTypes';
-import { CategoryTable } from './CategoryTable';
-import QuestionPanel from './QuestionPanel';
-import { Timer } from './Timer';
-import HostCamera from './HostCamera';
-import CardEffectOverlay from '@/components/animations/CardEffectOverlay';
-import BroadcastBar from './BroadcastBar';
+import React, { useEffect, useState } from 'react';
+import { useGame } from '@/context/GameContext';
+import { useSocket } from '@/context/SocketContext';
+import { motion, AnimatePresence } from 'framer-motion';
+import PlayerCameraGrid from './components/PlayerCameraGrid';
+import QuestionDisplay from './components/QuestionDisplay';
+import HostCamera from './components/HostCamera';
+import CategoryTable from './components/CategoryTable';
+import FortuneWheel from './components/FortuneWheel';
+import { RoundType } from '@/types/gameTypes';
 
-interface GameOverlayProps {
-  roundTitle: string;
-  currentTime: number;
-  maxTime: number;
-  question: string;
-  hint: string;
-  showHint: boolean;
-  showCategoryTable: boolean;
-  timerPulsing: boolean;
-  players: Player[];
-  categories: string[];
-  difficulties: number[];
-  selectedCategory: string;
-  selectedDifficulty: number;
-  hostCameraUrl: string;
-  showHostCamera: boolean;
-  broadcastBarText?: string;
-  broadcastBarEnabled?: boolean;
-  broadcastBarPosition?: 'top' | 'bottom';
-  broadcastBarColor?: string;
-  broadcastBarTextColor?: string;
-  broadcastBarAnimation?: 'slide' | 'fade' | 'static';
-  broadcastBarSpeed?: number;
-}
+export function GameOverlay() {
+  const { state } = useGame();
+  const { connected } = useSocket();
+  const [currentLayout, setCurrentLayout] = useState<RoundType>('knowledge');
 
-export const GameOverlay: React.FC<GameOverlayProps> = ({
-  roundTitle,
-  currentTime,
-  maxTime,
-  question,
-  hint,
-  showHint,
-  showCategoryTable,
-  timerPulsing,
-  players,
-  categories,
-  difficulties,
-  selectedCategory,
-  selectedDifficulty,
-  hostCameraUrl,
-  showHostCamera,
-  broadcastBarText = 'Witamy w Quiz Show! Trwa runda wiedzy',
-  broadcastBarEnabled = true,
-  broadcastBarPosition = 'bottom',
-  broadcastBarColor = '#000000',
-  broadcastBarTextColor = '#ffffff',
-  broadcastBarAnimation = 'slide',
-  broadcastBarSpeed = 5
-}) => {
+  useEffect(() => {
+    if (state.currentRound) {
+      setCurrentLayout(state.currentRound);
+    }
+  }, [state.currentRound]);
+
+  const activePlayers = state.players.filter(p => !p.eliminated);
+  const topPlayers = activePlayers.slice(0, Math.ceil(activePlayers.length / 2));
+  const bottomPlayers = activePlayers.slice(Math.ceil(activePlayers.length / 2));
+
   return (
-    <div className="game-overlay">
-      {/* Round Title */}
-      <div className="absolute top-4 left-4 text-4xl font-bold text-white drop-shadow-lg">
-        {roundTitle}
+    <div className="w-full h-screen bg-gradient-to-b from-gameshow-background to-gameshow-background/80 relative overflow-hidden">
+      {/* Connection status indicator */}
+      <div className={`absolute top-4 right-4 z-50 px-3 py-1 rounded-full text-sm font-medium ${
+        connected ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'
+      }`}>
+        {connected ? 'LIVE' : 'OFFLINE'}
       </div>
-      
-      {/* Timer */}
-      <div className="absolute top-4 right-4">
-        <Timer 
-          currentTime={currentTime} 
-          maxTime={maxTime} 
-          isPulsing={timerPulsing} 
-        />
-      </div>
-      
-      {/* Players List */}
-      <div className="absolute bottom-4 left-4 text-white drop-shadow-lg">
-        <div className="flex items-center space-x-4">
-          {players.map((player) => (
-            <div key={player.id} className="flex items-center">
-              <img
-                src={player.avatarUrl || '/avatars/player-1.png'}
-                alt={player.name}
-                className="w-10 h-10 rounded-full mr-2"
-              />
-              <div>
-                <div className="font-bold">{player.name}</div>
-                <div>
-                  {player.points} pkt | {player.lives} życia
-                </div>
-              </div>
-            </div>
-          ))}
+
+      {/* Layout based on current round */}
+      <div className="h-full flex flex-col">
+        {/* Top player row - 360px height */}
+        <div className="h-[360px] flex justify-center items-center p-4">
+          <PlayerCameraGrid 
+            players={topPlayers}
+            isTopRow={true}
+          />
+        </div>
+
+        {/* Middle section - Host, Question, Category/Wheel - 360px height */}
+        <div className="h-[360px] flex items-center p-4">
+          {/* Host camera - left side */}
+          <div className="w-[384px] h-full">
+            <HostCamera />
+          </div>
+
+          {/* Center content - Question display */}
+          <div className="flex-1 h-full mx-4">
+            <QuestionDisplay 
+              question={state.currentQuestion}
+              round={currentLayout}
+            />
+          </div>
+
+          {/* Right side - Category table or Fortune Wheel */}
+          <div className="w-[384px] h-full">
+            <AnimatePresence mode="wait">
+              {currentLayout === 'wheel' ? (
+                <motion.div
+                  key="wheel"
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.8 }}
+                  className="h-full"
+                >
+                  <FortuneWheel 
+                    spinning={state.wheelSpinning}
+                    selectedCategory={state.selectedCategory}
+                  />
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="categories"
+                  initial={{ opacity: 0, x: 50 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: 50 }}
+                  className="h-full"
+                >
+                  <CategoryTable round={currentLayout} />
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        </div>
+
+        {/* Bottom player row - 360px height */}
+        <div className="h-[360px] flex justify-center items-center p-4">
+          <PlayerCameraGrid 
+            players={bottomPlayers}
+            isTopRow={false}
+          />
         </div>
       </div>
-      
-      {/* Question Area */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full px-8">
-        {showCategoryTable ? (
-          <CategoryTable 
-            categories={categories}
-            difficulties={difficulties}
-            selectedCategory={selectedCategory}
-            selectedDifficulty={selectedDifficulty}
-          />
-        ) : (
-          <QuestionPanel question={question} hint={hint} showHint={showHint} />
+
+      {/* Overlay effects and animations */}
+      <div className="absolute inset-0 pointer-events-none">
+        {/* Round indicator */}
+        <div className="absolute top-8 left-8 bg-gameshow-primary/20 backdrop-blur-sm px-4 py-2 rounded-lg">
+          <span className="text-gameshow-text font-bold">
+            RUNDA {currentLayout === 'knowledge' ? '1' : currentLayout === 'speed' ? '2' : '3'}
+          </span>
+        </div>
+
+        {/* Timer display (if active) */}
+        {state.timeRemaining && state.timeRemaining > 0 && (
+          <div className="absolute top-8 left-1/2 transform -translate-x-1/2">
+            <motion.div
+              className="bg-red-500/20 backdrop-blur-sm px-6 py-3 rounded-lg border border-red-500"
+              animate={{ scale: state.timeRemaining <= 5 ? [1, 1.1, 1] : 1 }}
+              transition={{ duration: 0.5, repeat: state.timeRemaining <= 5 ? Infinity : 0 }}
+            >
+              <span className="text-red-400 font-bold text-2xl">
+                {Math.ceil(state.timeRemaining)}
+              </span>
+            </motion.div>
+          </div>
         )}
       </div>
-      
-      {/* Host Camera */}
-      {showHostCamera && (
-        <div className="absolute bottom-4 right-4 w-64 h-48 rounded-md overflow-hidden shadow-lg">
-          <HostCamera url={hostCameraUrl} />
-        </div>
-      )}
-      
-      {/* Add BroadcastBar at the end */}
-      {broadcastBarEnabled && (
-        <BroadcastBar 
-          text={broadcastBarText}
-          backgroundColor={broadcastBarColor}
-          textColor={broadcastBarTextColor}
-          animation={broadcastBarAnimation}
-          scrollSpeed={broadcastBarSpeed}
-          position={broadcastBarPosition}
-        />
-      )}
     </div>
   );
-};
+}
 
 export default GameOverlay;
