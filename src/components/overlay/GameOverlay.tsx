@@ -8,13 +8,60 @@ import QuestionDisplay from './components/QuestionDisplay';
 import HostCamera from './components/HostCamera';
 import CategoryTable from './components/CategoryTable';
 import FortuneWheel from './components/FortuneWheel';
-import { RoundType } from '@/types/gameTypes';
+import { RoundType, Player, Question } from '@/types/gameTypes';
 
-export function GameOverlay() {
+interface GameOverlayProps {
+  roundTitle?: string;
+  currentTime?: number;
+  maxTime?: number;
+  players?: Player[];
+  question?: Question | null;
+  hint?: string;
+  showHint?: boolean;
+  showCategoryTable?: boolean;
+  categories?: string[];
+  difficulties?: number[];
+  selectedCategory?: string;
+  selectedDifficulty?: number;
+  timerPulsing?: boolean;
+  hostCameraUrl?: string;
+  showHostCamera?: boolean;
+  broadcastBarText?: string;
+  broadcastBarEnabled?: boolean;
+  broadcastBarPosition?: 'top' | 'bottom';
+  broadcastBarColor?: string;
+  broadcastBarTextColor?: string;
+  broadcastBarAnimation?: 'slide' | 'fade' | 'static';
+  broadcastBarSpeed?: number;
+}
+
+export function GameOverlay({
+  roundTitle = "RUNDA 1 – ZRÓŻNICOWANA WIEDZA",
+  currentTime = 30,
+  maxTime = 30,
+  players = [],
+  question = null,
+  hint = "",
+  showHint = false,
+  showCategoryTable = true,
+  categories = [],
+  difficulties = [],
+  selectedCategory = "",
+  selectedDifficulty = 0,
+  timerPulsing = false,
+  hostCameraUrl = "",
+  showHostCamera = true,
+  broadcastBarText = "",
+  broadcastBarEnabled = false,
+  broadcastBarPosition = 'bottom',
+  broadcastBarColor = '#000000',
+  broadcastBarTextColor = '#ffffff',
+  broadcastBarAnimation = 'slide',
+  broadcastBarSpeed = 5
+}: GameOverlayProps) {
   const { state } = useGame();
   const { connected } = useSocket();
   const [currentLayout, setCurrentLayout] = useState<RoundType>('knowledge');
-  const [timeRemaining, setTimeRemaining] = useState(30);
 
   useEffect(() => {
     if (state.currentRound) {
@@ -22,10 +69,10 @@ export function GameOverlay() {
     }
   }, [state.currentRound]);
 
-  // Use timeRemaining from state if available, otherwise use local state
-  const displayTime = state.timeRemaining !== undefined ? state.timeRemaining : timeRemaining;
+  // Use timeRemaining from state if available, otherwise use props
+  const displayTime = state.timeRemaining !== undefined ? state.timeRemaining : currentTime;
 
-  const activePlayers = state.players.filter(p => !p.eliminated);
+  const activePlayers = players.filter(p => !p.eliminated);
   const topPlayers = activePlayers.slice(0, Math.ceil(activePlayers.length / 2));
   const bottomPlayers = activePlayers.slice(Math.ceil(activePlayers.length / 2));
 
@@ -52,13 +99,13 @@ export function GameOverlay() {
         <div className="h-[360px] flex items-center p-4">
           {/* Host camera - left side */}
           <div className="w-[384px] h-full">
-            <HostCamera />
+            <HostCamera url={hostCameraUrl} />
           </div>
 
           {/* Center content - Question display */}
           <div className="flex-1 h-full mx-4">
             <QuestionDisplay 
-              question={state.currentQuestion}
+              question={question || state.currentQuestion}
               round={currentLayout}
             />
           </div>
@@ -76,7 +123,7 @@ export function GameOverlay() {
                 >
                   <FortuneWheel 
                     spinning={state.wheelSpinning}
-                    selectedCategory={state.selectedCategory}
+                    selectedCategory={selectedCategory || state.selectedCategory}
                   />
                 </motion.div>
               ) : (
@@ -108,7 +155,7 @@ export function GameOverlay() {
         {/* Round indicator */}
         <div className="absolute top-8 left-8 bg-gameshow-primary/20 backdrop-blur-sm px-4 py-2 rounded-lg">
           <span className="text-gameshow-text font-bold">
-            RUNDA {currentLayout === 'knowledge' ? '1' : currentLayout === 'speed' ? '2' : '3'}
+            {roundTitle}
           </span>
         </div>
 
