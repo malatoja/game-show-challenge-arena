@@ -132,7 +132,6 @@ export function CameraManager({
                     [player.id]: e.target.value
                   }))}
                   placeholder="URL strumienia kamery gracza"
-                  size="sm"
                 />
                 
                 <div className="flex gap-2">
