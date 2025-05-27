@@ -1,0 +1,437 @@
+
+
+Dokumentacja Techniczna
+
+Discord Game Show – Kompletny opis logiki i funkcjonalności aplikacji
+
+
+---
+
+1. Wprowadzenie
+
+Discord Game Show to interaktywna gra quizowa działająca na platformie Discord, oparta na rywalizacji wiedzy, refleksu i szczęścia. Gra składa się z trzech rund o różnych mechanikach oraz systemu kart specjalnych, które wpływają na rozgrywkę.
+
+
+---
+
+2. Ogólne założenia i dane wspólne dla całej gry
+
+Gracze: Startuje 10 uczestników (Runda 1), potem 6 (Runda 2), a na finał 3 (Runda 3).
+
+Punkty i życie:
+
+Punkty zdobywa się za poprawne odpowiedzi.
+
+Życie (w %) spada za błędne odpowiedzi lub brak odpowiedzi.
+
+Każdy gracz zaczyna rundę z 100% życia.
+
+
+Panel hosta:
+
+Umożliwia manualne zarządzanie punktami i życiem (dodawanie, odejmowanie) w razie awarii lub wyjątkowych sytuacji.
+
+Zawiera przyciski "Poprawna odpowiedź" i "Błędna odpowiedź" aktywne w każdej rundzie, które wywołują animacje podświetlenia kamery gracza (zielone lub czerwone).
+
+
+Konfiguracja:
+
+Wszystkie wartości konfigurowalne (punkty, procenty życia, limity czasu, liczba kategorii itp.) definiowane w panelu ustawień.
+
+
+Układ wizualny:
+
+Overlay podzielony na trzy poziome pasy po 360px wysokości każdy.
+
+W R1 i R2 na dole i górze wyświetlane są okienka wideo graczy (odpowiednio 5+5 lub 3+3).
+
+W R3 tylko górny pasek z 3 graczami.
+
+Środkowy pasek: kamera hosta po lewej, pytania w centrum, tabela kategorii (lub koło fortuny w R3) po prawej.
+
+
+
+
+---
+
+3. Szczegółowa logika rund
+
+3.1 Runda 1 – Zróżnicowana wiedza z polskiego internetu (Eliminacje)
+
+Cel: Wyłonienie 5 graczy z najwyższym % życia oraz 1 lucky loser (min. 25 pkt).
+
+Gracze: 10 (5 na górze, 5 na dole).
+
+Punkty: 0 startowo.
+
+Życie: 100% startowo.
+
+Kategorie: 7 stałych kategorii (Pytania Pułapki, Memy, Virale/Easter Eggi, YouTube, Gry i Gaming, Top Roku, Wiedza Ogólna).
+
+Mechanika:
+
+Gracz wybiera kategorię i poziom trudności (5, 10, 15, 20 pkt).
+
+Host losuje pytanie z wybranej kategorii i trudności, pytanie oznaczane jako użyte.
+
+Pytanie wyświetlane jest na overlayu (środkowy obszar).
+
+Gracz ma 30 sekund na odpowiedź (timer uruchamiany przez hosta).
+
+Odpowiedź głosowa.
+
+Host ocenia odpowiedź:
+
+Poprawna → punkty dodane, kamera podświetlona na zielono.
+
+Błędna lub brak → procent życia odejmowany zgodnie z poziomem trudności (5/10 pkt → -10%, 15/20 pkt → -20%), kamera na czerwono.
+
+
+Eliminacja gracza, gdy życie spadnie do 0%.
+
+Gra kończy się po eliminacji 5 graczy.
+
+Lucky loser to gracz z najwyższą liczbą punktów spośród odpadłych (min. 25 pkt).
+
+
+Układ wizualny:
+
+Górny i dolny pasek po 5 okienek wideo.
+
+Środkowy pasek: kamera hosta (lewo), pytanie (centrum), tabela kategorii (prawo).
+
+
+Punkty przyznawane: 5, 10, 15, 20 (konfigurowalne).
+
+Życie odejmowane: -10% lub -20% w zależności od pytania.
+
+
+
+---
+
+3.2 Runda 2 – Szybka odpowiedź
+
+Cel: Test refleksu i wiedzy.
+
+Gracze: 6 (3 na górze i 3 na dole).
+
+Punkty: start 0.
+
+Życie: start 100%.
+
+Mechanika:
+
+System losuje pytania bez wariantów.
+
+Host uruchamia timer 5 sekund.
+
+Gracze odpowiadają najszybciej, odpowiedź oceniana przez hosta.
+
+Poprawna odpowiedź → +15 pkt (konfigurowalne), kamera zielona.
+
+Błędna/brak → -20% życia, kamera czerwona.
+
+Eliminacja przy 0% życia.
+
+Runda kończy się, gdy zostaną 3 gracze z życiem > 0%.
+
+
+Układ wizualny:
+
+Górny i dolny pasek po 3 okienka wideo.
+
+Środkowy pasek: kamera hosta (lewo), pytanie (centrum), puste lub statyczne (prawo).
+
+
+
+
+---
+
+3.3 Runda 3 – Koło Fortuny
+
+Cel: Połączenie szczęścia z wiedzą, zwycięzca to ostatni z życiem > 0%.
+
+Gracze: 3 (górny pasek).
+
+Punkty: start 0.
+
+Życie: start 100%.
+
+Kategorie: 6-10 (konfigurowalne).
+
+Mechanika:
+
+Host klika "Zakręć Kołem".
+
+System losuje kategorię i pytanie z niej.
+
+Host klika "Wyświetl pytanie".
+
+Gracz ma 30 sekund na odpowiedź.
+
+Host ocenia odpowiedź:
+
+Poprawna → +25 pkt (konfigurowalne), kamera zielona.
+
+Błędna → -25% życia, kamera czerwona.
+
+
+Gra trwa do wyłonienia 1 gracza z życiem > 0%.
+
+
+Układ wizualny:
+
+Górny pasek z 3 okienkami wideo.
+
+Środkowy pasek: kamera hosta (lewo), pytanie (centrum), koło fortuny (prawo).
+
+
+
+
+---
+
+4. Karty specjalne – szczegóły
+
+4.1 Nazwy, opisy i efekty
+
+Nazwa	Opis	Efekty wizualne i dźwiękowe
+
+Dejavu	Druga szansa na odpowiedź na to samo pytanie.	Strzały z efektem "widma", pulsujące błyski, animacja "wjazdu", dźwięk cofania
+Kontra	Po usłyszeniu pytania możesz wskazać innego gracza do odpowiedzi. Jeśli się pomyli, Ty dostajesz punkty.	Strzała odbijająca się od tarczy z iskrzeniem, dźwięk "uderzenia"
+Reanimacja	Dodatkowe +25% życia; jeśli odpowiedź jest błędna, nie odpadasz, zostajesz w grze.	Zielone pulsujące serce, animacja "oddychania", dźwięk pulsującego oddechu
+Skip	Pomija pytanie bez konsekwencji.	Neonowy ślad przy symbolu ">>", dźwięk "whoosh"
+Turbo	Przed odpowiedzią – jeśli poprawna, punkty podwajane.	Stylizowana opona z animacją smugi prędkości, dźwięk przyspieszenia
+Refleks 2	Podwaja czas na odpowiedź.	Ikony klepsydry z piaskiem i migotaniem, subtelny dźwięk "czasu"
+Refleks 3	Potraja czas na odpowiedź.	Trzy klepsydry z migotaniem, dźwięk "czasu"
+Lustro	Usuwa jedną błędną opcję odpowiedzi (jeśli są wyświetlane).	Ikona lustra z efektem odbicia, dźwięk odbicia
+Oświecenie	Krótka podpowiedź do pytania.	Stylizowana żarówka z promieniami i rozbłyskiem, dźwięk "ding"
+
+
+4.2 Przyznawanie kart
+
+Za 3 poprawne odpowiedzi z rzędu (dowolna runda).
+
+Za zdobycie 50, 100 i 200 punktów.
+
+Za przejście rundy bez utraty życia.
+
+Za zdobycie największej liczby punktów w rundzie 1 i 2.
+
+Po przejściu rundy 1 i 2 – każdy awansujący dostaje kartę.
+
+Po Rundzie 1 – losowa karta dla gracza z najmniejszą liczbą punktów spośród awansujących.
+
+Po Rundzie 2 – losowa karta dla najsłabszego awansującego.
+
+
+4.3 Limity i zasady użycia
+
+Max 3 karty na gracza.
+
+Karty usuwane z talii po rozdaniu.
+
+Gracz z 3 kartami nie dostaje kolejnych.
+
+Brak kart po wyczerpaniu puli.
+
+Karty używane zgłaszane głosowo do hosta przed odpowiedzią (lub gdy wymaga tego karta).
+
+Host aktywuje kartę w panelu.
+
+Animacje i dźwięki podczas użycia karty.
+
+Blokada jednoczesnego użycia kart o sprzecznych efektach.
+
+Możliwość cofnięcia użycia karty w panelu hosta.
+
+Gracze odpadli nie mogą używać kart.
+
+
+4.4 Interfejs kart
+
+Gracz widzi ikonki kart z krótkim opisem po najechaniu.
+
+Host widzi ikony kart przy nickach i ma przycisk „Zużyj kartę”.
+
+Na overlayu animacja i opis użytej karty.
+
+
+
+---
+
+5. Panel hosta – funkcje i sterowanie
+
+Manualne odejmowanie procentów życia i dodawanie punktów.
+
+
+Przyciski oceny odpowiedzi:
+
+„Poprawna odpowiedź” – dodaje punkty i wyświetla animację zielonego podświetlenia kamery.
+
+„Błędna odpowiedź” – odejmuje procent życia i wyświetla animację czerwonego podświetlenia kamery.
+
+
+Sterowanie timerem:
+
+Start, pauza i reset czasomierza dla każdej odpowiedzi.
+
+
+Losowanie pytań:
+
+Wybór kategorii, poziomu trudności i pytania z bazy.
+
+Możliwość pominięcia pytania (funkcja „Skip”).
+
+
+Koło fortuny (runda 3):
+
+Rzut kołem z animacją i dźwiękiem, wybór kategorii.
+
+
+Zarządzanie kartami specjalnymi:
+
+Przyznawanie kart konkretnym graczom.
+
+Aktywacja kart na żądanie gracza.
+
+Cofanie aktywacji kart.
+
+
+Panel statystyk:
+
+Wyświetlanie punktów i życia wszystkich graczy w czasie rzeczywistym.
+
+Historia ostatnich odpowiedzi i użytych kart.
+
+
+Reset gry:
+
+Restart całej rozgrywki lub poszczególnych rund.
+
+
+
+
+---
+
+6. Baza pytań i zarządzanie nimi
+
+Struktura bazy:
+
+Kategorie → pytania → poziomy trudności.
+
+Każde pytanie ma unikalny ID, tekst pytania, poprawną odpowiedź i opcjonalne podpowiedzi.
+
+
+Zarządzanie pytaniami:
+
+Dodawanie, edycja, usuwanie pytań w panelu administracyjnym.
+
+Oznaczanie pytań jako „użyte” w trakcie gry, aby unikać powtórek.
+
+
+Import/eksport:
+
+Możliwość importu pytań z plików CSV/JSON.
+
+Eksport statystyk i pytań.
+
+
+
+
+---
+
+7. Komunikacja i synchronizacja
+
+Real-time:
+
+Synchronizacja stanu gry między hostem, uczestnikami i overlayem.
+
+Aktualizacja punktów, życia, statusu odpowiedzi i kart na bieżąco.
+
+
+Discord API:
+
+Integracja z botem Discord, odbieranie komend od hosta i graczy.
+
+Wysyłanie powiadomień i statusów w kanałach Discord.
+
+
+Overlay:
+
+Aktualizacja UI w czasie rzeczywistym, animacje i reakcje na akcje hosta i graczy.
+
+
+
+
+---
+
+8. Układ interfejsu użytkownika
+
+Podział ekranu:
+
+Górny pasek: Okienka wideo uczestników (5/3 w zależności od rundy).
+
+Środkowy pasek: Kamera hosta (lewo), pytanie i kategorie/koło fortuny (prawo).
+
+Dolny pasek: Okienka wideo uczestników (5/3).
+
+
+Elementy dynamiczne:
+
+Podświetlenie kamer na zielono/czerwono po odpowiedzi.
+
+Animacje kart specjalnych.
+
+Timery i liczniki czasu.
+
+Informacje o punktach i życiu graczy.
+
+
+Dostosowanie do rozdzielczości:
+
+Responsywny design dla różnych rozdzielczości ekranu.
+
+
+
+
+---
+
+9. Bezpieczeństwo i stabilność
+
+Backup stanu gry:
+
+Automatyczne zapisywanie stanu gry co 30 sekund.
+
+
+Obsługa błędów:
+
+Tryb awaryjny z ręcznym zarządzaniem punktami i życiem przez hosta.
+
+Logowanie i raportowanie błędów.
+
+
+Uprawnienia:
+
+Dostęp do panelu hosta wyłącznie dla uprawnionych użytkowników.
+
+Weryfikacja komend botów.
+
+
+
+
+---
+
+10. Przyszłe rozszerzenia
+
+Wsparcie dla większej liczby graczy i rund.
+
+Integracja z innymi platformami streamingowymi.
+
+Rozszerzone statystyki i analiza wyników.
+
+System rankingowy i ligi.
+
+
+
+
+
