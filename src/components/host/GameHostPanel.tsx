@@ -10,7 +10,8 @@ import ConnectionStatus from './ConnectionStatus';
 import GameResultsWrapper from './components/GameResultsWrapper';
 import { useGame } from '@/context/GameContext';
 
-export function GameHostPanel() {
+// Inner component that uses the game control provider within the context
+function GameHostPanelInner() {
   const { state } = useGame();
   const gameControl = useGameControlProvider();
   const { showResults, resultType, handleResetGame, setShowResults } = gameControl;
@@ -29,6 +30,14 @@ export function GameHostPanel() {
   }
   
   return (
+    <GameControlProvider value={gameControl}>
+      <TabsHostPanel />
+    </GameControlProvider>
+  );
+}
+
+export function GameHostPanel() {
+  return (
     <>
       <div className="absolute top-4 right-4 z-10">
         <ConnectionStatus />
@@ -36,9 +45,7 @@ export function GameHostPanel() {
       <GameHistoryProvider>
         <EventsProvider>
           <TimerProvider>
-            <GameControlProvider value={gameControl}>
-              <TabsHostPanel />
-            </GameControlProvider>
+            <GameHostPanelInner />
           </TimerProvider>
         </EventsProvider>
       </GameHistoryProvider>
