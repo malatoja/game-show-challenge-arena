@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { Player, CardType } from '@/types/gameTypes';
+import { Player, CardType, Question } from '@/types/gameTypes';
 import { useSocket } from '@/context/SocketContext';
 import { toast } from 'sonner';
 import { playSound } from '@/lib/soundService';
@@ -11,7 +11,7 @@ export interface OverlayState {
   roundTitle: string;
   currentTime: number;
   maxTime: number;
-  question: string;
+  question: Question | null;
   hint: string;
   showHint: boolean;
   showCategoryTable: boolean;
@@ -35,7 +35,7 @@ export const useOverlayState = (demoMode: boolean) => {
   const [roundTitle, setRoundTitle] = useState("RUNDA 1 – ZRÓŻNICOWANA WIEDZA");
   const [currentTime, setCurrentTime] = useState(30);
   const [maxTime, setMaxTime] = useState(30);
-  const [question, setQuestion] = useState("");
+  const [question, setQuestion] = useState<Question | null>(null);
   const [hint, setHint] = useState("");
   const [showHint, setShowHint] = useState(false);
   const [showCategoryTable, setShowCategoryTable] = useState(true);
@@ -82,7 +82,7 @@ export const useOverlayState = (demoMode: boolean) => {
       
       // Update question if provided
       if (data.question) {
-        setQuestion(data.question.text);
+        setQuestion(data.question);
         // Check if hint exists and set it
         if (data.question.hint) {
           setHint(data.question.hint);
@@ -160,7 +160,7 @@ export const useOverlayState = (demoMode: boolean) => {
         setRoundTitle(`RUNDA ${data.roundType.toUpperCase()}`);
       }
       setShowCategoryTable(true);
-      setQuestion("");
+      setQuestion(null);
       setHint("");
       playSound('round-start');
     });
