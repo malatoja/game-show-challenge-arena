@@ -1,83 +1,107 @@
 
 import { useEffect } from 'react';
-import { playSound } from '@/lib/soundService';
+import { Player, Question } from '@/types/gameTypes';
+
+interface UseDemoModeEffectsProps {
+  demoMode: boolean;
+  setCurrentTime: (time: number) => void;
+  setTimerPulsing: (pulsing: boolean) => void;
+  setPlayers: (players: Player[]) => void;
+  setSelectedCategory: (category: string) => void;
+  setSelectedDifficulty: (difficulty: number) => void;
+  setShowCategoryTable: (show: boolean) => void;
+  setQuestion: (question: Question | null) => void;
+  categories: string[];
+  difficulties: number[];
+}
 
 export const useDemoModeEffects = (
   demoMode: boolean,
-  setCurrentTime: React.Dispatch<React.SetStateAction<number>>,
-  setTimerPulsing: React.Dispatch<React.SetStateAction<boolean>>,
-  setPlayers: React.Dispatch<React.SetStateAction<any[]>>,
-  setSelectedCategory: React.Dispatch<React.SetStateAction<string>>,
-  setSelectedDifficulty: React.Dispatch<React.SetStateAction<number>>,
-  setShowCategoryTable: React.Dispatch<React.SetStateAction<boolean>>,
-  setQuestion: React.Dispatch<React.SetStateAction<string>>,
+  setCurrentTime: (time: number) => void,
+  setTimerPulsing: (pulsing: boolean) => void,
+  setPlayers: (players: Player[]) => void,
+  setSelectedCategory: (category: string) => void,
+  setSelectedDifficulty: (difficulty: number) => void,
+  setShowCategoryTable: (show: boolean) => void,
+  setQuestion: (question: Question | null) => void,
   categories: string[],
   difficulties: number[]
 ) => {
   useEffect(() => {
     if (!demoMode) return;
-    
-    // Demo mode: Simulate WebSocket updates
-    const timer = setInterval(() => {
-      setCurrentTime(prev => {
-        if (prev <= 0) {
-          setTimerPulsing(false);
-          return 30;
-        }
-        
-        if (prev <= 5) {
-          setTimerPulsing(true);
-        } else {
-          setTimerPulsing(false);
-        }
-        
-        return prev - 1;
-      });
-    }, 1000);
-    
-    // Simulate category selection after 5 seconds
-    const categoryTimer = setTimeout(() => {
-      const randomCategory = categories[Math.floor(Math.random() * categories.length)];
-      const randomDifficulty = difficulties[Math.floor(Math.random() * difficulties.length)];
-      setSelectedCategory(randomCategory);
-      setSelectedDifficulty(randomDifficulty);
-      playSound('wheel-spin');
-    }, 5000);
-    
-    // Simulate showing question after 8 seconds
-    const questionTimer = setTimeout(() => {
-      setShowCategoryTable(false);
-      setQuestion("Jaki streamer na polskim Twitchu pobił rekord widzów w 2023 roku?");
-      playSound('countdown');
-    }, 8000);
-    
-    // Simulate activating different players periodically
-    const playerTimer = setInterval(() => {
-      const randomIndex = Math.floor(Math.random() * 10); // Assuming 10 players
-      setPlayers(prevState => {
-        // Capture current state for comparison
-        const currentPlayers = prevState;
-        
-        // Update players with new active state
-        const updatedPlayers = currentPlayers.map((player, index) => ({
-          ...player,
-          isActive: index === randomIndex
-        }));
-        
-        // Play sound if active player changed
-        if (!currentPlayers[randomIndex].isActive) {
-          playSound('buzzer');
-        }
-        
-        return updatedPlayers;
-      });
-    }, 3000);
-    
-    return () => {
-      clearInterval(timer);
-      clearTimeout(categoryTimer);
-      clearTimeout(questionTimer);
-      clearInterval(playerTimer);
+
+    // Demo players
+    const demoPlayers: Player[] = [
+      {
+        id: '1',
+        name: 'Gracz1',
+        lives: 3,
+        points: 45,
+        cards: [],
+        isActive: true,
+        eliminated: false,
+        color: '#FF6B6B'
+      },
+      {
+        id: '2',
+        name: 'Gracz2',
+        lives: 2,
+        points: 30,
+        cards: [],
+        isActive: false,
+        eliminated: false,
+        color: '#4ECDC4'
+      },
+      {
+        id: '3',
+        name: 'Gracz3',
+        lives: 3,
+        points: 60,
+        cards: [],
+        isActive: false,
+        eliminated: false,
+        color: '#45B7D1'
+      }
+    ];
+
+    // Demo question
+    const demoQuestion: Question = {
+      id: 'demo-1',
+      text: 'Jak nazywa się najpopularniejszy mem z kotkiem, który stał się symbolem internetu?',
+      category: 'MEMY',
+      answers: [
+        { text: 'Grumpy Cat', isCorrect: false },
+        { text: 'Keyboard Cat', isCorrect: false },
+        { text: 'Nyan Cat', isCorrect: true },
+        { text: 'LOL Cat', isCorrect: false }
+      ],
+      correctAnswerIndex: 2,
+      round: 'knowledge',
+      difficulty: 'medium',
+      points: 15
     };
-  }, [demoMode, categories, difficulties, setCurrentTime, setPlayers, setQuestion, setSelectedCategory, setSelectedDifficulty, setShowCategoryTable, setTimerPulsing]);
+
+    setPlayers(demoPlayers);
+    setSelectedCategory(categories[0] || 'MEMY');
+    setSelectedDifficulty(difficulties[1] || 10);
+    
+    // Simulate a timer countdown
+    let timeLeft = 30;
+    const timer = setInterval(() => {
+      setCurrentTime(timeLeft);
+      if (timeLeft <= 5) {
+        setTimerPulsing(true);
+      }
+      timeLeft--;
+      if (timeLeft < 0) {
+        clearInterval(timer);
+        setTimerPulsing(false);
+        // Show demo question after timer ends
+        setQuestion(demoQuestion);
+        setShowCategoryTable(false);
+      }
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [demoMode, setCurrentTime, setTimerPulsing, setPlayers, setSelectedCategory, setSelectedDifficulty, setShowCategoryTable, setQuestion, categories, difficulties]);
 };
