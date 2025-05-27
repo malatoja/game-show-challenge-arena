@@ -11,11 +11,20 @@ export class SoundManager {
     const soundFiles: Record<SoundType, string> = {
       'round-start': '/sounds/round_start.mp3',
       'card-activate': '/sounds/card_use.mp3',
+      'card-use': '/sounds/card_use.mp3',
       'correct-answer': '/sounds/correct.mp3',
+      'correct': '/sounds/correct.mp3',
       'wrong-answer': '/sounds/wrong.mp3',
+      'incorrect': '/sounds/wrong.mp3',
       'timer-warning': '/sounds/timer_warning.mp3',
+      'timer-end': '/sounds/timer_end.mp3',
       'game-over': '/sounds/game_over.mp3',
-      'hint': '/sounds/hint.mp3'
+      'hint': '/sounds/hint.mp3',
+      'buzzer': '/sounds/buzzer.mp3',
+      'countdown': '/sounds/countdown.mp3',
+      'elimination': '/sounds/elimination.mp3',
+      'wheel-spin': '/sounds/wheel_spin.mp3',
+      'winner': '/sounds/winner.mp3'
     };
 
     Object.entries(soundFiles).forEach(([soundType, filePath]) => {

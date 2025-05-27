@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
@@ -18,8 +17,8 @@ export function SoundsTab() {
   
   // Sound effects available in the game
   const soundEffects: {label: string; value: SoundType}[] = [
-    { label: 'Poprawna odpowiedź', value: 'correct' },
-    { label: 'Niepoprawna odpowiedź', value: 'incorrect' },
+    { label: 'Poprawna odpowiedź', value: 'correct-answer' },
+    { label: 'Niepoprawna odpowiedź', value: 'wrong-answer' },
     { label: 'Brzęczyk końca czasu', value: 'buzzer' },
     { label: 'Odliczanie', value: 'countdown' },
     { label: 'Eliminacja gracza', value: 'elimination' },
