@@ -1,82 +1,86 @@
 
-import React, { useState, useEffect } from 'react';
-import { 
-  isSettingsAuthenticated, 
-  logoutSettings,
-  getAuthSettings
-} from '@/lib/authService';
-
-import { SettingsLayout } from '@/components/settings/SettingsLayout';
-import { SettingsHeader } from '@/components/settings/SettingsHeader';
-import { SettingsAuth } from '@/components/settings/SettingsAuth';
-
-// Import tab components
-import { GeneralTab } from '@/components/settings/GeneralTab';
-import { PlayersTab } from '@/components/settings/PlayersTab';
-import { QuestionsTab } from '@/components/settings/QuestionsTab';
-import { ThemesTab } from '@/components/settings/ThemesTab';
-import { CardsTab } from '@/components/settings/CardsTab';
-import { SoundsTab } from '@/components/settings/SoundsTab';
-import { RolesTab } from '@/components/settings/RolesTab';
-import { RankingTab } from '@/components/settings/RankingTab';
-import { AutomationTab } from '@/components/settings/AutomationTab';
-import { LuckyLoserTab } from '@/components/settings/LuckyLoserTab';
-import { CameraConfigTab } from '@/components/settings/CameraConfigTab';
-import { InfoBarTab } from '@/components/settings/InfoBarTab';
-import { BackupTab } from '@/components/settings/BackupTab';
-import { AdvancedTab } from '@/components/settings/AdvancedTab';
-import { TestsTab } from '@/components/settings/TestsTab';
-import { PasswordTab } from '@/components/settings/PasswordTab';
-import { RoundsTab } from '@/components/settings/RoundsTab';
+import React from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Settings, Users, HelpCircle, Palette } from 'lucide-react';
 
 const SettingsPage = () => {
-  const [activeTab, setActiveTab] = useState('general');
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  
-  useEffect(() => {
-    const authStatus = isSettingsAuthenticated();
-    setIsAuthenticated(authStatus);
-  }, []);
-  
-  const handleLoginSuccess = () => {
-    setIsAuthenticated(true);
-  };
-  
-  const handleLogout = () => {
-    logoutSettings();
-    setIsAuthenticated(false);
-  };
-
-  if (!isAuthenticated) {
-    return <SettingsAuth onLoginSuccess={handleLoginSuccess} />;
-  }
-
   return (
-    <SettingsLayout activeTab={activeTab} setActiveTab={setActiveTab}>
-      <SettingsHeader 
-        handleLogout={handleLogout}
-      />
-      
-      <div className="mt-6">
-        {activeTab === 'general' && <GeneralTab />}
-        {activeTab === 'rounds' && <RoundsTab />}
-        {activeTab === 'players' && <PlayersTab />}
-        {activeTab === 'questions' && <QuestionsTab />}
-        {activeTab === 'cards' && <CardsTab />}
-        {activeTab === 'themes' && <ThemesTab />}
-        {activeTab === 'sounds' && <SoundsTab />}
-        {activeTab === 'roles' && <RolesTab />}
-        {activeTab === 'ranking' && <RankingTab />}
-        {activeTab === 'automation' && <AutomationTab />}
-        {activeTab === 'lucky-loser' && <LuckyLoserTab />}
-        {activeTab === 'cameras' && <CameraConfigTab />}
-        {activeTab === 'info-bar' && <InfoBarTab />}
-        {activeTab === 'backup' && <BackupTab />}
-        {activeTab === 'advanced' && <AdvancedTab />}
-        {activeTab === 'tests' && <TestsTab />}
-        {activeTab === 'password' && <PasswordTab />}
+    <div className="min-h-screen bg-gameshow-background p-4">
+      <div className="container mx-auto max-w-6xl">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-gameshow-primary to-gameshow-secondary bg-clip-text text-transparent">
+            Ustawienia aplikacji
+          </h1>
+          <p className="text-gameshow-muted mt-2">Skonfiguruj parametry gry i aplikacji</p>
+        </div>
+
+        <Tabs defaultValue="general" className="w-full">
+          <TabsList className="grid w-full grid-cols-4 bg-gameshow-card/50 border border-gameshow-accent/20">
+            <TabsTrigger value="general" className="flex items-center gap-2">
+              <Settings className="h-4 w-4" />
+              Ogólne
+            </TabsTrigger>
+            <TabsTrigger value="players" className="flex items-center gap-2">
+              <Users className="h-4 w-4" />
+              Gracze
+            </TabsTrigger>
+            <TabsTrigger value="questions" className="flex items-center gap-2">
+              <HelpCircle className="h-4 w-4" />
+              Pytania
+            </TabsTrigger>
+            <TabsTrigger value="appearance" className="flex items-center gap-2">
+              <Palette className="h-4 w-4" />
+              Wygląd
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="general" className="mt-6">
+            <Card className="bg-gameshow-card border-gameshow-accent/20">
+              <CardHeader>
+                <CardTitle>Ustawienia ogólne</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-gameshow-muted">Podstawowe ustawienia aplikacji</p>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="players" className="mt-6">
+            <Card className="bg-gameshow-card border-gameshow-accent/20">
+              <CardHeader>
+                <CardTitle>Zarządzanie graczami</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-gameshow-muted">Konfiguracja ustawień graczy</p>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="questions" className="mt-6">
+            <Card className="bg-gameshow-card border-gameshow-accent/20">
+              <CardHeader>
+                <CardTitle>Edytor pytań</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-gameshow-muted">Dodawanie i edycja pytań do gry</p>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="appearance" className="mt-6">
+            <Card className="bg-gameshow-card border-gameshow-accent/20">
+              <CardHeader>
+                <CardTitle>Personalizacja wyglądu</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-gameshow-muted">Kolory, motywy i inne ustawienia wizualne</p>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
       </div>
-    </SettingsLayout>
+    </div>
   );
 };
 

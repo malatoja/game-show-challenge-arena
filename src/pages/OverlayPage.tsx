@@ -1,91 +1,52 @@
 
-import React, { useState } from 'react';
-import { GameOverlay } from '@/components/overlay/GameOverlay';
-import CardEffectOverlay from '@/components/animations/CardEffectOverlay';
-import { DebugControls } from '@/components/overlay/DebugControls';
-import ConnectionAlert from '@/components/overlay/ConnectionAlert';
-import { useOverlayState } from '@/hooks/useOverlayState';
-import { useDemoModeEffects } from '@/hooks/useDemoModeEffects';
-import { useBroadcastBarState } from '@/hooks/useBroadcastBarState';
-import { useConnectionManager } from '@/hooks/useConnectionManager';
+import React from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Monitor, Camera, Users } from 'lucide-react';
 
 const OverlayPage = () => {
-  const [demoMode, setDemoMode] = useState(import.meta.env.DEV);
-  
-  // Connection management
-  const connectionManager = useConnectionManager(demoMode);
-  
-  // Overlay state management
-  const overlayState = useOverlayState(demoMode);
-  
-  // Broadcast bar state
-  const broadcastBarState = useBroadcastBarState(demoMode);
-  
-  // Demo mode effects
-  useDemoModeEffects(
-    demoMode,
-    overlayState.setCurrentTime,
-    overlayState.setTimerPulsing,
-    overlayState.setPlayers,
-    overlayState.setSelectedCategory,
-    overlayState.setSelectedDifficulty,
-    overlayState.setShowCategoryTable,
-    overlayState.setQuestion,
-    overlayState.categories,
-    overlayState.difficulties
-  );
-
-  const handleToggleDemoMode = () => {
-    setDemoMode(prev => !prev);
-  };
-
   return (
-    <div style={{ width: '100vw', height: '100vh', overflow: 'hidden'}}>
-      {/* Connection error alert */}
-      {connectionManager.showConnectionAlert && (
-        <ConnectionAlert
-          lastError={connectionManager.lastError}
-          autoReconnectEnabled={connectionManager.autoReconnectEnabled}
-          onReconnect={connectionManager.handleReconnect}
-          onToggleAutoReconnect={connectionManager.handleToggleAutoReconnect}
-          onDismiss={connectionManager.handleDismissAlert}
-        />
-      )}
-      
-      {/* Card Activation Animation */}
-      <CardEffectOverlay 
-        cardType={overlayState.activeCardType} 
-        show={overlayState.showCardAnimation} 
-        playerName={overlayState.activePlayerName}
-        onComplete={() => overlayState.setShowCardAnimation(false)}
-      />
-      
-      <GameOverlay 
-        roundTitle={overlayState.roundTitle}
-        currentTime={overlayState.currentTime}
-        maxTime={30}
-        players={overlayState.players}
-        question={overlayState.question}
-        hint={overlayState.hint}
-        showHint={overlayState.showHint}
-        showCategoryTable={overlayState.showCategoryTable}
-        categories={overlayState.categories}
-        difficulties={overlayState.difficulties}
-        selectedCategory={overlayState.selectedCategory}
-        selectedDifficulty={overlayState.selectedDifficulty}
-        timerPulsing={overlayState.timerPulsing}
-        hostCameraUrl={overlayState.hostCameraUrl}
-        showHostCamera={overlayState.showHostCamera}
-        {...broadcastBarState}
-      />
-      
-      {/* Debug controls - only visible during development */}
-      <DebugControls 
-        demoMode={demoMode}
-        connected={connectionManager.connected}
-        mockMode={false}
-        onToggleDemoMode={handleToggleDemoMode}
-      />
+    <div className="min-h-screen bg-black text-white p-4">
+      <div className="container mx-auto">
+        <div className="grid grid-cols-12 gap-4 h-screen">
+          {/* Player cameras grid */}
+          <div className="col-span-8 grid grid-cols-2 gap-2">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="bg-gray-800 rounded-lg flex items-center justify-center">
+                <div className="text-center">
+                  <Camera className="h-12 w-12 mx-auto mb-2 text-gray-400" />
+                  <p className="text-gray-400">Gracz {i + 1}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Right sidebar */}
+          <div className="col-span-4 space-y-4">
+            {/* Question display */}
+            <Card className="bg-gray-900 border-gray-700">
+              <CardHeader>
+                <CardTitle className="text-white">Aktualne pytanie</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-gray-300">Brak aktywnego pytania</p>
+              </CardContent>
+            </Card>
+
+            {/* Scoreboard */}
+            <Card className="bg-gray-900 border-gray-700">
+              <CardHeader>
+                <CardTitle className="text-white flex items-center gap-2">
+                  <Users className="h-5 w-5" />
+                  Tabela wyników
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-gray-300">Brak graczy</p>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };
