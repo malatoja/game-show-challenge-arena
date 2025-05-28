@@ -12,30 +12,33 @@ import GameRulesPage from "./pages/GameRulesPage";
 import NotFound from "./pages/NotFound";
 import { GameProvider } from "./context/GameContext";
 import { SocketProvider } from "./context/SocketContext";
+import { ThemeProvider } from "./context/ThemeProvider";
 
 const queryClient = new QueryClient();
 
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <SocketProvider>
-          <GameProvider>
-            <Toaster />
-            <BrowserRouter>
-              <Routes>
-                <Route path="/" element={<Index />} />
-                <Route path="/host" element={<HostPage />} />
-                <Route path="/players" element={<PlayersPage />} />
-                <Route path="/overlay" element={<OverlayPage />} />
-                <Route path="/settings" element={<SettingsPage />} />
-                <Route path="/rules" element={<GameRulesPage />} />
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </BrowserRouter>
-          </GameProvider>
-        </SocketProvider>
-      </TooltipProvider>
+      <ThemeProvider>
+        <TooltipProvider>
+          <SocketProvider>
+            <GameProvider>
+              <Toaster />
+              <BrowserRouter>
+                <Routes>
+                  <Route path="/" element={<Index />} />
+                  <Route path="/host" element={<HostPage />} />
+                  <Route path="/players" element={<PlayersPage />} />
+                  <Route path="/overlay" element={<OverlayPage />} />
+                  <Route path="/settings" element={<SettingsPage />} />
+                  <Route path="/rules" element={<GameRulesPage />} />
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </BrowserRouter>
+            </GameProvider>
+          </SocketProvider>
+        </TooltipProvider>
+      </ThemeProvider>
     </QueryClientProvider>
   );
 }
