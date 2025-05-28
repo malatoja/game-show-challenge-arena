@@ -1,22 +1,22 @@
-import { defineConfig } from "vite";
-import react from "@vitejs/plugin-react-swc";
-import path from "path";
-import { componentTagger } from "lovable-tagger";
+import { defineConfig } from 'vite';
+import reactVitest from '@vitejs/plugin-react';
+import { vitePlugin as remix } from "@remix-run/dev";
+import path from 'path';
+import { installGlobals } from "@remix-run/node";
+installGlobals();
 
-// https://vitejs.dev/config/
-export default defineConfig(({ mode }) => ({
-  server: {
-    host: "::",
-    port: 8080,
-  },
-  plugins: [
-    react(),
-    mode === 'development' &&
-    componentTagger(),
-  ].filter(Boolean),
+export default defineConfig({
+  plugins: [remix()],
   resolve: {
     alias: {
-      "@": path.resolve(__dirname, "./src"),
+      '~': path.resolve(__dirname, './app'),
     },
   },
-}));
+  test: {
+    globals: true,
+    environment: 'jsdom',
+    alias: {
+      '~': path.resolve(__dirname, './app'),
+    },
+  },
+});
