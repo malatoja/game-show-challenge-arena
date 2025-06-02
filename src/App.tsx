@@ -1,45 +1,23 @@
 
-import { Toaster } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Index from "./pages/Index";
-import HostPage from "./pages/HostPage";
-import PlayersPage from "./pages/PlayersPage";
-import OverlayPage from "./pages/OverlayPage";
-import SettingsPage from "./pages/SettingsPage";
-import GameRulesPage from "./pages/GameRulesPage";
-import NotFound from "./pages/NotFound";
-import { GameProvider } from "./context/GameContext";
-import { SocketProvider } from "./context/SocketContext";
-import { ThemeProvider } from "./context/ThemeProvider";
-
-const queryClient = new QueryClient();
+import React from 'react';
+import { Routes, Route } from 'react-router-dom';
+import { Toaster } from 'sonner';
+import HomePage from './pages/HomePage';
+import HostPage from './pages/HostPage';
+import PlayerPage from './pages/PlayerPage';
+import OverlayPage from './pages/OverlayPage';
 
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <ThemeProvider>
-        <TooltipProvider>
-          <SocketProvider>
-            <GameProvider>
-              <Toaster />
-              <BrowserRouter>
-                <Routes>
-                  <Route path="/" element={<Index />} />
-                  <Route path="/host" element={<HostPage />} />
-                  <Route path="/players" element={<PlayersPage />} />
-                  <Route path="/overlay" element={<OverlayPage />} />
-                  <Route path="/settings" element={<SettingsPage />} />
-                  <Route path="/rules" element={<GameRulesPage />} />
-                  <Route path="*" element={<NotFound />} />
-                </Routes>
-              </BrowserRouter>
-            </GameProvider>
-          </SocketProvider>
-        </TooltipProvider>
-      </ThemeProvider>
-    </QueryClientProvider>
+    <div className="App">
+      <Routes>
+        <Route path="/" element={<HomePage />} />
+        <Route path="/host" element={<HostPage />} />
+        <Route path="/player/:token?" element={<PlayerPage />} />
+        <Route path="/overlay" element={<OverlayPage />} />
+      </Routes>
+      <Toaster richColors position="top-right" />
+    </div>
   );
 }
 
