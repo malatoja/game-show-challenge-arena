@@ -1,6 +1,6 @@
 
 export type PlayerId = string;
-export type RoundType = 'knowledge' | 'speed' | 'wheel' | 'standard' | 'all';
+export type RoundType = 'knowledge' | 'speed' | 'wheel' | 'standard';
 
 export type CardType = 
   | 'dejavu'     // Retry after wrong answer
@@ -17,19 +17,23 @@ export interface Player {
   id: PlayerId;
   name: string;
   avatarUrl?: string;
+  avatar?: string; // Added for compatibility
   lives: number;
   points: number;
   cards: Card[];
   isActive: boolean;
   streamUrl?: string; // URL to Twitch stream
+  cameraUrl?: string; // Added for camera URL
   eliminated: boolean;
   color?: string; // Adding color property
+  consecutiveCorrect?: number; // Track consecutive correct answers
+  token?: string; // Added for player token
 }
 
 export interface Card {
-  id?: string; // Adding id as optional
+  id?: string;
   type: CardType;
-  name?: string; // Adding name as optional
+  name?: string;
   description: string;
   isUsed: boolean;
 }
@@ -41,11 +45,13 @@ export interface Question {
   answers: Answer[];
   correctAnswerIndex: number;
   timeLimit?: number; // in seconds
-  round?: RoundType; // Adding round property
-  difficulty?: 'easy' | 'medium' | 'hard'; // Adding difficulty property
-  used?: boolean; // Adding used property
-  favorite?: boolean; // Adding favorite property
-  points?: number; // Adding points property
+  round?: RoundType;
+  difficulty?: 'easy' | 'medium' | 'hard';
+  used?: boolean;
+  favorite?: boolean;
+  points?: number;
+  hint?: string;
+  imageUrl?: string; // Added for question images
 }
 
 export interface Answer {
@@ -54,14 +60,20 @@ export interface Answer {
 }
 
 export interface GameState {
+  gameStarted: boolean;
+  roundActive: boolean;
   currentRound: RoundType;
   players: Player[];
-  currentPlayerIndex: number;
-  currentQuestion?: Question;
   questions: Question[];
+  usedQuestions: Question[];
   remainingQuestions: Question[];
+  currentQuestion: Question | null;
+  selectedCategory: string;
+  wheelSpinning: boolean;
+  activePlayerId: string | null;
+  timeRemaining?: number; // Added for timer functionality
+  // Adding missing properties
   roundStarted: boolean;
   roundEnded: boolean;
-  wheelSpinning: boolean;
-  selectedCategory?: string;
+  currentPlayerIndex?: number;
 }

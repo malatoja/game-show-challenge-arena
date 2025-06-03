@@ -1,101 +1,82 @@
 
-export type WebSocketMessageType = 
-  | 'QUESTION_UPDATE' 
-  | 'TIMER_UPDATE' 
-  | 'PLAYER_UPDATE'
-  | 'CATEGORY_SELECT'
-  | 'ROUND_UPDATE';
+import socketCore from './socket/socketCore';
+import { toast } from 'sonner';
+import debugLog from './socket/debugUtils';
 
-export interface WebSocketMessage {
-  type: WebSocketMessageType;
-  data: any;
-}
+// Base WebSocket URL, can be overridden in environment
+const WS_URL = process.env.REACT_APP_WS_URL || 'http://localhost:3001';
 
-class WebSocketService {
-  private socket: WebSocket | null = null;
-  private listeners: Record<WebSocketMessageType, Function[]> = {
-    'QUESTION_UPDATE': [],
-    'TIMER_UPDATE': [],
-    'PLAYER_UPDATE': [],
-    'CATEGORY_SELECT': [],
-    'ROUND_UPDATE': []
-  };
-
-  connect(url: string): Promise<void> {
-    return new Promise((resolve, reject) => {
-      try {
-        this.socket = new WebSocket(url);
-        
-        this.socket.onopen = () => {
-          console.log('WebSocket connection established');
-          resolve();
-        };
-        
-        this.socket.onmessage = (event) => {
-          try {
-            const message: WebSocketMessage = JSON.parse(event.data);
-            this.handleMessage(message);
-          } catch (error) {
-            console.error('Error parsing WebSocket message:', error);
-          }
-        };
-        
-        this.socket.onerror = (error) => {
-          console.error('WebSocket error:', error);
-          reject(error);
-        };
-        
-        this.socket.onclose = () => {
-          console.log('WebSocket connection closed');
-          // Attempt to reconnect after a delay
-          setTimeout(() => {
-            if (this.socket?.readyState === WebSocket.CLOSED) {
-              this.connect(url);
-            }
-          }, 5000);
-        };
-        
-      } catch (error) {
-        console.error('Failed to create WebSocket connection:', error);
-        reject(error);
+// Initialize and export WebSocket service
+const websocketService = {
+  /**
+   * Initialize the WebSocket connection
+   * @param mockMode Enable mock mode for development without a real server
+   */
+  init: (mockMode = false) => {
+    try {
+      if (mockMode) {
+        debugLog('WebSocket initializing in mock mode');
+        socketCore.mockMode = true;
+        return;
       }
-    });
-  }
 
-  disconnect(): void {
-    if (this.socket && this.socket.readyState === WebSocket.OPEN) {
-      this.socket.close();
-      this.socket = null;
-    }
-  }
-
-  addListener(type: WebSocketMessageType, callback: Function): void {
-    if (!this.listeners[type]) {
-      this.listeners[type] = [];
-    }
-    this.listeners[type].push(callback);
-  }
-
-  removeListener(type: WebSocketMessageType, callback: Function): void {
-    if (this.listeners[type]) {
-      this.listeners[type] = this.listeners[type].filter(cb => cb !== callback);
-    }
-  }
-
-  private handleMessage(message: WebSocketMessage): void {
-    const { type, data } = message;
-    
-    if (this.listeners[type]) {
-      this.listeners[type].forEach(callback => {
-        try {
-          callback(data);
-        } catch (error) {
-          console.error(`Error in WebSocket listener for ${type}:`, error);
-        }
+      socketCore.init(WS_URL, {
+        reconnectionAttempts: 5,
+        reconnectionDelay: 2000,
+        autoConnect: true,
+        transports: ['websocket', 'polling']
       });
+      
+      debugLog(`WebSocket initialized with URL: ${WS_URL}`);
+    } catch (error) {
+      console.error('Failed to initialize WebSocket:', error);
+      toast.error('Failed to initialize WebSocket connection');
     }
-  }
-}
+  },
 
-// Create a singleton instance
-export const websocketService = new WebSocketService();
+  /**
+   * Get the connection status
+   */
+  isConnected: () => {
+    return socketCore.connected;
+  },
+
+  /**
+   * Force a reconnection attempt
+   */
+  reconnect: () => {
+    socketCore.reconnect();
+    toast.info('Attempting to reconnect WebSocket...');
+  },
+
+  /**
+   * Enable or disable mock mode
+   */
+  setMockMode: (enabled: boolean) => {
+    socketCore.mockMode = enabled;
+    
+    if (enabled) {
+      toast.success('WebSocket mock mode enabled');
+    } else {
+      toast.info('WebSocket mock mode disabled, using real connection');
+      socketCore.reconnect();
+    }
+  },
+
+  /**
+   * Connect to a specific URL
+   */
+  connect: (url?: string) => {
+    const targetUrl = url || WS_URL;
+    socketCore.init(targetUrl, {
+      reconnectionAttempts: 5,
+      reconnectionDelay: 2000,
+      autoConnect: true,
+      transports: ['websocket', 'polling']
+    });
+    
+    toast.info(`Connecting to WebSocket server at ${targetUrl}`);
+  }
+};
+
+export default websocketService;

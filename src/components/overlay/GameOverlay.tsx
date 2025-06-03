@@ -1,102 +1,181 @@
 
 import React, { useEffect, useState } from 'react';
-import { Player } from '@/types/gameTypes';
-import { Timer } from './Timer';
-import { PlayerCamera } from './PlayerCamera';
-import { QuestionDisplay } from './QuestionDisplay';
-import { CategoryTable } from './CategoryTable';
-import { Logo } from './Logo';
-import './overlay.css';
+import { useGame } from '@/context/GameContext';
+import { useSocket } from '@/context/SocketContext';
+import { motion, AnimatePresence } from 'framer-motion';
+import PlayerCameraGrid from './components/PlayerCameraGrid';
+import QuestionDisplay from './components/QuestionDisplay';
+import HostCamera from './components/HostCamera';
+import CategoryTable from './components/CategoryTable';
+import FortuneWheel from './components/FortuneWheel';
+import { RoundType, Player, Question } from '@/types/gameTypes';
 
 interface GameOverlayProps {
   roundTitle?: string;
   currentTime?: number;
   maxTime?: number;
   players?: Player[];
-  question?: string;
+  question?: Question | null;
+  hint?: string;
+  showHint?: boolean;
   showCategoryTable?: boolean;
   categories?: string[];
   difficulties?: number[];
   selectedCategory?: string;
   selectedDifficulty?: number;
   timerPulsing?: boolean;
+  hostCameraUrl?: string;
+  showHostCamera?: boolean;
+  broadcastBarText?: string;
+  broadcastBarEnabled?: boolean;
+  broadcastBarPosition?: 'top' | 'bottom';
+  broadcastBarColor?: string;
+  broadcastBarTextColor?: string;
+  broadcastBarAnimation?: 'slide' | 'fade' | 'static';
+  broadcastBarSpeed?: number;
 }
 
-export const GameOverlay: React.FC<GameOverlayProps> = ({
+export function GameOverlay({
   roundTitle = "RUNDA 1 – ZRÓŻNICOWANA WIEDZA",
   currentTime = 30,
   maxTime = 30,
   players = [],
-  question = "",
+  question = null,
+  hint = "",
+  showHint = false,
   showCategoryTable = true,
-  categories = ["MEMY", "TRENDY", "TWITCH", "INTERNET", "CIEKAWOSTKI"],
-  difficulties = [10, 20, 30],
+  categories = [],
+  difficulties = [],
   selectedCategory = "",
   selectedDifficulty = 0,
   timerPulsing = false,
-}) => {
-  const [time, setTime] = useState(currentTime);
-  
-  // Split players into top and bottom rows
-  const topRowPlayers = players.slice(0, 5);
-  const bottomRowPlayers = players.slice(5, 10);
-  
+  hostCameraUrl = "",
+  showHostCamera = true,
+  broadcastBarText = "",
+  broadcastBarEnabled = false,
+  broadcastBarPosition = 'bottom',
+  broadcastBarColor = '#000000',
+  broadcastBarTextColor = '#ffffff',
+  broadcastBarAnimation = 'slide',
+  broadcastBarSpeed = 5
+}: GameOverlayProps) {
+  const { state } = useGame();
+  const { connected } = useSocket();
+  const [currentLayout, setCurrentLayout] = useState<RoundType>('knowledge');
+
   useEffect(() => {
-    setTime(currentTime);
-  }, [currentTime]);
+    if (state.currentRound) {
+      setCurrentLayout(state.currentRound);
+    }
+  }, [state.currentRound]);
+
+  // Use timeRemaining from state if available, otherwise use props
+  const displayTime = state.timeRemaining !== undefined ? state.timeRemaining : currentTime;
+
+  const activePlayers = players.filter(p => !p.eliminated);
+  const topPlayers = activePlayers.slice(0, Math.ceil(activePlayers.length / 2));
+  const bottomPlayers = activePlayers.slice(Math.ceil(activePlayers.length / 2));
 
   return (
-    <div className="game-overlay">
-      {/* Round Title */}
-      <div className="round-title neon-text">
-        {roundTitle}
+    <div className="w-full h-screen bg-gradient-to-b from-gameshow-background to-gameshow-background/80 relative overflow-hidden">
+      {/* Connection status indicator */}
+      <div className={`absolute top-4 right-4 z-50 px-3 py-1 rounded-full text-sm font-medium ${
+        connected ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'
+      }`}>
+        {connected ? 'LIVE' : 'OFFLINE'}
       </div>
-      
-      {/* Logo */}
-      <Logo />
-      
-      {/* Timer */}
-      <Timer 
-        currentTime={time} 
-        maxTime={maxTime} 
-        isPulsing={timerPulsing}
-      />
-      
-      {/* Top Row Players */}
-      <div className="player-row top-row">
-        {topRowPlayers.map((player, index) => (
-          <PlayerCamera 
-            key={player.id || index}
-            player={player}
-            position="top"
+
+      {/* Layout based on current round */}
+      <div className="h-full flex flex-col">
+        {/* Top player row - 360px height */}
+        <div className="h-[360px] flex justify-center items-center p-4">
+          <PlayerCameraGrid 
+            players={topPlayers}
+            isTopRow={true}
           />
-        ))}
+        </div>
+
+        {/* Middle section - Host, Question, Category/Wheel - 360px height */}
+        <div className="h-[360px] flex items-center p-4">
+          {/* Host camera - left side */}
+          <div className="w-[384px] h-full">
+            <HostCamera url={hostCameraUrl} />
+          </div>
+
+          {/* Center content - Question display */}
+          <div className="flex-1 h-full mx-4">
+            <QuestionDisplay 
+              question={question || state.currentQuestion}
+              round={currentLayout}
+            />
+          </div>
+
+          {/* Right side - Category table or Fortune Wheel */}
+          <div className="w-[384px] h-full">
+            <AnimatePresence mode="wait">
+              {currentLayout === 'wheel' ? (
+                <motion.div
+                  key="wheel"
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.8 }}
+                  className="h-full"
+                >
+                  <FortuneWheel 
+                    spinning={state.wheelSpinning}
+                    selectedCategory={selectedCategory || state.selectedCategory}
+                  />
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="categories"
+                  initial={{ opacity: 0, x: 50 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: 50 }}
+                  className="h-full"
+                >
+                  <CategoryTable round={currentLayout} />
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        </div>
+
+        {/* Bottom player row - 360px height */}
+        <div className="h-[360px] flex justify-center items-center p-4">
+          <PlayerCameraGrid 
+            players={bottomPlayers}
+            isTopRow={false}
+          />
+        </div>
       </div>
-      
-      {/* Center Content */}
-      <div className="center-content">
-        {showCategoryTable ? (
-          <CategoryTable 
-            categories={categories}
-            difficulties={difficulties}
-            selectedCategory={selectedCategory}
-            selectedDifficulty={selectedDifficulty}
-          />
-        ) : (
-          <QuestionDisplay question={question} />
+
+      {/* Overlay effects and animations */}
+      <div className="absolute inset-0 pointer-events-none">
+        {/* Round indicator */}
+        <div className="absolute top-8 left-8 bg-gameshow-primary/20 backdrop-blur-sm px-4 py-2 rounded-lg">
+          <span className="text-gameshow-text font-bold">
+            {roundTitle}
+          </span>
+        </div>
+
+        {/* Timer display (if active) */}
+        {displayTime && displayTime > 0 && (
+          <div className="absolute top-8 left-1/2 transform -translate-x-1/2">
+            <motion.div
+              className="bg-red-500/20 backdrop-blur-sm px-6 py-3 rounded-lg border border-red-500"
+              animate={{ scale: displayTime <= 5 ? [1, 1.1, 1] : 1 }}
+              transition={{ duration: 0.5, repeat: displayTime <= 5 ? Infinity : 0 }}
+            >
+              <span className="text-red-400 font-bold text-2xl">
+                {Math.ceil(displayTime)}
+              </span>
+            </motion.div>
+          </div>
         )}
-      </div>
-      
-      {/* Bottom Row Players */}
-      <div className="player-row bottom-row">
-        {bottomRowPlayers.map((player, index) => (
-          <PlayerCamera 
-            key={player.id || index}
-            player={player}
-            position="bottom"
-          />
-        ))}
       </div>
     </div>
   );
-};
+}
+
+export default GameOverlay;

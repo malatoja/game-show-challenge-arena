@@ -2,384 +2,609 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Switch } from '@/components/ui/switch';
 import { toast } from 'sonner';
+import { 
+  Clock, 
+  AlertCircle,
+  Activity,
+  Sparkles,
+  Play,
+  Pause,
+  RotateCw,
+  Check,
+  X
+} from 'lucide-react';
+
+type AutomationRule = {
+  id: string;
+  name: string;
+  trigger: string;
+  action: string;
+  enabled: boolean;
+  condition?: string;
+};
 
 export const AutomationTab = () => {
-  const [streamerBotConnected, setStreamerBotConnected] = useState(false);
-  const [twitchConnected, setTwitchConnected] = useState(false);
-  const [discordConnected, setDiscordConnected] = useState(false);
-  
-  const [streamerBotSettings, setStreamerBotSettings] = useState({
-    ip: '127.0.0.1',
-    port: '8080',
-    password: ''
-  });
-  
-  const [timerSettings, setTimerSettings] = useState({
-    defaultTime: 30,
-    autoStart: false,
-    soundEnabled: true
-  });
-  
-  const [twitchCommands, setTwitchCommands] = useState([
-    { command: '!pytanie', action: 'Pokaż aktualne pytanie', enabled: true },
-    { command: '!typowanie', action: 'Rozpocznij głosowanie na odpowiedź', enabled: false },
-    { command: '!ranking', action: 'Pokaż ranking', enabled: true },
-    { command: '!karta', action: 'Użyj karty specjalnej', enabled: false },
-  ]);
-
-  const handleConnectStreamerBot = () => {
-    if (!streamerBotSettings.ip || !streamerBotSettings.port) {
-      toast.error('Wypełnij wszystkie wymagane pola');
-      return;
+  const [automationRules, setAutomationRules] = useState<AutomationRule[]>([
+    {
+      id: '1',
+      name: 'Automatyczny timer',
+      trigger: 'questionDisplay',
+      action: 'startTimer',
+      enabled: true
+    },
+    {
+      id: '2',
+      name: 'Dźwięk po czasie',
+      trigger: 'timerEnd',
+      action: 'playSound',
+      enabled: true
+    },
+    {
+      id: '3',
+      name: 'Następne pytanie po poprawnej odpowiedzi',
+      trigger: 'correctAnswer',
+      action: 'nextQuestion',
+      enabled: false,
+      condition: 'roundType=speed'
     }
+  ]);
+  
+  const [activeIntegrations, setActiveIntegrations] = useState({
+    discord: true,
+    twitch: false,
+    obs: true,
+    streamElements: false
+  });
+  
+  const [editingRule, setEditingRule] = useState<AutomationRule | null>(null);
+  
+  const triggerTypes = [
+    { id: 'questionDisplay', name: 'Wyświetlenie pytania' },
+    { id: 'timerEnd', name: 'Koniec odliczania' },
+    { id: 'correctAnswer', name: 'Poprawna odpowiedź' },
+    { id: 'incorrectAnswer', name: 'Błędna odpowiedź' },
+    { id: 'playerEliminated', name: 'Eliminacja gracza' },
+    { id: 'roundStart', name: 'Początek rundy' },
+    { id: 'roundEnd', name: 'Koniec rundy' },
+    { id: 'cardUsed', name: 'Użycie karty' },
+    { id: 'wheelSpin', name: 'Kręcenie kołem' }
+  ];
+  
+  const actionTypes = [
+    { id: 'startTimer', name: 'Uruchom timer' },
+    { id: 'stopTimer', name: 'Zatrzymaj timer' },
+    { id: 'nextQuestion', name: 'Następne pytanie' },
+    { id: 'playSound', name: 'Odtwórz dźwięk' },
+    { id: 'showAnimation', name: 'Pokaż animację' },
+    { id: 'updateInfoBar', name: 'Aktualizuj pasek info' },
+    { id: 'sendToDiscord', name: 'Wyślij do Discord' },
+    { id: 'sendToTwitch', name: 'Wyślij do Twitch' },
+    { id: 'triggerOBS', name: 'Steruj OBS' }
+  ];
+  
+  const handleSaveSettings = () => {
+    try {
+      localStorage.setItem('automationRules', JSON.stringify(automationRules));
+      localStorage.setItem('activeIntegrations', JSON.stringify(activeIntegrations));
+      toast.success('Ustawienia automatyzacji zostały zapisane');
+    } catch (error) {
+      console.error('Error saving automation settings:', error);
+      toast.error('Wystąpił błąd podczas zapisywania ustawień');
+    }
+  };
+  
+  const handleToggleRule = (ruleId: string) => {
+    setAutomationRules(automationRules.map(rule => 
+      rule.id === ruleId ? { ...rule, enabled: !rule.enabled } : rule
+    ));
+  };
+  
+  const handleAddRule = () => {
+    const newRule: AutomationRule = {
+      id: Date.now().toString(),
+      name: 'Nowa reguła',
+      trigger: 'questionDisplay',
+      action: 'startTimer',
+      enabled: false
+    };
     
-    // In a real implementation, this would connect to Streamer.bot
-    setStreamerBotConnected(true);
-    toast.success('Połączono z Streamer.bot');
+    setAutomationRules([...automationRules, newRule]);
+    setEditingRule(newRule);
   };
   
-  const handleDisconnectStreamerBot = () => {
-    setStreamerBotConnected(false);
-    toast.info('Rozłączono z Streamer.bot');
+  const handleDeleteRule = (ruleId: string) => {
+    if (confirm('Czy na pewno chcesz usunąć tę regułę automatyzacji?')) {
+      setAutomationRules(automationRules.filter(rule => rule.id !== ruleId));
+      toast.success('Reguła została usunięta');
+    }
   };
   
-  const handleConnectTwitch = () => {
-    // In a real implementation, this would connect to Twitch
-    setTwitchConnected(true);
-    toast.success('Połączono z Twitch');
-  };
-  
-  const handleConnectDiscord = () => {
-    // In a real implementation, this would connect to Discord
-    setDiscordConnected(true);
-    toast.success('Połączono z Discord');
-  };
-  
-  const handleSaveTimerSettings = () => {
-    toast.success('Zapisano ustawienia timera');
-  };
-  
-  const handleToggleCommand = (index: number) => {
-    const updatedCommands = [...twitchCommands];
-    updatedCommands[index].enabled = !updatedCommands[index].enabled;
-    setTwitchCommands(updatedCommands);
+  const handleSaveRule = () => {
+    if (!editingRule) return;
     
-    toast.success(
-      updatedCommands[index].enabled
-        ? `Włączono komendę ${updatedCommands[index].command}`
-        : `Wyłączono komendę ${updatedCommands[index].command}`
-    );
+    setAutomationRules(automationRules.map(rule => 
+      rule.id === editingRule.id ? editingRule : rule
+    ));
+    
+    setEditingRule(null);
+    toast.success('Reguła została zaktualizowana');
   };
-
+  
+  const handleToggleIntegration = (integration: keyof typeof activeIntegrations) => {
+    setActiveIntegrations({
+      ...activeIntegrations,
+      [integration]: !activeIntegrations[integration]
+    });
+  };
+  
+  const handleTestAllRules = () => {
+    toast.info('Testowanie wszystkich włączonych reguł automatyzacji...');
+    
+    // Symulacja testu
+    setTimeout(() => {
+      const enabledRules = automationRules.filter(rule => rule.enabled).length;
+      toast.success(`Przetestowano ${enabledRules} reguł automatyzacji`);
+    }, 2000);
+  };
+  
   return (
     <div>
-      <h2 className="text-2xl font-bold mb-4">Automatyzacja i Integracja</h2>
+      <h2 className="text-2xl font-bold mb-4">Automatyzacja i integracje</h2>
       <p className="text-gray-600 mb-6">
-        Łączenie z botami, OBS, Discordem i czatem Twitcha.
+        Konfiguracja automatycznych akcji i integracji z zewnętrznymi platformami.
       </p>
-
+      
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Streamer.bot integration */}
-        <div className="space-y-4">
-          <div className="bg-gameshow-background/20 p-4 rounded-lg">
-            <h3 className="text-lg font-medium mb-3">Streamer.bot</h3>
+        {/* Reguły automatyzacji */}
+        <div className="space-y-6">
+          <div className="bg-gameshow-background/30 p-4 rounded-lg">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="font-medium">Reguły automatyzacji</h3>
+              <Button size="sm" onClick={handleAddRule}>
+                Dodaj regułę
+              </Button>
+            </div>
             
-            <div className="space-y-3">
-              {streamerBotConnected ? (
-                <>
-                  <div className="flex items-center gap-2 mb-4">
-                    <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                    <span>Połączony</span>
-                  </div>
-                  
-                  <div className="space-y-3">
+            {automationRules.length === 0 ? (
+              <div className="text-center p-6 text-gameshow-muted">
+                Brak zdefiniowanych reguł automatyzacji
+              </div>
+            ) : (
+              <div className="space-y-2 max-h-96 overflow-y-auto">
+                {automationRules.map((rule) => (
+                  <div 
+                    key={rule.id}
+                    className="flex items-center justify-between p-3 bg-gameshow-background/20 rounded"
+                  >
                     <div>
-                      <label className="block text-sm mb-1">Akcja: Start rundy</label>
-                      <select className="w-full p-2 rounded bg-gameshow-background text-gameshow-text">
-                        <option value="">Nie przypisano</option>
-                        <option value="action1">Zmień scenę na Rundę 1</option>
-                        <option value="action2">Włącz intro</option>
-                      </select>
+                      <div className="font-medium">{rule.name}</div>
+                      <div className="text-xs text-gameshow-muted flex items-center gap-1">
+                        <span>Wyzwalacz: {triggerTypes.find(t => t.id === rule.trigger)?.name || rule.trigger}</span>
+                        {rule.condition && (
+                          <>
+                            <AlertCircle size={10} className="mx-1" />
+                            <span>z warunkiem</span>
+                          </>
+                        )}
+                      </div>
                     </div>
                     
-                    <div>
-                      <label className="block text-sm mb-1">Akcja: Pytanie</label>
-                      <select className="w-full p-2 rounded bg-gameshow-background text-gameshow-text">
-                        <option value="">Nie przypisano</option>
-                        <option value="action1">Zmień scenę na pytanie</option>
-                        <option value="action2">Pokaż pytanie na ekranie</option>
-                      </select>
-                    </div>
-                    
-                    <div>
-                      <label className="block text-sm mb-1">Akcja: Zakończenie rundy</label>
-                      <select className="w-full p-2 rounded bg-gameshow-background text-gameshow-text">
-                        <option value="">Nie przypisano</option>
-                        <option value="action1">Zmień scenę na wyniki</option>
-                        <option value="action2">Pokaż ranking</option>
-                      </select>
-                    </div>
-                    
-                    <div className="pt-3">
-                      <Button variant="outline" onClick={handleDisconnectStreamerBot}>
-                        Rozłącz
+                    <div className="flex items-center gap-2">
+                      <Switch 
+                        checked={rule.enabled}
+                        onCheckedChange={() => handleToggleRule(rule.id)}
+                      />
+                      
+                      <Button 
+                        size="sm"
+                        variant="outline"
+                        onClick={() => setEditingRule(rule)}
+                      >
+                        Edytuj
                       </Button>
                     </div>
                   </div>
-                </>
-              ) : (
-                <>
-                  <p className="text-sm mb-3">
-                    Połącz z aplikacją Streamer.bot, aby sterować scenami OBS i innymi akcjami.
-                  </p>
-                  
-                  <div className="space-y-3">
-                    <div>
-                      <label className="block text-sm mb-1">IP Address</label>
-                      <Input
-                        value={streamerBotSettings.ip}
-                        onChange={(e) => setStreamerBotSettings({...streamerBotSettings, ip: e.target.value})}
-                        placeholder="np. 127.0.0.1"
-                      />
-                    </div>
-                    
-                    <div>
-                      <label className="block text-sm mb-1">Port</label>
-                      <Input
-                        value={streamerBotSettings.port}
-                        onChange={(e) => setStreamerBotSettings({...streamerBotSettings, port: e.target.value})}
-                        placeholder="np. 8080"
-                      />
-                    </div>
-                    
-                    <div>
-                      <label className="block text-sm mb-1">Hasło (opcjonalnie)</label>
-                      <Input
-                        type="password"
-                        value={streamerBotSettings.password}
-                        onChange={(e) => setStreamerBotSettings({...streamerBotSettings, password: e.target.value})}
-                      />
-                    </div>
-                    
-                    <div className="pt-3">
-                      <Button onClick={handleConnectStreamerBot}>
-                        Połącz
-                      </Button>
-                    </div>
-                  </div>
-                </>
-              )}
+                ))}
+              </div>
+            )}
+            
+            <div className="mt-4">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="w-full"
+                onClick={handleTestAllRules}
+              >
+                Testuj wszystkie włączone reguły
+              </Button>
             </div>
           </div>
           
-          <div className="bg-gameshow-background/20 p-4 rounded-lg">
-            <h3 className="text-lg font-medium mb-3">Timer</h3>
-            
-            <div className="space-y-3">
-              <div>
-                <label className="block text-sm mb-1">Domyślny czas (sekundy)</label>
-                <Input
-                  type="number"
-                  min="5"
-                  max="300"
-                  value={timerSettings.defaultTime}
-                  onChange={(e) => setTimerSettings({
-                    ...timerSettings,
-                    defaultTime: parseInt(e.target.value)
-                  })}
-                />
-              </div>
+          {/* Edycja reguły */}
+          {editingRule && (
+            <div className="bg-gameshow-background/30 p-4 rounded-lg">
+              <h3 className="font-medium mb-4">Edycja reguły</h3>
               
-              <div className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  checked={timerSettings.autoStart}
-                  onChange={() => setTimerSettings({
-                    ...timerSettings,
-                    autoStart: !timerSettings.autoStart
-                  })}
-                  id="autoStartTimer"
-                />
-                <label htmlFor="autoStartTimer">
-                  Automatycznie uruchamiaj timer po wybraniu pytania
-                </label>
-              </div>
-              
-              <div className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  checked={timerSettings.soundEnabled}
-                  onChange={() => setTimerSettings({
-                    ...timerSettings,
-                    soundEnabled: !timerSettings.soundEnabled
-                  })}
-                  id="timerSound"
-                />
-                <label htmlFor="timerSound">
-                  Dźwięk końca czasu
-                </label>
-              </div>
-              
-              <div className="pt-3">
-                <Button onClick={handleSaveTimerSettings}>
-                  Zapisz ustawienia
-                </Button>
-                <Button variant="outline" className="ml-2">
-                  Testuj timer
-                </Button>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm mb-1">Nazwa reguły</label>
+                  <Input
+                    value={editingRule.name}
+                    onChange={(e) => setEditingRule({ ...editingRule, name: e.target.value })}
+                    placeholder="np. Automatyczny timer"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm mb-1">Wyzwalacz</label>
+                  <select
+                    className="w-full p-2 rounded bg-gameshow-background"
+                    value={editingRule.trigger}
+                    onChange={(e) => setEditingRule({ ...editingRule, trigger: e.target.value })}
+                  >
+                    {triggerTypes.map((trigger) => (
+                      <option key={trigger.id} value={trigger.id}>
+                        {trigger.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                
+                <div>
+                  <label className="block text-sm mb-1">Akcja</label>
+                  <select
+                    className="w-full p-2 rounded bg-gameshow-background"
+                    value={editingRule.action}
+                    onChange={(e) => setEditingRule({ ...editingRule, action: e.target.value })}
+                  >
+                    {actionTypes.map((action) => (
+                      <option key={action.id} value={action.id}>
+                        {action.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                
+                <div>
+                  <label className="flex items-center gap-2 text-sm mb-1">
+                    <span>Warunek (opcjonalnie)</span>
+                    <AlertCircle size={14} className="text-gameshow-muted" />
+                  </label>
+                  <Input
+                    value={editingRule.condition || ''}
+                    onChange={(e) => setEditingRule({ ...editingRule, condition: e.target.value })}
+                    placeholder="np. roundType=speed"
+                  />
+                  <p className="text-xs text-gameshow-muted mt-1">
+                    Format: nazwa_zmiennej=wartość, np. roundType=speed
+                  </p>
+                </div>
+                
+                <div className="flex items-center justify-between">
+                  <div>
+                    <label className="flex items-center gap-2">
+                      <Switch
+                        checked={editingRule.enabled}
+                        onCheckedChange={(checked) => setEditingRule({ ...editingRule, enabled: checked })}
+                      />
+                      <span>Włączona</span>
+                    </label>
+                  </div>
+                  
+                  <Button 
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleDeleteRule(editingRule.id)}
+                    className="text-red-500"
+                  >
+                    Usuń
+                  </Button>
+                </div>
+                
+                <div className="pt-2 flex justify-end gap-2">
+                  <Button 
+                    variant="outline"
+                    onClick={() => setEditingRule(null)}
+                  >
+                    Anuluj
+                  </Button>
+                  
+                  <Button onClick={handleSaveRule}>
+                    Zapisz regułę
+                  </Button>
+                </div>
               </div>
             </div>
-          </div>
+          )}
         </div>
         
-        {/* Platform integrations */}
-        <div className="space-y-4">
-          <div className="bg-gameshow-background/20 p-4 rounded-lg">
-            <h3 className="text-lg font-medium mb-3">Twitch</h3>
+        {/* Integracje */}
+        <div className="space-y-6">
+          <div className="bg-gameshow-background/30 p-4 rounded-lg">
+            <h3 className="font-medium mb-4">Dostępne integracje</h3>
             
-            {twitchConnected ? (
-              <>
-                <div className="flex items-center gap-2 mb-4">
-                  <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                  <span>Połączony</span>
-                </div>
-                
-                <h4 className="font-medium mb-2">Komendy czatu</h4>
-                
-                <div className="space-y-2 max-h-60 overflow-y-auto">
-                  {twitchCommands.map((command, index) => (
-                    <div 
-                      key={index} 
-                      className="flex items-center justify-between p-2 bg-gameshow-background/20 rounded"
-                    >
-                      <div>
-                        <div className="font-mono">{command.command}</div>
-                        <div className="text-xs text-gray-500">{command.action}</div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <div className={`w-2 h-2 rounded-full ${command.enabled ? 'bg-green-500' : 'bg-red-500'}`}></div>
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          onClick={() => handleToggleCommand(index)}
-                        >
-                          {command.enabled ? 'Wyłącz' : 'Włącz'}
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                
-                <div className="mt-4">
-                  <Button variant="outline" size="sm">
-                    Dodaj komendę
-                  </Button>
-                  <Button variant="outline" size="sm" className="ml-2">
-                    Rozłącz
-                  </Button>
-                </div>
-              </>
-            ) : (
-              <>
-                <p className="text-sm mb-3">
-                  Połącz z kontem Twitch, aby zintegrować czat i powiadomienia.
-                </p>
-                <Button onClick={handleConnectTwitch}>
-                  Połącz z Twitch
-                </Button>
-              </>
-            )}
-          </div>
-          
-          <div className="bg-gameshow-background/20 p-4 rounded-lg">
-            <h3 className="text-lg font-medium mb-3">Discord</h3>
-            
-            {discordConnected ? (
-              <>
-                <div className="flex items-center gap-2 mb-4">
-                  <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                  <span>Połączony</span>
-                </div>
-                
-                <div className="space-y-3">
+            <div className="space-y-4">
+              {/* Discord integration */}
+              <div className="flex items-center justify-between p-3 bg-gameshow-background/20 rounded">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 bg-[#5865F2] rounded-full flex items-center justify-center text-white font-bold">
+                    D
+                  </div>
                   <div>
-                    <label className="block text-sm mb-1">Kanał powiadomień</label>
-                    <select className="w-full p-2 rounded bg-gameshow-background text-gameshow-text">
-                      <option value="general">#general</option>
-                      <option value="quiz-show">#quiz-show</option>
-                    </select>
-                  </div>
-                  
-                  <div className="flex items-center gap-2">
-                    <input type="checkbox" id="notifyGameStart" defaultChecked />
-                    <label htmlFor="notifyGameStart">
-                      Powiadomienie o rozpoczęciu gry
-                    </label>
-                  </div>
-                  
-                  <div className="flex items-center gap-2">
-                    <input type="checkbox" id="notifyResults" defaultChecked />
-                    <label htmlFor="notifyResults">
-                      Publikuj wyniki na kanale
-                    </label>
+                    <div className="font-medium">Discord</div>
+                    <div className="text-xs text-gameshow-muted">
+                      {activeIntegrations.discord ? 'Połączono' : 'Nie połączono'}
+                    </div>
                   </div>
                 </div>
                 
-                <div className="mt-4">
-                  <Button variant="outline" size="sm">
-                    Rozłącz
+                <div className="flex items-center gap-2">
+                  <Switch
+                    checked={activeIntegrations.discord}
+                    onCheckedChange={() => handleToggleIntegration('discord')}
+                  />
+                  
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => toast.info('Konfiguracja Discord będzie dostępna wkrótce')}
+                  >
+                    Konfiguruj
                   </Button>
                 </div>
-              </>
-            ) : (
-              <>
-                <p className="text-sm mb-3">
-                  Połącz z serwerem Discord, aby zintegrować powiadomienia i komendy.
-                </p>
-                <Button onClick={handleConnectDiscord}>
-                  Połącz z Discord
-                </Button>
-              </>
-            )}
+              </div>
+              
+              {/* Twitch integration */}
+              <div className="flex items-center justify-between p-3 bg-gameshow-background/20 rounded">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 bg-[#9146FF] rounded-full flex items-center justify-center text-white font-bold">
+                    T
+                  </div>
+                  <div>
+                    <div className="font-medium">Twitch</div>
+                    <div className="text-xs text-gameshow-muted">
+                      {activeIntegrations.twitch ? 'Połączono' : 'Nie połączono'}
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="flex items-center gap-2">
+                  <Switch
+                    checked={activeIntegrations.twitch}
+                    onCheckedChange={() => handleToggleIntegration('twitch')}
+                  />
+                  
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => toast.info('Konfiguracja Twitch będzie dostępna wkrótce')}
+                  >
+                    Konfiguruj
+                  </Button>
+                </div>
+              </div>
+              
+              {/* OBS integration */}
+              <div className="flex items-center justify-between p-3 bg-gameshow-background/20 rounded">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 bg-[#302E31] rounded-full flex items-center justify-center text-white font-bold">
+                    O
+                  </div>
+                  <div>
+                    <div className="font-medium">OBS</div>
+                    <div className="text-xs text-gameshow-muted">
+                      {activeIntegrations.obs ? 'Połączono' : 'Nie połączono'}
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="flex items-center gap-2">
+                  <Switch
+                    checked={activeIntegrations.obs}
+                    onCheckedChange={() => handleToggleIntegration('obs')}
+                  />
+                  
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => toast.info('Konfiguracja OBS będzie dostępna wkrótce')}
+                  >
+                    Konfiguruj
+                  </Button>
+                </div>
+              </div>
+              
+              {/* StreamElements integration */}
+              <div className="flex items-center justify-between p-3 bg-gameshow-background/20 rounded">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 bg-[#00C8C8] rounded-full flex items-center justify-center text-white font-bold">
+                    S
+                  </div>
+                  <div>
+                    <div className="font-medium">StreamElements</div>
+                    <div className="text-xs text-gameshow-muted">
+                      {activeIntegrations.streamElements ? 'Połączono' : 'Nie połączono'}
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="flex items-center gap-2">
+                  <Switch
+                    checked={activeIntegrations.streamElements}
+                    onCheckedChange={() => handleToggleIntegration('streamElements')}
+                  />
+                  
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => toast.info('Konfiguracja StreamElements będzie dostępna wkrótce')}
+                  >
+                    Konfiguruj
+                  </Button>
+                </div>
+              </div>
+            </div>
           </div>
           
-          <div className="bg-gameshow-background/20 p-4 rounded-lg">
-            <h3 className="text-lg font-medium mb-3">Automatyczne wiadomości</h3>
+          <div className="bg-gameshow-background/30 p-4 rounded-lg">
+            <h3 className="font-medium mb-4">Typowe automatyzacje</h3>
             
             <div className="space-y-3">
-              <div>
-                <label className="block text-sm mb-1">Start rundy</label>
-                <Input
-                  placeholder="np. Rozpoczynamy rundę {round}!"
-                  defaultValue="Rozpoczynamy rundę {round}! Powodzenia wszystkim graczom."
-                />
+              <div className="p-3 bg-gameshow-background/20 rounded">
+                <div className="flex items-center gap-2 mb-1">
+                  <Clock size={16} className="text-gameshow-muted" />
+                  <h4 className="font-medium">Timer dla każdego pytania</h4>
+                </div>
+                <p className="text-sm text-gameshow-muted mb-2">
+                  Automatycznie uruchamia timer przy wyświetleniu pytania
+                </p>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => {
+                    const existingRule = automationRules.find(r => 
+                      r.trigger === 'questionDisplay' && r.action === 'startTimer'
+                    );
+                    
+                    if (existingRule) {
+                      setAutomationRules(automationRules.map(r => 
+                        r.id === existingRule.id ? {...r, enabled: true} : r
+                      ));
+                      toast.success('Włączono istniejącą regułę automatycznego timera');
+                    } else {
+                      const newRule = {
+                        id: Date.now().toString(),
+                        name: 'Automatyczny timer',
+                        trigger: 'questionDisplay',
+                        action: 'startTimer',
+                        enabled: true
+                      };
+                      setAutomationRules([...automationRules, newRule]);
+                      toast.success('Dodano regułę automatycznego timera');
+                    }
+                  }}
+                >
+                  Włącz
+                </Button>
               </div>
               
-              <div>
-                <label className="block text-sm mb-1">Poprawna odpowiedź</label>
-                <Input
-                  placeholder="np. {player} odpowiada poprawnie!"
-                  defaultValue="{player} odpowiada poprawnie i zdobywa {points} punktów!"
-                />
+              <div className="p-3 bg-gameshow-background/20 rounded">
+                <div className="flex items-center gap-2 mb-1">
+                  <Activity size={16} className="text-gameshow-muted" />
+                  <h4 className="font-medium">Automatyczne przejście po odpowiedzi</h4>
+                </div>
+                <p className="text-sm text-gameshow-muted mb-2">
+                  Przechodzi do następnego pytania po udzieleniu poprawnej odpowiedzi
+                </p>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => {
+                    const existingRule = automationRules.find(r => 
+                      r.trigger === 'correctAnswer' && r.action === 'nextQuestion'
+                    );
+                    
+                    if (existingRule) {
+                      setAutomationRules(automationRules.map(r => 
+                        r.id === existingRule.id ? {...r, enabled: true} : r
+                      ));
+                      toast.success('Włączono istniejącą regułę automatycznego przejścia');
+                    } else {
+                      const newRule = {
+                        id: Date.now().toString(),
+                        name: 'Auto przejście po poprawnej odpowiedzi',
+                        trigger: 'correctAnswer',
+                        action: 'nextQuestion',
+                        enabled: true
+                      };
+                      setAutomationRules([...automationRules, newRule]);
+                      toast.success('Dodano regułę automatycznego przejścia');
+                    }
+                  }}
+                >
+                  Włącz
+                </Button>
               </div>
               
-              <div>
-                <label className="block text-sm mb-1">Użycie karty</label>
-                <Input
-                  placeholder="np. {player} używa karty {card}!"
-                  defaultValue="{player} używa karty {card}! {effect}"
-                />
-              </div>
-              
-              <div className="pt-3">
-                <Button size="sm">
-                  Zapisz wiadomości
+              <div className="p-3 bg-gameshow-background/20 rounded">
+                <div className="flex items-center gap-2 mb-1">
+                  <Sparkles size={16} className="text-gameshow-muted" />
+                  <h4 className="font-medium">Automatyczne animacje</h4>
+                </div>
+                <p className="text-sm text-gameshow-muted mb-2">
+                  Pokazuje animacje po poprawnych/błędnych odpowiedziach
+                </p>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => toast.info('Ta funkcja będzie dostępna wkrótce')}
+                >
+                  Włącz
                 </Button>
               </div>
             </div>
           </div>
         </div>
+      </div>
+      
+      <div className="mt-6 bg-gameshow-background/30 p-4 rounded-lg">
+        <h3 className="font-medium mb-4">Status automatyzacji</h3>
+        
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="p-3 bg-gameshow-background/20 rounded">
+            <div className="flex justify-between items-center">
+              <h4 className="font-medium">System automatyzacji</h4>
+              <span className="text-green-500 flex items-center gap-1">
+                <span className="w-2 h-2 rounded-full bg-green-500"></span>
+                Aktywny
+              </span>
+            </div>
+            <p className="text-sm text-gameshow-muted mt-1">
+              {automationRules.filter(r => r.enabled).length} aktywnych reguł
+            </p>
+          </div>
+          
+          <div className="p-3 bg-gameshow-background/20 rounded">
+            <div className="flex justify-between items-center">
+              <h4 className="font-medium">Integracje</h4>
+              <span className="text-green-500 flex items-center gap-1">
+                <span className="w-2 h-2 rounded-full bg-green-500"></span>
+                Połączone
+              </span>
+            </div>
+            <p className="text-sm text-gameshow-muted mt-1">
+              {Object.values(activeIntegrations).filter(Boolean).length} aktywnych połączeń
+            </p>
+          </div>
+          
+          <div className="p-3 bg-gameshow-background/20 flex justify-between items-center">
+            <div>
+              <h4 className="font-medium">System automatyzacji</h4>
+              <p className="text-sm text-gameshow-muted mt-1">
+                Włącz lub wyłącz wszystkie automatyzacje
+              </p>
+            </div>
+            
+            <div className="flex gap-2">
+              <Button size="sm" variant="outline" className="flex items-center gap-1">
+                <Play size={14} />
+                <span>Start</span>
+              </Button>
+              <Button size="sm" variant="outline" className="flex items-center gap-1">
+                <Pause size={14} />
+                <span>Pauza</span>
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div className="mt-6 flex justify-end">
+        <Button onClick={handleSaveSettings}>
+          Zapisz ustawienia
+        </Button>
       </div>
     </div>
   );

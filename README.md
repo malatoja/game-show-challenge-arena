@@ -1,73 +1,62 @@
-# Welcome to your Lovable project
+# Welcome to Remix!
 
-## Project info
-
-**URL**: https://lovable.dev/projects/50ea122d-2c7b-4612-9804-5d4ff2de7f07
-
-## How can I edit this code?
-
-There are several ways of editing your application.
-
-**Use Lovable**
-
-Simply visit the [Lovable Project](https://lovable.dev/projects/50ea122d-2c7b-4612-9804-5d4ff2de7f07) and start prompting.
-
-Changes made via Lovable will be committed automatically to this repo.
-
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
+- [Remix Docs](https://remix.run/docs)
 
 ```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+npm install
+```
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+## Development
 
-# Step 3: Install the necessary dependencies.
-npm i
+From your terminal:
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+```sh
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+This starts your app in development mode, rebuilding assets on file changes.
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+## Deployment
 
-**Use GitHub Codespaces**
+First, build your app for production:
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+```sh
+npm run build
+```
 
-## What technologies are used for this project?
+Then run the app in production mode:
 
-This project is built with:
+```sh
+npm start
+```
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+Now you'll need to pick a host to deploy it to.
 
-## How can I deploy this project?
+### DIY
 
-Simply open [Lovable](https://lovable.dev/projects/50ea122d-2c7b-4612-9804-5d4ff2de7f07) and click on Share -> Publish.
+If you're familiar with deploying node applications, the built-in Remix app server is production-ready.
 
-## Can I connect a custom domain to my Lovable project?
+Make sure to deploy the output of `remix build`
 
-Yes, you can!
+- `build/`
+- `public/build/`
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+### Using a Template
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+When you ran `npx create-remix@latest` there were a few choices for hosting. You can run that again to create a new project, then copy over relevant code/assets from your current app to the new project that's pre-configured for your target server.
+
+Most importantly, this means everything in the `app/` directory, but if you've further customized your current application outside of there it may also include:
+
+- Any assets you've added/updated in `public/`
+- Any updated versions of root files such as `.eslintrc.js`, etc.
+
+```sh
+cd ..
+# create a new project, and pick a pre-configured host
+npx create-remix@latest
+cd my-new-remix-app
+# remove the new project's app (not the old one!)
+rm -rf app
+# copy your app over
+cp -R ../my-old-remix-app/app app
+```

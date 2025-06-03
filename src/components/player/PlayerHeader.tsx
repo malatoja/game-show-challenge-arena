@@ -3,7 +3,7 @@ import React from 'react';
 import { Player } from '@/types/gameTypes';
 import { Progress } from '@/components/ui/progress';
 import { Heart, Award } from 'lucide-react';
-import PlayerCardIndicator from '../players/PlayerCardIndicator';
+import { PlayerCardCollection } from '../players/PlayerCardIndicator';
 
 interface PlayerHeaderProps {
   player: Player;
@@ -53,7 +53,7 @@ const PlayerHeader: React.FC<PlayerHeaderProps> = ({ player }) => {
             {/* Cards */}
             <div className="flex items-center gap-2">
               <span className="text-sm text-gameshow-muted">Karty:</span>
-              <PlayerCardIndicator cards={player.cards} />
+              <PlayerCardCollection cards={player.cards} />
             </div>
           </div>
         </div>

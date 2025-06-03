@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useGame } from '@/context/GameContext';
 import { CardType, Player } from '@/types/gameTypes';
@@ -14,17 +13,37 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { toast } from 'sonner';
 import PlayerHeader from './PlayerHeader';
 import PlayerRoundContent from './PlayerRoundContent';
+import { PlayerRoundContentProps } from './PlayerRoundContentProps';
 import PlayerFooter from './PlayerFooter';
+import { useSocket } from '@/context/SocketContext';
 
 export function PlayerView({ playerId }: { playerId: string }) {
   const { state } = useGame();
-  const { currentRound, players, currentQuestion, wheelSpinning, roundEnded } = state;
+  const { currentRound, players, currentQuestion, wheelSpinning, roundActive } = state;
   const [selectedCard, setSelectedCard] = useState<CardType | null>(null);
   const [showCardAnimation, setShowCardAnimation] = useState(false);
   const [showCardDesc, setShowCardDesc] = useState(false);
   
+  // Socket integration
+  const { emit, on } = useSocket();
+  
   // Find this player
   const player = players.find(p => p.id === playerId);
+  
+  // Listen for card awards
+  useEffect(() => {
+    const unsubCardResolve = on('card:resolve', (data: { playerId: string, cardType: string, success: boolean }) => {
+      if (data.playerId === playerId && data.success) {
+        toast.success(`Karta ${CARD_DETAILS[data.cardType as CardType].name} została aktywowana!`, {
+          duration: 3000,
+        });
+      }
+    });
+    
+    return () => {
+      unsubCardResolve();
+    };
+  }, [playerId, on]);
   
   // Show card animation if player has just received a new card
   useEffect(() => {
@@ -55,6 +74,12 @@ export function PlayerView({ playerId }: { playerId: string }) {
     const audio = new Audio('/sounds/card_use.mp3');
     audio.play().catch(err => console.error("Error playing sound:", err));
     
+    // Emit socket event
+    emit('card:use', {
+      playerId: player.id,
+      cardType: cardType
+    });
+    
     toast(`Używasz karty: ${CARD_DETAILS[cardType].name}`, {
       description: "Poinformuj prowadzącego o chęci użycia karty.",
       duration: 5000,
@@ -67,6 +92,19 @@ export function PlayerView({ playerId }: { playerId: string }) {
     setTimeout(() => {
       setShowCardDesc(false);
     }, 5000);
+  };
+  
+  // Handle answer function to emit socket event
+  const handleAnswer = (isCorrect: boolean, answerIndex: number) => {
+    if (!player) return;
+    
+    emit('question:answer', {
+      playerId: player.id,
+      correct: isCorrect,
+      answerIndex: answerIndex
+    });
+    
+    // Let the host handle the game state update
   };
   
   if (!player) {
@@ -88,7 +126,7 @@ export function PlayerView({ playerId }: { playerId: string }) {
   }
   
   // If the round has ended, show a different view
-  if (roundEnded) {
+  if (!roundActive) {
     return (
       <div className="container mx-auto p-4 bg-gameshow-background min-h-screen flex items-center justify-center">
         <Card className="max-w-lg w-full bg-gameshow-card">
@@ -138,6 +176,7 @@ export function PlayerView({ playerId }: { playerId: string }) {
         currentRound={currentRound}
         currentQuestion={currentQuestion}
         wheelSpinning={wheelSpinning}
+        onAnswer={handleAnswer}
       />
       
       {/* Bottom section - Actions */}

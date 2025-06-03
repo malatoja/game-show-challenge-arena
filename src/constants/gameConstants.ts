@@ -1,131 +1,121 @@
 
-import { Card, CardType, Question, Answer } from "../types/gameTypes";
+import { CardType, Card, RoundType } from '../types/gameTypes';
 
-export const ROUND_TIME_LIMITS = {
-  knowledge: 30, // seconds
-  speed: 5,      // seconds
-  wheel: 20,     // seconds
-  standard: 30   // seconds
-};
+// Points per question
+export const MAX_POINTS_PER_QUESTION = 10;
 
-export const ROUND_NAMES = {
-  knowledge: "Zróżnicowana Wiedza z Polskiego Internetu",
-  speed: "Runda 5 sekund",
-  wheel: "Koło fortuny",
-  standard: "Standardowa runda"
-};
-
-export const INITIAL_LIVES = 3;
-
-export const CARD_DETAILS: Record<CardType, { name: string; description: string }> = {
-  dejavu: {
-    name: "Dejavu",
-    description: "Pozwala na ponowną odpowiedź po błędnej odpowiedzi"
-  },
-  kontra: {
-    name: "Kontra",
-    description: "Przekazuje pytanie innemu graczowi"
-  },
-  reanimacja: {
-    name: "Reanimacja",
-    description: "Zapobiega utracie życia w Rundzie 2"
-  },
-  skip: {
-    name: "Skip",
-    description: "Pomija pytanie bez kary"
-  },
-  turbo: {
-    name: "Turbo",
-    description: "Podwaja liczbę zdobytych punktów"
-  },
-  refleks2: {
-    name: "Refleks x2",
-    description: "Podwaja czas na odpowiedź"
-  },
-  refleks3: {
-    name: "Refleks x3",
-    description: "Potraja czas na odpowiedź"
-  },
-  lustro: {
-    name: "Lustro",
-    description: "Odbija efekt karty"
-  },
-  oswiecenie: {
-    name: "Oświecenie",
-    description: "Podpowiedź do pytania"
-  }
-};
-
+// Categories for the wheel round
 export const WHEEL_CATEGORIES = [
-  "Język polskiego internetu",
-  "Polska scena Twitcha",
-  "Zagadki",
-  "Kalambury wizualne",
-  "Gry, które podbiły Polskę",
-  "Technologie i internet w Polsce"
+  'Historia',
+  'Geografia',
+  'Nauka',
+  'Sztuka',
+  'Sport',
+  'Rozrywka',
+  'Technologia',
+  'Muzyka',
+  'Film',
+  'Literatura'
 ];
 
-// Sample questions for testing
-export const SAMPLE_QUESTIONS: Question[] = [
-  {
-    id: "1",
-    text: "Co oznacza skrót 'JD' w polskim internecie?",
-    category: "Język polskiego internetu",
-    answers: [
-      { text: "Jestem Dumny", isCorrect: false },
-      { text: "Ja Dziękuję", isCorrect: true },
-      { text: "Jutro Dobranoc", isCorrect: false },
-      { text: "Już Dawno", isCorrect: false }
-    ],
-    correctAnswerIndex: 1,
-    round: "standard",
-    difficulty: "medium",
-    used: false,
-    favorite: false,
-    points: 10
-  },
-  {
-    id: "2",
-    text: "Kto jest twórcą popularnego formatu 'Dwóch Typów Podcast'?",
-    category: "Polska scena Twitcha",
-    answers: [
-      { text: "Gimper i Rojo", isCorrect: false },
-      { text: "Włodek i Popo", isCorrect: false },
-      { text: "Izak i Friz", isCorrect: false },
-      { text: "Vogule Poland i Quebonafide", isCorrect: true }
-    ],
-    correctAnswerIndex: 3,
-    round: "standard",
-    difficulty: "medium",
-    used: false,
-    favorite: false,
-    points: 10
-  },
-  {
-    id: "3",
-    text: "Co oznacza termin 'Janusz' w polskiej kulturze internetowej?",
-    category: "Język polskiego internetu",
-    answers: [
-      { text: "Stereotypowy starszy mężczyzna szukający promocji", isCorrect: true },
-      { text: "Popularny youtuber z lat 2010-2015", isCorrect: false },
-      { text: "Postać z polskiego mema", isCorrect: false },
-      { text: "Bohater gry 'Wiedźmin'", isCorrect: false }
-    ],
-    correctAnswerIndex: 0,
-    round: "standard",
-    difficulty: "medium",
-    used: false,
-    favorite: false,
-    points: 10
-  }
-];
-
-export function createCard(type: CardType): Card {
-  const details = CARD_DETAILS[type];
+// Function to create a new card
+export const createCard = (type: CardType, description?: string): Card => {
   return {
+    id: `card-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
     type,
-    name: details.name,
-    description: details.description,
+    description: description || CARD_DETAILS[type].description,
     isUsed: false
   };
-}
+};
+
+// Round names
+export const ROUND_NAMES: Record<RoundType | 'all', string> = {
+  'all': 'Wszystkie rundy',
+  'knowledge': 'Runda Wiedzy',
+  'speed': 'Runda Szybka',
+  'wheel': 'Koło Fortuny',
+  'standard': 'Standardowa'
+};
+
+// Card details with descriptions and effects
+export const CARD_DETAILS: Record<CardType, { name: string, description: string, effect?: string }> = {
+  'dejavu': { 
+    name: 'Déjà Vu', 
+    description: 'Pozwala na powtórzenie pytania po złej odpowiedzi', 
+    effect: 'Gracz dostaje szansę odpowiedzieć ponownie na to samo pytanie.' 
+  },
+  'kontra': { 
+    name: 'Kontra', 
+    description: 'Przekazuje pytanie innemu graczowi', 
+    effect: 'Pytanie zostaje przekazane wybranemu przeciwnikowi.' 
+  },
+  'reanimacja': { 
+    name: 'Reanimacja', 
+    description: 'Zapobiega utracie życia w Rundzie 2', 
+    effect: 'Gracz nie traci życia przy błędnej odpowiedzi.' 
+  },
+  'skip': { 
+    name: 'Skip', 
+    description: 'Pomija aktualne pytanie', 
+    effect: 'Pytanie zostaje pominięte bez kary.' 
+  },
+  'turbo': { 
+    name: 'Turbo', 
+    description: 'Podwaja zdobyte punkty', 
+    effect: 'Punkty za poprawną odpowiedź zostają podwojone.' 
+  },
+  'refleks2': { 
+    name: 'Refleks x2', 
+    description: 'Podwaja czas na odpowiedź', 
+    effect: 'Czas na odpowiedź zostaje podwojony.' 
+  },
+  'refleks3': { 
+    name: 'Refleks x3', 
+    description: 'Potraja czas na odpowiedź', 
+    effect: 'Czas na odpowiedź zostaje potrojony.' 
+  },
+  'lustro': { 
+    name: 'Lustro', 
+    description: 'Usuwa jedną błędną odpowiedź', 
+    effect: 'Jedna niepoprawna odpowiedź zostaje usunięta z opcji.' 
+  },
+  'oswiecenie': { 
+    name: 'Oświecenie', 
+    description: 'Daje wskazówkę do pytania', 
+    effect: 'Gracz otrzymuje dodatkową wskazówkę.' 
+  }
+};
+
+// Sample questions for testing
+export const SAMPLE_QUESTIONS = [
+  {
+    id: "q-1",
+    text: "Która planeta jest najbliżej Słońca?",
+    category: "Nauka",
+    answers: [
+      { text: "Merkury", isCorrect: true },
+      { text: "Wenus", isCorrect: false },
+      { text: "Mars", isCorrect: false },
+      { text: "Ziemia", isCorrect: false }
+    ],
+    correctAnswerIndex: 0,
+    round: "knowledge",
+    difficulty: "easy",
+    points: 10
+  },
+  {
+    id: "q-2",
+    text: "Kto napisał 'Pan Tadeusz'?",
+    category: "Literatura",
+    answers: [
+      { text: "Juliusz Słowacki", isCorrect: false },
+      { text: "Adam Mickiewicz", isCorrect: true },
+      { text: "Henryk Sienkiewicz", isCorrect: false },
+      { text: "Cyprian Kamil Norwid", isCorrect: false }
+    ],
+    correctAnswerIndex: 1,
+    round: "knowledge",
+    difficulty: "easy",
+    points: 10
+  }
+];
